@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { AnswerValue, AssessmentSession } from "@/types/assessment";
 
 interface Props {
@@ -124,7 +124,7 @@ function optionHint(session: AssessmentSession, n: AnswerValue) {
 
 function hapticTap() {
   try {
-    navigator.vibrate?.(12);
+    navigator.vibrate?.([18, 10, 16]);
   } catch {
     // Browser may not support haptic vibration. The visual press effect still runs.
   }
@@ -134,9 +134,17 @@ export function AnswerScale({ value, onSelect, leftLabel, rightLabel, session }:
   const labels = getLabels(session);
   const selectedIndex = value ? value - 1 : -1;
   const selectedTone = value ? SCALE_TONES[value] : undefined;
+  const [pressValue, setPressValue] = useState<AnswerValue | null>(null);
+
+  useEffect(() => {
+    if (!pressValue) return;
+    const timer = window.setTimeout(() => setPressValue(null), 560);
+    return () => window.clearTimeout(timer);
+  }, [pressValue]);
 
   function handleSelect(n: AnswerValue) {
     hapticTap();
+    setPressValue(n);
     onSelect(n);
   }
 
@@ -186,7 +194,7 @@ export function AnswerScale({ value, onSelect, leftLabel, rightLabel, session }:
                 aria-pressed={selected}
                 className={`answer-pill-option group relative flex h-[54px] w-full items-center gap-3 rounded-full px-3 text-left outline-none transition-[background,box-shadow,transform,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-primary/30 ${
                   selected ? "is-selected text-foreground" : "text-foreground"
-                }`}
+                } ${pressValue === n ? "is-pressing" : ""}`}
                 style={
                   {
                     "--scale-fill": tone.fill,

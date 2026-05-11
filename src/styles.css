@@ -64,6 +64,21 @@
   --chart-3: oklch(0.6 0.12 145);
   --chart-4: oklch(0.65 0.16 270);
   --chart-5: oklch(0.7 0.16 90);
+  --rank-dominant: oklch(0.64 0.19 28);
+  --rank-dominant-soft: oklch(0.64 0.19 28 / 0.12);
+  --rank-dominant-border: oklch(0.64 0.19 28 / 0.34);
+  --rank-dominant-ink: oklch(0.44 0.16 28);
+  --rank-medium: oklch(0.86 0.13 82);
+  --rank-medium-soft: oklch(0.86 0.13 82 / 0.18);
+  --rank-medium-border: oklch(0.78 0.14 78 / 0.38);
+  --rank-medium-ink: oklch(0.39 0.08 62);
+  --rank-neutral: oklch(1 0 0);
+  --rank-low: oklch(0.78 0.012 250);
+  --rank-low-soft: oklch(0.78 0.012 250 / 0.22);
+  --rank-low-border: oklch(0.62 0.014 250 / 0.28);
+  --rank-low-ink: oklch(0.38 0.02 250);
+  --rank-weak: oklch(0.23 0.02 250);
+  --rank-weak-border: oklch(0.23 0.02 250 / 0.44);
 }
 
 .dark {
@@ -103,9 +118,46 @@
 }
 
 @media print {
-  .no-print { display: none !important; }
-  body { background: white !important; }
-  .print-page { break-after: page; }
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html, body {
+    background: white !important;
+  }
+
+  body {
+    color: #172033 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .report-hero,
+  .report-section,
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-section {
+    margin-top: 18mm !important;
+  }
+
+  .report-section:nth-of-type(4),
+  .report-section:nth-of-type(8) {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .shadow-sm,
+  .shadow-lg {
+    box-shadow: none !important;
+  }
 }
 
 .question-card {
@@ -129,6 +181,8 @@
   }
 }
 
+
+/* Patch L/M — tactile answer pill scale */
 .answer-pill-indicator {
   border: 2px solid var(--active-scale-border, var(--primary));
   background: var(--active-scale-soft, color-mix(in oklab, var(--primary) 8%, transparent));
@@ -234,3 +288,165 @@
   100% { opacity: 0; transform: scale(1.04); }
 }
 
+
+
+/* Patch N — stronger satisfying press effect for answer pills */
+.answer-pill-group {
+  overflow: visible;
+}
+
+.answer-pill-option {
+  isolation: isolate;
+  overflow: visible;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 160ms cubic-bezier(0.18, 0.85, 0.22, 1),
+    color 140ms ease;
+}
+
+.answer-pill-option > span {
+  position: relative;
+  z-index: 2;
+}
+
+.answer-pill-option::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 18% 50%, color-mix(in oklab, var(--scale-fill) 34%, white) 0%, transparent 34%),
+    linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--scale-fill) 22%, white) 50%, transparent 100%);
+  opacity: 0;
+  transform: scaleX(0.44) scaleY(0.72);
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.answer-pill-option::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  z-index: -2;
+  border-radius: inherit;
+  border: 2px solid var(--scale-border);
+  background: color-mix(in oklab, var(--scale-fill) 8%, transparent);
+  opacity: 0;
+  transform: scaleX(0.98) scaleY(0.98);
+  transform-origin: center;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .answer-pill-option:hover {
+    border-color: var(--scale-border);
+    background: color-mix(in oklab, var(--scale-soft) 76%, white);
+    box-shadow:
+      inset 0 0 0 1px var(--scale-border),
+      0 10px 24px color-mix(in oklab, var(--scale-glow) 88%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .answer-pill-option:hover::after {
+    opacity: 0.42;
+    transform: scaleX(1.012) scaleY(1.08);
+    transition:
+      transform 240ms cubic-bezier(0.18, 0.85, 0.22, 1),
+      opacity 180ms ease;
+  }
+}
+
+.answer-pill-option:active {
+  transform: translateY(1px) scale(0.972);
+  border-color: var(--scale-border);
+  background: color-mix(in oklab, var(--scale-soft) 82%, white);
+  box-shadow:
+    inset 0 0 0 1px var(--scale-border),
+    0 0 0 5px color-mix(in oklab, var(--scale-glow) 86%, transparent),
+    0 12px 26px var(--scale-glow);
+}
+
+.answer-pill-option.is-pressing {
+  animation: answer-pill-satisfying-press 460ms cubic-bezier(0.2, 0.9, 0.16, 1) both;
+}
+
+.answer-pill-option.is-pressing::before {
+  animation: answer-pill-energy-burst 520ms cubic-bezier(0.18, 0.85, 0.22, 1) both;
+}
+
+.answer-pill-option.is-pressing::after {
+  animation: answer-pill-expanding-ring 560ms ease-out both;
+}
+
+.answer-pill-option.is-pressing .answer-pill-number {
+  animation: answer-pill-number-pop 420ms cubic-bezier(0.18, 0.85, 0.22, 1) both;
+}
+
+.answer-pill-option.is-selected .answer-pill-number {
+  background: var(--scale-fill);
+  border-color: var(--scale-fill);
+  color: var(--scale-ink);
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--scale-glow) 90%, transparent),
+    0 10px 20px var(--scale-glow);
+}
+
+.answer-pill-indicator {
+  transition:
+    transform 300ms cubic-bezier(0.2, 0.92, 0.18, 1),
+    background-color 170ms ease,
+    border-color 170ms ease,
+    box-shadow 220ms ease;
+}
+
+@keyframes answer-pill-satisfying-press {
+  0% { transform: scale(1) translateX(0); }
+  22% { transform: scale(0.958) translateX(-1.5px); }
+  45% { transform: scale(1.032) translateX(1.6px); }
+  64% { transform: scale(0.992) translateX(-0.9px); }
+  82% { transform: scale(1.006) translateX(0.5px); }
+  100% { transform: scale(1) translateX(0); }
+}
+
+@keyframes answer-pill-energy-burst {
+  0% {
+    opacity: 0.34;
+    transform: scaleX(0.42) scaleY(0.72);
+  }
+  45% {
+    opacity: 0.26;
+    transform: scaleX(1.04) scaleY(1.18);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1.32) scaleY(1.68);
+  }
+}
+
+@keyframes answer-pill-expanding-ring {
+  0% {
+    opacity: 0.72;
+    transform: scaleX(0.98) scaleY(0.96);
+    filter: blur(0px);
+  }
+  52% {
+    opacity: 0.36;
+    transform: scaleX(1.08) scaleY(1.26);
+    filter: blur(0.2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1.18) scaleY(1.58);
+    filter: blur(0.6px);
+  }
+}
+
+@keyframes answer-pill-number-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.88); }
+  62% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}

@@ -22,6 +22,16 @@ import {
   getPurposeLens,
   purposeSummaryText,
 } from "@/data/purposeLens";
+import {
+  buildAnalogies,
+  buildBlindSpots,
+  buildCommunicationOn,
+  buildCommunicationResistance,
+  buildDailyHabits,
+  buildObservablePatterns,
+  buildPressurePatterns,
+  getMicroRoleNarrative,
+} from "@/data/observableNarratives";
 
 export const Route = createFileRoute("/result")({
   head: () => ({
@@ -54,6 +64,13 @@ function ResultPage() {
     () => buildPurposeGuidance(lens, topThree, bottom, reports),
     [lens, topThree, bottom, reports],
   );
+  const observablePatterns = useMemo(() => buildObservablePatterns(patternReport.topNaturalRoles), [patternReport]);
+  const dailyHabits = useMemo(() => buildDailyHabits(patternReport.topNaturalRoles), [patternReport]);
+  const pressurePatterns = useMemo(() => buildPressurePatterns(patternReport.topNaturalRoles), [patternReport]);
+  const communicationOn = useMemo(() => buildCommunicationOn(patternReport.topNaturalRoles), [patternReport]);
+  const communicationResistance = useMemo(() => buildCommunicationResistance(patternReport.topNaturalRoles), [patternReport]);
+  const analogies = useMemo(() => buildAnalogies(patternReport.topNaturalRoles), [patternReport]);
+  const blindSpots = useMemo(() => buildBlindSpots(patternReport.topNaturalRoles), [patternReport]);
 
   useEffect(() => {
     if (!identity) navigate({ to: "/" });
@@ -191,6 +208,61 @@ function ResultPage() {
           </div>
         </Section>
 
+        <Section title="Bahasa Sehari-hari" kicker="Observable Pattern">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <BulletPanel
+              title="Perilaku yang mungkin terlihat"
+              intro="Bagian ini menerjemahkan micro-role menjadi kebiasaan yang lebih mudah dikenali dalam hidup sehari-hari."
+              items={observablePatterns}
+            />
+            <BulletPanel
+              title="Kebiasaan kecil yang sering relate"
+              intro="Poin ini membantu membaca pola yang sering muncul tanpa terasa seperti teori psikologi."
+              items={dailyHabits}
+            />
+          </div>
+          <div className="mt-3 rounded-3xl border border-primary/20 bg-primary/10 p-5 print-avoid-break">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Analogi mudah</div>
+            <ul className="mt-3 space-y-2 text-xs leading-relaxed text-foreground/90">
+              {analogies.map((item) => (
+                <li key={item}>• {item}</li>
+              ))}
+            </ul>
+          </div>
+        </Section>
+
+        <Section title="Saat Terdesak" kicker="Pressure Pattern">
+          <div className="grid gap-3 sm:grid-cols-[1.1fr_0.9fr]">
+            <BulletPanel
+              title="Respons yang cenderung muncul"
+              intro="Pola ini bukan diagnosis stres, tetapi petunjuk bagaimana kekuatan alami dapat muncul ketika ada tekanan."
+              items={pressurePatterns}
+            />
+            <BulletPanel
+              title="Blind spot yang perlu dijaga"
+              intro="Sisi bayangan dari kekuatan utama agar tetap sehat dan tidak berubah menjadi sumber konflik."
+              items={blindSpots}
+              muted
+            />
+          </div>
+        </Section>
+
+        <Section title="Panduan Komunikasi Praktis" kicker="Communication Trigger">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <BulletPanel
+              title="Cara bicara yang membuat lebih terbuka"
+              intro="Gunakan pendekatan ini agar komunikasi lebih mudah diterima dan tidak terasa menyerang."
+              items={communicationOn}
+            />
+            <BulletPanel
+              title="Pola yang dapat memicu resistensi"
+              intro="Hindari pola ini terutama ketika sedang membahas keputusan, konflik, atau perubahan penting."
+              items={communicationResistance}
+              muted
+            />
+          </div>
+        </Section>
+
         <Section title={lens.summaryTitle} kicker="Executive Summary">
           <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
             <p className="text-sm leading-relaxed text-muted-foreground">{lens.summaryFrame}</p>
@@ -222,12 +294,14 @@ function ResultPage() {
 
         <Section title="Kekuatan Alami" kicker="Natural Micro Roles">
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-            Bagian ini membaca potensi dominan pada level micro-role, bukan hanya cluster besar. Di titik inilah hasil biasanya mulai terasa lebih personal.
+            Bagian ini membaca potensi dominan pada level micro-role. Gunakan warna sebagai kode cepat: dominan, berkembang, netral, perlu dukungan, dan titik rentan energi.
           </p>
+          <ColorMeaningLegend />
           <div className="space-y-3">
             {patternReport.topNaturalRoles.map((role, i) => (
               <MicroRoleInsightCard key={role.id} index={i + 1} role={role} score={role.natural} scoreLabel="Natural">
                 <Row k="Terlihat sebagai" v={role.visible} />
+                <Row k="Kebiasaan relate" v={getMicroRoleNarrative(role).dailyHabits[0]} />
                 <Row k="Pengisi energi" v={role.energy} />
                 <Row k="Hal yang perlu dijaga" v={role.risk} />
               </MicroRoleInsightCard>
@@ -299,7 +373,7 @@ function ResultPage() {
                     <h3 className="mt-1 font-bold text-foreground">{role.name}</h3>
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{role.tagline}</p>
                   </div>
-                  <ScoreBadge score={role.natural} muted />
+                  <ScoreBadge score={role.natural} />
                 </div>
                 <dl className="mt-4 space-y-2 text-xs">
                   <Row k="Yang menguras" v={role.risk} />
@@ -332,6 +406,9 @@ function ResultPage() {
         </Section>
 
         <Section title="Peta Cluster Kekuatan" kicker="Cluster Score">
+          <div className="mb-3 rounded-3xl border border-border/60 bg-card p-5 text-xs leading-relaxed text-muted-foreground shadow-sm print-avoid-break">
+            Maksud peta ini dalam hidup sehari-hari: cluster menunjukkan wilayah besar energi Anda. Micro-role menjelaskan perilaku konkretnya. Jadi diagram bukan untuk dilihat sebagai angka semata, tetapi sebagai peta arah: area mana yang menghidupkan, area mana yang terlatih, dan area mana yang perlu dikelola agar tidak menjadi sumber lelah.
+          </div>
           <ClusterRadar reports={reports} />
         </Section>
 
@@ -383,6 +460,54 @@ function ResultPage() {
         </footer>
       </div>
     </main>
+  );
+}
+
+function BulletPanel({
+  title,
+  intro,
+  items,
+  muted,
+}: {
+  title: string;
+  intro: string;
+  items: string[];
+  muted?: boolean;
+}) {
+  return (
+    <div className={`rounded-3xl border p-5 shadow-sm print-avoid-break ${muted ? "border-border/70 bg-muted/45" : "border-border/60 bg-card"}`}>
+      <div className="text-sm font-bold text-foreground">{title}</div>
+      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{intro}</p>
+      <ul className="mt-4 space-y-2 text-xs leading-relaxed text-foreground/90">
+        {items.map((item) => (
+          <li key={item}>• {item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ColorMeaningLegend() {
+  const items = [
+    { label: "Dominan", tone: "bg-[var(--rank-dominant)]", text: "Kekuatan alami paling menonjol" },
+    { label: "Berkembang", tone: "bg-[var(--rank-medium)]", text: "Potensi kuat yang perlu diberi ruang" },
+    { label: "Netral", tone: "bg-[var(--rank-neutral)]", text: "Area penyeimbang" },
+    { label: "Perlu dukungan", tone: "bg-[var(--rank-low)]", text: "Butuh sistem atau latihan" },
+    { label: "Rentan", tone: "bg-[var(--rank-weak)]", text: "Cenderung menguras energi" },
+  ];
+
+  return (
+    <div className="mb-4 grid gap-2 rounded-3xl border border-border/60 bg-card p-4 shadow-sm sm:grid-cols-5 print-avoid-break">
+      {items.map((item) => (
+        <div key={item.label} className="flex items-center gap-2 sm:block">
+          <span className={`inline-block size-3 shrink-0 rounded-full border border-border ${item.tone}`} />
+          <div>
+            <div className="text-[11px] font-bold text-foreground">{item.label}</div>
+            <div className="text-[10px] leading-snug text-muted-foreground">{item.text}</div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -485,13 +610,18 @@ function Row({ k, v }: { k: string; v: string }) {
   );
 }
 
+function scoreTone(score: number, muted?: boolean) {
+  if (muted) return "border-border bg-muted text-muted-foreground";
+  if (score >= 80) return "border-[var(--rank-dominant-border)] bg-[var(--rank-dominant-soft)] text-[var(--rank-dominant-ink)]";
+  if (score >= 64) return "border-[var(--rank-medium-border)] bg-[var(--rank-medium-soft)] text-[var(--rank-medium-ink)]";
+  if (score >= 45) return "border-border bg-[var(--rank-neutral)] text-foreground";
+  if (score >= 30) return "border-[var(--rank-low-border)] bg-[var(--rank-low-soft)] text-[var(--rank-low-ink)]";
+  return "border-[var(--rank-weak-border)] bg-[var(--rank-weak)] text-white";
+}
+
 function ScoreBadge({ score, muted }: { score: number; muted?: boolean }) {
   return (
-    <div
-      className={`rounded-full px-2.5 py-1 text-xs font-bold tabular-nums ${
-        muted ? "bg-muted text-muted-foreground" : "bg-primary/15 text-primary"
-      }`}
-    >
+    <div className={`rounded-full border px-2.5 py-1 text-xs font-bold tabular-nums ${scoreTone(score, muted)}`}>
       {score}
     </div>
   );

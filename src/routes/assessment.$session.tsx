@@ -62,7 +62,7 @@ function AssessmentPage() {
         } else {
           setCurrentIndex(s, idx + 1);
         }
-      }, 220);
+      }, 430);
     },
     [idx, navigate, question, questions.length, s, setAnswer, setCurrentIndex],
   );
@@ -114,7 +114,6 @@ function AssessmentPage() {
             onSelect={handleSelect}
             leftLabel={LABELS[s].left}
             rightLabel={LABELS[s].right}
-            session={s}
           />
         </QuestionCard>
 
