@@ -13,11 +13,16 @@ const SCORE_MAX = 7;
 const NAT_HI = 62;
 const STR_HI = 62;
 
+export type RoleConfidence = "tinggi" | "sedang" | "indikasi awal";
+
 export interface MicroRoleScore extends MicroRoleDefinition {
   natural: number;
   strength: number;
   naturalItems: number;
   strengthItems: number;
+  gap: number;
+  confidence: RoleConfidence;
+  confidenceLabel: string;
   zone: Zone;
 }
 
@@ -63,6 +68,7 @@ export interface PatternSignatureReport {
   topTrainedRoles: MicroRoleScore[];
   adaptiveRoles: MicroRoleScore[];
   adaptiveGapInsights: AdaptiveGapInsight[];
+  naturalDormantRoles: MicroRoleScore[];
   drainingRoles: MicroRoleScore[];
   roleFamilies: RoleFamilyScore[];
 }
@@ -208,6 +214,19 @@ function classify(natural: number, strength: number): Zone {
   return "Weak / Draining";
 }
 
+function confidenceFromItems(naturalItems: number, strengthItems: number): RoleConfidence {
+  const total = naturalItems + strengthItems;
+  if (naturalItems >= 4 && total >= 6) return "tinggi";
+  if (naturalItems >= 3 && total >= 4) return "sedang";
+  return "indikasi awal";
+}
+
+function confidenceLabel(confidence: RoleConfidence): string {
+  if (confidence === "tinggi") return "sinyal kuat";
+  if (confidence === "sedang") return "cukup terbaca";
+  return "indikasi awal";
+}
+
 function roleById(id: MicroRoleId, roles: MicroRoleScore[]): MicroRoleScore | undefined {
   return roles.find((role) => role.id === id);
 }
@@ -273,12 +292,16 @@ export function buildMicroRoleScores(answers: Answers): MicroRoleScore[] {
     const definition = MICRO_ROLE_DEFINITIONS[map.id];
     const natural = scoreFromIds(answers.natural, map.naturalItemIds);
     const strength = scoreFromIds(answers.strength, map.strengthItemIds);
+    const confidence = confidenceFromItems(natural.items, strength.items);
     return {
       ...definition,
       natural: natural.score,
       strength: strength.score,
       naturalItems: natural.items,
       strengthItems: strength.items,
+      gap: strength.score - natural.score,
+      confidence,
+      confidenceLabel: confidenceLabel(confidence),
       zone: classify(natural.score, strength.score),
     };
   });
@@ -505,14 +528,18 @@ export function buildPatternSignatureReport(answers: Answers, reports: ClusterRe
     .sort((a, b) => b.strength - a.strength)
     .slice(0, 7);
   const adaptiveRoles = [...roles]
-    .filter((role) => role.strength >= STR_HI && role.natural < NAT_HI)
-    .sort((a, b) => b.strength - a.strength)
-    .slice(0, 5);
+    .filter((role) => role.strengthItems > 0 && role.strength >= 55 && role.gap >= 14)
+    .sort((a, b) => b.gap - a.gap || b.strength - a.strength)
+    .slice(0, 7);
   const adaptiveGapInsights = buildAdaptiveGapInsights(answers, roles);
+  const naturalDormantRoles = [...roles]
+    .filter((role) => role.naturalItems > 0 && role.strengthItems > 0 && role.natural >= 55 && role.natural - role.strength >= 12)
+    .sort((a, b) => b.natural - a.natural || a.strength - b.strength)
+    .slice(0, 7);
   const drainingRoles = [...roles]
     .filter((role) => role.naturalItems > 0)
     .sort((a, b) => a.natural - b.natural)
-    .slice(0, 5);
+    .slice(0, 7);
 
   // Keep reports parameter in the signature for future bridge with cluster-level engine.
   void reports;
@@ -524,6 +551,7 @@ export function buildPatternSignatureReport(answers: Answers, reports: ClusterRe
     topTrainedRoles,
     adaptiveRoles,
     adaptiveGapInsights,
+    naturalDormantRoles,
     drainingRoles,
     roleFamilies: buildRoleFamilyScores(roles),
   };

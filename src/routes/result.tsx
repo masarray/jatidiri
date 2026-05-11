@@ -1,35 +1,38 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
-import { Printer, RotateCcw, Home, AlertCircle } from "lucide-react";
+import { AlertCircle, Home, Printer, RotateCcw } from "lucide-react";
 import { useAssessmentStore } from "@/store/assessmentStore";
 import {
   buildClusterReports,
-  topClusters,
-  bottomClusters,
-  progressFor,
+  computeReadingQuality,
   getNextAssessmentTarget,
   isAssessmentComplete,
-  computeReadingQuality,
+  progressFor,
 } from "@/engine/scoring";
-import { buildPatternSignatureReport, type MicroRoleScore } from "@/engine/patternSignature";
-import { ClusterRadar } from "@/components/result/ClusterRadar";
-import { ZoneMatrix } from "@/components/result/ZoneMatrix";
-import { buildPurposeGuidance, getPurposeLens } from "@/data/purposeLens";
-import { buildCommunicationSwitchProfiles, type CommunicationSwitchProfile } from "@/data/communicationSwitch";
 import {
-  buildAnalogies,
+  buildPatternSignatureReport,
+  type AdaptiveGapInsight,
+  type MicroRoleScore,
+} from "@/engine/patternSignature";
+import { ClusterRadar } from "@/components/result/ClusterRadar";
+import { getPurposeLens } from "@/data/purposeLens";
+import {
   buildCommunicationOn,
   buildCommunicationResistance,
   buildDailyHabits,
   buildObservablePatterns,
 } from "@/data/observableNarratives";
+import { buildCommunicationSwitchProfiles, type CommunicationSwitchProfile } from "@/data/communicationSwitch";
 
 export const Route = createFileRoute("/result")({
   head: () => ({
     meta: [
       { title: "Hasil Peta Jati Diri Anda" },
-      { name: "description", content: "Ringkasan pola inti, sumber energi, kekuatan adaptif, dan strategi komunikasi." },
+      {
+        name: "description",
+        content: "Ringkasan pola energi alami, titik rentan energi, kemampuan adaptif, dan strategi komunikasi.",
+      },
     ],
   }),
   component: ResultPage,
@@ -42,25 +45,27 @@ function ResultPage() {
   const strengthProg = progressFor("strength", answers);
   const reports = useMemo(() => buildClusterReports(answers), [answers]);
   const patternReport = useMemo(() => buildPatternSignatureReport(answers, reports), [answers, reports]);
-  const topNaturalClusters = useMemo(() => topClusters(reports, 5), [reports]);
-  const topThree = topNaturalClusters.slice(0, 3);
-  const bottom = useMemo(() => bottomClusters(reports, 3), [reports]);
-  const lens = useMemo(() => getPurposeLens(identity), [identity]);
-  const purposeGuidance = useMemo(
-    () => buildPurposeGuidance(lens, topThree, bottom, reports),
-    [lens, topThree, bottom, reports],
-  );
   const readingQuality = useMemo(() => computeReadingQuality(answers), [answers]);
+  const lens = useMemo(() => getPurposeLens(identity), [identity]);
 
-  const observablePatterns = useMemo(() => buildObservablePatterns(patternReport.topNaturalRoles).slice(0, 3), [patternReport]);
-  const dailyHabits = useMemo(() => buildDailyHabits(patternReport.topNaturalRoles).slice(0, 3), [patternReport]);
-  const communicationOn = useMemo(() => buildCommunicationOn(patternReport.topNaturalRoles).slice(0, 4), [patternReport]);
-  const communicationResistance = useMemo(() => buildCommunicationResistance(patternReport.topNaturalRoles).slice(0, 4), [patternReport]);
-  const communicationSwitches = useMemo(
-    () => buildCommunicationSwitchProfiles(patternReport.topNaturalRoles, lens.key),
-    [patternReport.topNaturalRoles, lens.key],
+  const topNaturalRoles = patternReport.topNaturalRoles.slice(0, 7);
+  const drainingRoles = patternReport.drainingRoles.slice(0, 7);
+  const trainedRoles = patternReport.topTrainedRoles.slice(0, 7);
+  const adaptiveRoles = patternReport.adaptiveRoles.slice(0, 7);
+  const dormantRoles = patternReport.naturalDormantRoles.slice(0, 7);
+  const adaptiveInsights = patternReport.adaptiveGapInsights.slice(0, 3);
+
+  const observablePatterns = useMemo(() => buildObservablePatterns(topNaturalRoles).slice(0, 4), [topNaturalRoles]);
+  const dailyHabits = useMemo(() => buildDailyHabits(topNaturalRoles).slice(0, 4), [topNaturalRoles]);
+  const communicationOn = useMemo(() => buildCommunicationOn(topNaturalRoles).slice(0, 5), [topNaturalRoles]);
+  const communicationResistance = useMemo(
+    () => buildCommunicationResistance(topNaturalRoles).slice(0, 5),
+    [topNaturalRoles],
   );
-  const analogies = useMemo(() => buildAnalogies(patternReport.topNaturalRoles).slice(0, 2), [patternReport]);
+  const communicationSwitches = useMemo(
+    () => buildCommunicationSwitchProfiles(topNaturalRoles, lens.key),
+    [topNaturalRoles, lens.key],
+  );
 
   useEffect(() => {
     if (!identity) navigate({ to: "/" });
@@ -95,18 +100,22 @@ function ResultPage() {
             <div className="grid size-12 place-items-center rounded-full bg-amber-500/10 text-[var(--ember)]">
               <AlertCircle className="size-6" />
             </div>
-            <h1 className="mt-5 text-2xl font-bold text-foreground">Asesmen belum lengkap</h1>
+            <h1 className="mt-5 text-2xl font-semibold text-foreground">Asesmen belum lengkap</h1>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Hasil baru ditampilkan setelah kedua sesi selesai agar pembacaan tidak terpotong dan tidak menyesatkan.
+              Hasil baru ditampilkan setelah kedua sesi selesai agar pembacaan tidak terpotong.
             </p>
             <div className="mt-5 rounded-2xl bg-muted/50 p-4 text-sm">
               <div className="flex justify-between gap-3">
                 <span>Sesi 1 — Bakat Alami</span>
-                <strong>{naturalProg.answered}/{naturalProg.total}</strong>
+                <strong>
+                  {naturalProg.answered}/{naturalProg.total}
+                </strong>
               </div>
               <div className="mt-2 flex justify-between gap-3">
                 <span>Sesi 2 — Kekuatan Aktivitas</span>
-                <strong>{strengthProg.answered}/{strengthProg.total}</strong>
+                <strong>
+                  {strengthProg.answered}/{strengthProg.total}
+                </strong>
               </div>
             </div>
             <button
@@ -128,7 +137,8 @@ function ResultPage() {
     year: "numeric",
   });
 
-  const primaryAnalogy = analogies[0] ?? "Pola ini dapat dibaca sebagai cara kerja energi: bukan hanya apa yang bisa dilakukan, tetapi jalur mana yang membuat semangat bertahan lebih lama.";
+  const strongestText = joinRoleNames(topNaturalRoles.slice(0, 3));
+  const drainText = joinRoleNames(drainingRoles.slice(0, 3));
 
   return (
     <main className="min-h-dvh bg-background">
@@ -158,315 +168,224 @@ function ResultPage() {
           </div>
         </div>
 
-        <section className="report-hero rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-card to-[var(--ember)]/10 p-6 shadow-sm sm:p-8 print-avoid-break">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-            Peta Jati Diri · Curated Psychological Insight
+        <section className="rounded-[2rem] border border-border/60 bg-gradient-to-br from-primary/12 via-card to-[var(--ember)]/8 p-6 shadow-sm sm:p-8 print-avoid-break">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+            Peta Jati Diri · Pembacaan Pola Energi
           </div>
-          <div className="mt-5 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="mt-5 grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{identity.name}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{identity.name}</h1>
               <p className="mt-2 text-sm text-muted-foreground">Tanggal asesmen: {reportDate}</p>
             </div>
             <div className="rounded-2xl border border-border/60 bg-background/70 px-4 py-3 text-left sm:text-right">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Konteks Pembacaan
+              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Konteks
               </div>
-              <div className="mt-1 text-xl font-bold text-primary">{lens.label}</div>
+              <div className="mt-1 text-lg font-semibold text-primary">{lens.label}</div>
             </div>
           </div>
           <div className="mt-6 max-w-2xl">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Core Signature</div>
-            <div className="mt-1 text-2xl font-bold text-primary">{patternReport.core.title}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pola inti</div>
+            <div className="mt-1 text-2xl font-semibold text-primary">{patternReport.core.title}</div>
             <p className="mt-3 text-sm leading-relaxed text-foreground/85">{patternReport.core.subtitle}</p>
           </div>
         </section>
 
-        <Section title="Pembacaan Utama" kicker="Curated Insight">
-          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
-            <p className="text-base leading-relaxed text-foreground/90">{patternReport.core.summary}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {patternReport.core.evidence.map((role) => (
-                <span key={role.id} className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
-                  {role.name}
-                </span>
-              ))}
-            </div>
+        <Section title="Cermin Diri Singkat" kicker="dibaca oleh kamu">
+          <div className="rounded-[1.75rem] border border-primary/15 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
+            <p className="text-[15px] leading-relaxed text-foreground/90 sm:text-base">
+              Kamu tampak lebih mudah hidup ketika berada di wilayah <strong className="font-semibold">{strongestText}</strong>. Ini bukan label permanen, tetapi sinyal tentang jalur yang biasanya membuat energi, rasa ingin tahu, dan dorongan bergerak lebih mudah menyala.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Hasil ini juga membaca area yang bisa membuat energi turun, terutama bila kamu terlalu lama diminta bergerak di wilayah <strong className="font-semibold text-foreground/80">{drainText}</strong> tanpa bantuan sistem, pasangan, tim, atau batas peran yang jelas.
+            </p>
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <InsightCard title="Yang terlihat dari luar" body={patternReport.core.visiblePattern} />
-            <InsightCard title="Sumber energi dan semangat" body={patternReport.core.hiddenEnergy} accent />
-            <InsightCard
-              title="Jika salah konteks"
-              body={`${patternReport.core.riskIfMisplaced} Jika pola ini dipaksa terlalu lama di luar jalur yang sesuai, semangat dan energi Anda dapat cepat turun.`}
-              muted
-            />
-            <InsightCard title="Strategi pemakaian sehat" body={patternReport.core.healthyUse} />
-          </div>
-
-          <div className="mt-3 rounded-3xl border border-primary/20 bg-primary/10 p-5 print-avoid-break">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Analogi sederhana</div>
-            <p className="mt-3 text-sm leading-relaxed text-foreground/90">{primaryAnalogy}</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <InsightCard title="Tombol ON kamu" body={communicationOn[0] ?? patternReport.core.hiddenEnergy} accent />
+            <InsightCard title="Energi turun saat" body={communicationResistance[0] ?? patternReport.core.riskIfMisplaced} muted />
+            <InsightCard title="Paling sehat dipakai untuk" body={patternReport.core.healthyUse} />
           </div>
         </Section>
 
-        <Section title="Kenapa Ini Terasa Relate" kicker="Observable Pattern">
+        <Section title="7 Sumber Energi Alami" kicker="yang membuat kamu lebih hidup">
+          <p className="section-lead">
+            Bagian ini membaca tujuh pola yang paling mudah menyalakan energi alami. Ini bukan berarti selalu mudah, tetapi biasanya lebih cepat membuat kamu merasa punya arah, semangat, atau rasa bermakna.
+          </p>
+          <div className="mt-4 grid gap-3">
+            {topNaturalRoles.map((role, index) => (
+              <EnergyRoleCard key={role.id} index={index + 1} role={role} score={role.natural} scoreLabel="energi alami">
+                <Row k="Terlihat sebagai" v={role.visible} />
+                <Row k="Menyalakan saat" v={role.energy} />
+                <Row k="Pakai sehat" v={role.healthyUse} />
+              </EnergyRoleCard>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="7 Titik Rentan Energi" kicker="yang mudah membuat lelah">
+          <p className="section-lead">
+            Ini bukan daftar kelemahan moral. Ini adalah area yang cenderung membutuhkan energi lebih besar. Bila terlalu sering menjadi pusat tuntutan, kamu bisa tampak menjalankan, tetapi bagian dalam terasa cepat lelah.
+          </p>
+          <div className="mt-4 grid gap-3">
+            {drainingRoles.map((role, index) => (
+              <EnergyRoleCard key={role.id} index={index + 1} role={role} score={role.natural} scoreLabel="energi rendah" muted>
+                <Row k="Berisiko lelah jika" v={role.risk} />
+                <Row k="Jangan dipaksa sebagai" v="pusat tuntutan harian tanpa sistem, batas, atau dukungan orang lain." />
+                <Row k="Cara bantu" v="pakai checklist, template, pembagian peran, jeda pemulihan, atau pasangan/tim yang lebih natural di area ini." />
+              </EnergyRoleCard>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Alami vs Terlatih" kicker="gap yang paling penting dibaca">
           <div className="grid gap-3 sm:grid-cols-2">
-            <CuratedList title="Perilaku yang mungkin terlihat" items={observablePatterns} />
-            <CuratedList title="Kebiasaan kecil yang sering muncul" items={dailyHabits} />
+            <ZoneSummaryCard
+              title="Alami & terlatih"
+              body="Area ini cenderung menjadi rumah energi: natural dan sudah cukup sering dipakai."
+              roles={topNaturalRoles.filter((role) => role.strength >= 55).slice(0, 5)}
+              tone="calm"
+            />
+            <ZoneSummaryCard
+              title="Potensi belum terlatih"
+              body="Area ini punya energi alami, tetapi belum cukup sering digunakan atau dikembangkan."
+              roles={dormantRoles.length > 0 ? dormantRoles : topNaturalRoles.filter((role) => role.strength < 55).slice(0, 5)}
+              tone="soft"
+            />
+            <ZoneSummaryCard
+              title="Kemampuan adaptif"
+              body="Area ini bisa kamu jalankan, tetapi perlu dijaga agar tidak menjadi tuntutan yang menguras."
+              roles={adaptiveRoles.length > 0 ? adaptiveRoles : trainedRoles.filter((role) => role.gap > 8).slice(0, 5)}
+              tone="warm"
+            />
+            <ZoneSummaryCard
+              title="Titik rentan energi"
+              body="Area ini sebaiknya dibantu sistem, kolaborasi, atau batas peran."
+              roles={drainingRoles.slice(0, 5)}
+              tone="muted"
+            />
           </div>
         </Section>
 
-        {patternReport.adaptiveGapInsights.length > 0 && (
-          <Section title="Adaptive / Survival Strength" kicker="Natural vs Adaptive Gap">
-            <div className="mb-4 rounded-3xl border border-amber-500/25 bg-amber-500/10 p-5 print-avoid-break">
-              <p className="text-sm leading-relaxed text-foreground/90">
-                Bagian ini membaca kemampuan yang tampak kuat karena tuntutan pekerjaan, tanggung jawab, keluarga, target, jabatan, atau kebutuhan sosial. Fokusnya bukan hanya <strong>“Anda kuat di apa”</strong>, tetapi <strong>“Anda kuat lewat jalur apa”</strong>, lalu apakah jalur itu menjadi sumber energi dan semangat atau justru membuat energi turun lebih cepat.
-              </p>
-            </div>
-            <div className="space-y-3">
-              {patternReport.adaptiveGapInsights.slice(0, 2).map((insight) => (
+        {adaptiveInsights.length > 0 && (
+          <Section title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="adaptive / survival">
+            <p className="section-lead">
+              Bagian ini membaca aktivitas yang mungkin terlihat kuat karena sering digunakan, tuntutan pekerjaan, peran keluarga, atau tanggung jawab. Kamu bisa melakukannya, tetapi belum tentu itu sumber energi utama.
+            </p>
+            <div className="mt-4 grid gap-4">
+              {adaptiveInsights.map((insight) => (
                 <AdaptiveGapCard key={insight.id} insight={insight} />
               ))}
             </div>
           </Section>
         )}
 
-        <Section title="Natural Talent" kicker="Top Natural Roles">
-          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-            Lima area berikut adalah kandidat sumber energi dan semangat yang paling dominan. Ini bukan sekadar aktivitas yang bisa dilakukan, tetapi area yang cenderung lebih mudah membuat Anda hidup, fokus, dan terlibat.
+        <Section title="Kalimat yang Menyalakan Energi Kamu" kicker="cara masuk yang lebih diterima">
+          <p className="section-lead">
+            Bagian ini dibaca oleh kamu terlebih dahulu. Maksudnya: pola kalimat seperti apa yang biasanya membuat kamu lebih ON, lebih semangat, dan lebih tidak resistan.
           </p>
-          <ColorMeaningLegend />
-          <div className="space-y-3">
-            {patternReport.topNaturalRoles.slice(0, 5).map((role, i) => (
-              <MicroRoleCompactCard key={role.id} index={i + 1} role={role} score={role.natural} scoreLabel="Natural">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <CuratedList title="Kamu biasanya lebih ON ketika orang berkata…" items={communicationOn} />
+            <CuratedList title="Kamu mudah resistan jika mendengar…" items={communicationResistance} muted />
+          </div>
+          <CommunicationSwitchGuide switches={communicationSwitches} />
+        </Section>
+
+        <Section title="Pola yang Mungkin Terlihat Sehari-hari" kicker="human observable pattern">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <CuratedList title="Orang lain mungkin melihat kamu seperti ini" items={observablePatterns} />
+            <CuratedList title="Kebiasaan kecil yang mungkin relate" items={dailyHabits} />
+          </div>
+        </Section>
+
+        <Section title="Kekuatan yang Sudah Terlatih" kicker="sesi 2 · aktivitas nyata">
+          <p className="section-lead">
+            Ini adalah area yang tampak sering dipakai atau terasa kuat dalam aktivitas nyata. Bandingkan dengan energi alami: yang selaras akan terasa mengisi, yang terlalu jauh dari natural bisa menjadi adaptif.
+          </p>
+          <div className="mt-4 grid gap-3">
+            {trainedRoles.map((role, index) => (
+              <EnergyRoleCard key={role.id} index={index + 1} role={role} score={role.strength} scoreLabel="terlatih">
                 <Row k="Terlihat sebagai" v={role.visible} />
-                <Row k="Sumber energi" v={role.energy} />
-                <Row k="Perlu dijaga" v={role.risk} />
-              </MicroRoleCompactCard>
+                <Row k="Energi alami" v={`${role.natural}/100 · ${role.confidenceLabel}`} />
+              </EnergyRoleCard>
             ))}
           </div>
         </Section>
 
-        <Section title="Explored Strength" kicker="Kekuatan Terlatih">
-          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-            Area ini menunjukkan aktivitas yang tampak sudah sering digunakan, dilatih, atau terbentuk karena pengalaman nyata. Area ini bisa selaras dengan Natural Talent, tetapi bisa juga menjadi kemampuan adaptif.
+        <Section title="Peta Pendukung" kicker="chart bukan inti utama">
+          <p className="section-lead">
+            Chart di bawah ini hanya membantu melihat wilayah besar. Pembacaan paling penting tetap ada pada tujuh sumber energi, tujuh titik rentan, dan gap alami-vs-terlatih di atas.
           </p>
-          <div className="space-y-3">
-            {patternReport.topTrainedRoles.slice(0, 5).map((role, i) => (
-              <MicroRoleCompactCard key={role.id} index={i + 1} role={role} score={role.strength} scoreLabel="Aktivitas" mutedIndex>
-                <Row k="Aktivitas terlihat" v={role.visible} />
-                <Row k="Jika selaras" v={role.energy} />
-                <Row k="Strategi sehat" v={role.healthyUse} />
-              </MicroRoleCompactCard>
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Draining Role" kicker="Titik Rentan Energi">
-          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-            Area ini bukan vonis kelemahan. Artinya, area tersebut bisa saja dikerjakan, tetapi bila dijadikan tuntutan utama terlalu lama, semangat dan energi Anda dapat cepat turun. Gunakan sistem, alat bantu, pembagian peran, atau delegasi bila memungkinkan.
-          </p>
-          <div className="space-y-3">
-            {patternReport.drainingRoles.slice(0, 3).map((role, i) => (
-              <MicroRoleCompactCard key={role.id} index={i + 1} role={role} score={role.natural} scoreLabel="Natural" mutedIndex>
-                <Row k="Yang menguras" v={role.risk} />
-                <Row k="Cara mengelola" v={role.healthyUse} />
-              </MicroRoleCompactCard>
-            ))}
-          </div>
-        </Section>
-
-        <Section title={lens.guideTitle} kicker={lens.guideKicker}>
-          <p className="mb-4 text-sm leading-relaxed text-muted-foreground">{lens.guideIntro}</p>
-          {lens.key === "relationship_family" ? (
-            <RelationshipSwitchGuide switches={communicationSwitches} />
-          ) : (
-            <>
-              <CommunicationSwitchGuide switches={communicationSwitches} />
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <CuratedList title="Cara bicara yang membuat lebih terbuka" items={communicationOn} />
-                <CuratedList title="Pola yang dapat memicu resistensi" items={communicationResistance} muted />
-              </div>
-            </>
-          )}
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {purposeGuidance.slice(0, 2).map((item) => (
-              <div key={item.title} className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-                <div className="text-sm font-bold text-foreground">{item.title}</div>
-                <p className="mt-3 text-xs leading-relaxed text-foreground/90">{item.body}</p>
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section title="Peta Ringkas" kicker="Appendix">
-          <div className="space-y-3">
+          <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Peta ini adalah ringkasan teknis. Bagian paling penting tetap pembacaan di atas: pola inti, Natural Talent, Explored Strength, Adaptive / Survival Strength, dan Draining Role.
+              <div className="text-sm font-semibold text-foreground">Peta Cluster Besar</div>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Ringkasan visual wilayah besar, bukan pengganti pembacaan micro-role.
               </p>
+              <div className="mt-4">
+                <ClusterRadar reports={reports} />
+              </div>
             </div>
-            <ZoneMatrix reports={reports} />
             <RoleFamilySummary families={patternReport.roleFamilies.slice(0, 6)} />
-            <ClusterRadar reports={reports} />
           </div>
+          <ReadingQualityNote quality={readingQuality} />
         </Section>
 
-        <Section title={lens.reflectionTitle} kicker="Next Step">
-          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Gunakan hasil ini untuk observasi kecil selama satu minggu. Fokus pada satu perubahan: tempatkan energi terbaik Anda di jalur yang lebih tepat, dan jangan jadikan titik rentan sebagai beban utama tanpa bantuan sistem.
+        <section className="mt-10 rounded-[1.75rem] border border-border/60 bg-card p-6 shadow-sm print-avoid-break">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Next step</div>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+            {lens.key === "relationship_family" ? "Refleksi Pasangan 7 Hari" : "Refleksi 7 Hari"}
+          </h2>
+          <div className="mt-4 rounded-3xl border border-border/60 bg-background/60 p-5 text-sm leading-relaxed text-foreground/90">
+            <p>
+              Gunakan hasil ini untuk observasi kecil selama satu minggu. Fokus pada satu perubahan: masuk lewat jalur yang lebih tepat, dan jangan jadikan titik rentan sebagai beban utama tanpa bantuan sistem.
             </p>
-            <ol className="mt-4 space-y-3 text-sm text-foreground/90">
-              {lens.reflectionItems.slice(0, 3).map((item, index) => (
-                <li key={item}><strong>{index + 1}.</strong> {item}</li>
-              ))}
+            <ol className="mt-5 space-y-3 font-medium">
+              <li>1. Situasi apa yang paling cepat menyalakan energi kamu?</li>
+              <li>2. Aktivitas apa yang bisa kamu lakukan, tetapi membuat lelah jika terlalu lama?</li>
+              <li>3. Kalimat atau cara masuk seperti apa yang paling membuat kamu tidak defensif?</li>
             </ol>
           </div>
-        </Section>
-
-        <Section title="Catatan Pembacaan" kicker="Reading Note">
-          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Hasil ini adalah peta refleksi berdasarkan jawaban Anda. Hasil tidak dimaksudkan sebagai diagnosis klinis, tes rekrutmen, atau label permanen. Gunakan sebagai bahan membaca pola energi, komunikasi, dan arah pengembangan diri.
-            </p>
-            <ReadingQualityNote quality={readingQuality} />
-          </div>
-        </Section>
-
-        <footer className="no-print mt-12 text-center text-xs text-muted-foreground">
-          Peta Jati Diri · Self-awareness assessment
-        </footer>
+        </section>
       </div>
     </main>
   );
 }
 
+function joinRoleNames(roles: MicroRoleScore[]) {
+  if (roles.length === 0) return "beberapa pola utama yang muncul";
+  return roles.map((role) => role.name).join(", ");
+}
 
-function RelationshipSwitchGuide({ switches }: { switches: CommunicationSwitchProfile[] }) {
-  const primary = switches[0];
-  const secondary = switches[1];
-
-  if (!primary) return null;
-
+function Section({ title, kicker, children }: { title: string; kicker?: string; children: ReactNode }) {
   return (
-    <div className="space-y-3">
-      <div className="rounded-3xl border border-primary/20 bg-primary/10 p-5 shadow-sm print-avoid-break">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Communication ON-Switch</div>
-        <h3 className="mt-2 text-lg font-bold text-foreground">Setiap orang punya pintu masuk komunikasi yang berbeda.</h3>
-        <p className="mt-3 text-sm leading-relaxed text-foreground/90">
-          Bagian ini membaca kalimat, topik, dan cara membungkus aktivitas agar pasangan lebih mudah merasa hidup, bukan resistan. Aktivitas yang sama bisa terasa berat atau justru menarik, tergantung pintu masuk komunikasinya.
-        </p>
-      </div>
-
-      <SwitchProfileCard profile={primary} featured />
-      {secondary && <SwitchProfileCard profile={secondary} />}
-
-      <div className="rounded-3xl border border-amber-500/25 bg-amber-500/10 p-5 shadow-sm print-avoid-break">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">Parenting hint</div>
-        <p className="mt-3 text-sm leading-relaxed text-foreground/90">
-          {primary.parentingNote ?? "Dalam parenting, gunakan pintu komunikasi yang membuat pasangan merasa dihargai dan punya ruang kontribusi. Setelah itu, sepakati rutinitas, batas, dan visi pengasuhan secara konkret."}
-        </p>
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          Prinsip praktisnya: masuk lewat tombol ON pasangan, baru bicara pembagian peran, aturan anak, rutinitas rumah, dan strategi keluarga. Jangan berharap satu kalimat yang sama cocok untuk semua tipe energi.
-        </p>
-      </div>
-    </div>
+    <section className="report-section mt-10">
+      {kicker && <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">{kicker}</div>}
+      <h2 className="mb-3 text-xl font-semibold tracking-tight text-foreground">{title}</h2>
+      {children}
+    </section>
   );
 }
 
-function CommunicationSwitchGuide({ switches }: { switches: CommunicationSwitchProfile[] }) {
-  if (switches.length === 0) return null;
+function InsightCard({ title, body, accent, muted }: { title: string; body: string; accent?: boolean; muted?: boolean }) {
+  const tone = accent
+    ? "border-primary/20 bg-primary/10"
+    : muted
+      ? "border-border/70 bg-muted/45"
+      : "border-border/60 bg-card";
   return (
-    <div className="space-y-3">
-      {switches.slice(0, 2).map((profile, index) => (
-        <SwitchProfileCard key={profile.id} profile={profile} featured={index === 0} />
-      ))}
-    </div>
-  );
-}
-
-function SwitchProfileCard({
-  profile,
-  featured,
-}: {
-  profile: CommunicationSwitchProfile;
-  featured?: boolean;
-}) {
-  return (
-    <div className={`rounded-3xl border p-5 shadow-sm print-avoid-break ${featured ? "border-primary/20 bg-card" : "border-border/60 bg-card"}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">{profile.title}</div>
-          <p className="mt-3 text-sm leading-relaxed text-foreground/90">{profile.summary}</p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <CuratedList title="Kalimat yang menyalakan" items={profile.onSwitch.slice(0, 4)} />
-        <CuratedList title="Kalimat yang memicu resistensi" items={profile.resistanceTrigger.slice(0, 4)} muted />
-      </div>
-
-      <div className="mt-3 rounded-2xl border border-primary/20 bg-primary/10 p-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Contoh reframe</div>
-        <div className="mt-3 grid gap-3 text-xs leading-relaxed sm:grid-cols-2">
-          <div>
-            <div className="font-semibold text-muted-foreground">Kurang masuk</div>
-            <p className="mt-1 text-foreground/80">“{profile.reframeExample.raw}”</p>
-          </div>
-          <div>
-            <div className="font-semibold text-muted-foreground">Lebih masuk</div>
-            <p className="mt-1 font-medium text-foreground">“{profile.reframeExample.better}”</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 rounded-2xl border border-border/60 bg-muted/35 p-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Catatan untuk pasangan</div>
-        <p className="mt-2 text-xs leading-relaxed text-foreground/90">{profile.partnerNote}</p>
-      </div>
-    </div>
-  );
-}
-
-function AdaptiveGapCard({
-  insight,
-}: {
-  insight: import("@/engine/patternSignature").AdaptiveGapInsight;
-}) {
-  return (
-    <div className="rounded-3xl border border-amber-500/25 bg-card p-5 shadow-sm print-avoid-break">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">Adaptive / Survival</div>
-          <h3 className="mt-1 text-base font-bold text-foreground">{insight.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{insight.interpretation}</p>
-        </div>
-        <div className="shrink-0 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Visible strength</div>
-          <div className="text-lg font-bold text-[var(--ember)]">{insight.score}</div>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <InsightCard title="Jalur yang mengisi" body={insight.routeLabel} accent />
-        <InsightCard title="Jalur yang menguras" body={insight.notRouteLabel} muted />
-      </div>
-
-      <dl className="mt-4 space-y-2 text-xs">
-        <Row k="Best-fit use" v={insight.bestUse} />
-        <Row k="Energy cost" v={insight.energyCost} />
-        <Row k="Support strategy" v={insight.supportStrategy} />
-      </dl>
+    <div className={`rounded-2xl border p-4 shadow-sm print-avoid-break ${tone}`}>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">{title}</div>
+      <p className="mt-2 text-xs leading-relaxed text-foreground/90">{body}</p>
     </div>
   );
 }
 
 function CuratedList({ title, items, muted }: { title: string; items: string[]; muted?: boolean }) {
+  if (items.length === 0) return null;
   return (
-    <div className={`rounded-3xl border p-5 shadow-sm print-avoid-break ${muted ? "border-border/70 bg-muted/45" : "border-border/60 bg-card"}`}>
-      <div className="text-sm font-bold text-foreground">{title}</div>
+    <div className={`rounded-[1.5rem] border p-5 shadow-sm print-avoid-break ${muted ? "border-border/70 bg-muted/45" : "border-border/60 bg-card"}`}>
+      <div className="text-sm font-semibold text-foreground">{title}</div>
       <ul className="mt-3 space-y-2 text-xs leading-relaxed text-foreground/90">
         {items.map((item) => (
           <li key={item}>• {item}</li>
@@ -476,26 +395,144 @@ function CuratedList({ title, items, muted }: { title: string; items: string[]; 
   );
 }
 
-function ColorMeaningLegend() {
-  const items = [
-    { label: "Dominan", tone: "bg-[var(--rank-dominant)]", text: "Sumber energi utama" },
-    { label: "Berkembang", tone: "bg-[var(--rank-medium)]", text: "Perlu diberi ruang" },
-    { label: "Netral", tone: "bg-[var(--rank-neutral)]", text: "Area penyeimbang" },
-    { label: "Perlu dukungan", tone: "bg-[var(--rank-low)]", text: "Butuh sistem" },
-    { label: "Rentan", tone: "bg-[var(--rank-weak)]", text: "Cepat menguras" },
-  ];
-
+function EnergyRoleCard({
+  index,
+  role,
+  score,
+  scoreLabel,
+  children,
+  muted,
+}: {
+  index: number;
+  role: MicroRoleScore;
+  score: number;
+  scoreLabel: string;
+  children: ReactNode;
+  muted?: boolean;
+}) {
   return (
-    <div className="mb-4 grid gap-2 rounded-3xl border border-border/60 bg-card p-4 shadow-sm sm:grid-cols-5 print-avoid-break">
-      {items.map((item) => (
-        <div key={item.label} className="flex items-center gap-2 sm:block">
-          <span className={`inline-block size-3 shrink-0 rounded-full border border-border ${item.tone}`} />
+    <div className={`rounded-[1.5rem] border p-5 shadow-sm print-avoid-break ${muted ? "border-border/70 bg-muted/35" : "border-border/60 bg-card"}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${muted ? "bg-background text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+            {index}
+          </div>
           <div>
-            <div className="text-[11px] font-bold text-foreground">{item.label}</div>
-            <div className="text-[10px] leading-snug text-muted-foreground">{item.text}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              {role.family} · {role.confidenceLabel}
+            </div>
+            <h3 className="mt-1 text-base font-semibold text-foreground">{role.name}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{role.tagline}</p>
           </div>
         </div>
-      ))}
+        <div className="shrink-0 text-right">
+          <ScoreBadge score={score} muted={muted} />
+          <div className="mt-1 text-[10px] text-muted-foreground">{scoreLabel}</div>
+        </div>
+      </div>
+      <dl className="mt-4 space-y-2 text-xs">{children}</dl>
+    </div>
+  );
+}
+
+function Row({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="grid gap-1 sm:grid-cols-[8.5rem_1fr] sm:gap-3">
+      <dt className="font-semibold text-muted-foreground">{k}</dt>
+      <dd className="leading-relaxed text-foreground/90">{v}</dd>
+    </div>
+  );
+}
+
+function ZoneSummaryCard({
+  title,
+  body,
+  roles,
+  tone,
+}: {
+  title: string;
+  body: string;
+  roles: MicroRoleScore[];
+  tone: "calm" | "soft" | "warm" | "muted";
+}) {
+  const toneClass = {
+    calm: "border-primary/25 bg-primary/8",
+    soft: "border-rose-300/45 bg-rose-50/60",
+    warm: "border-amber-300/60 bg-amber-50/65",
+    muted: "border-border/70 bg-muted/45",
+  }[tone];
+
+  return (
+    <div className={`rounded-[1.5rem] border p-5 shadow-sm print-avoid-break ${toneClass}`}>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <p className="mt-2 text-xs leading-relaxed text-foreground/75">{body}</p>
+      {roles.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {roles.map((role) => (
+            <span key={role.id} className="rounded-full border border-border/60 bg-background/75 px-3 py-1 text-[11px] font-medium text-foreground/85">
+              {role.name}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-xs text-muted-foreground">Belum ada sinyal yang cukup kuat untuk kategori ini.</p>
+      )}
+    </div>
+  );
+}
+
+function AdaptiveGapCard({ insight }: { insight: AdaptiveGapInsight }) {
+  return (
+    <div className="rounded-[1.5rem] border border-amber-500/25 bg-card p-5 shadow-sm print-avoid-break">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">
+            kemampuan adaptif
+          </div>
+          <h3 className="mt-1 text-base font-semibold text-foreground">{insight.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{insight.interpretation}</p>
+        </div>
+        <div className="shrink-0 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">terlihat kuat</div>
+          <div className="text-lg font-semibold text-[var(--ember)]">{insight.score}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <InsightCard title="Jalur yang mengisi" body={insight.routeLabel} accent />
+        <InsightCard title="Jalur yang menguras" body={insight.notRouteLabel} muted />
+      </div>
+
+      <dl className="mt-4 space-y-2 text-xs">
+        <Row k="Paling cocok" v={insight.bestUse} />
+        <Row k="Biaya energi" v={insight.energyCost} />
+        <Row k="Cara dukung" v={insight.supportStrategy} />
+      </dl>
+    </div>
+  );
+}
+
+function CommunicationSwitchGuide({ switches }: { switches: CommunicationSwitchProfile[] }) {
+  if (switches.length === 0) return null;
+  const primary = switches[0];
+  return (
+    <div className="mt-4 rounded-[1.5rem] border border-primary/15 bg-card p-5 shadow-sm print-avoid-break">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Catatan untuk pasangan / rekan kerja</div>
+      <p className="mt-3 text-sm leading-relaxed text-foreground/90">{primary.summary}</p>
+      <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/10 p-4">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Contoh reframe</div>
+        <div className="mt-3 grid gap-3 text-xs leading-relaxed sm:grid-cols-2">
+          <div>
+            <div className="font-semibold text-muted-foreground">Kurang masuk</div>
+            <p className="mt-1 text-foreground/80">“{primary.reframeExample.raw}”</p>
+          </div>
+          <div>
+            <div className="font-semibold text-muted-foreground">Lebih masuk</div>
+            <p className="mt-1 font-medium text-foreground">“{primary.reframeExample.better}”</p>
+          </div>
+        </div>
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{primary.partnerNote}</p>
     </div>
   );
 }
@@ -503,16 +540,18 @@ function ColorMeaningLegend() {
 function RoleFamilySummary({ families }: { families: { family: string; natural: number; strength: number }[] }) {
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-      <div className="text-sm font-bold text-foreground">Role Family Map</div>
+      <div className="text-sm font-semibold text-foreground">Peta Wilayah Peran</div>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-        Keluarga peran membantu membaca wilayah besar tanpa kehilangan detail micro-role.
+        Ringkasan wilayah besar agar mudah melihat kecenderungan umum. Detail paling akurat tetap ada di micro-role.
       </p>
       <div className="mt-4 space-y-3">
         {families.map((family) => (
           <div key={family.family}>
             <div className="mb-1 flex items-center justify-between gap-3 text-xs">
               <span className="font-semibold text-foreground">{family.family}</span>
-              <span className="text-muted-foreground">Natural {family.natural} · Aktivitas {family.strength}</span>
+              <span className="text-muted-foreground">
+                Alami {family.natural} · Terlatih {family.strength}
+              </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div className="h-full rounded-full bg-primary" style={{ width: `${family.natural}%` }} />
@@ -526,7 +565,7 @@ function RoleFamilySummary({ families }: { families: { family: string; natural: 
 
 function ReadingQualityNote({ quality }: { quality: ReturnType<typeof computeReadingQuality> }) {
   return (
-    <div className="mt-4 rounded-2xl border border-border/60 bg-muted/40 p-4">
+    <div className="mt-4 rounded-2xl border border-border/60 bg-muted/40 p-4 print-avoid-break">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Kualitas Pembacaan</div>
@@ -545,79 +584,8 @@ function ReadingQualityNote({ quality }: { quality: ReturnType<typeof computeRea
   );
 }
 
-function Section({ title, kicker, children }: { title: string; kicker?: string; children: ReactNode }) {
-  return (
-    <section className="report-section mt-10">
-      {kicker && <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">{kicker}</div>}
-      <h2 className="mb-4 text-xl font-bold tracking-tight text-foreground">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function InsightCard({ title, body, accent, muted }: { title: string; body: string; accent?: boolean; muted?: boolean }) {
-  const tone = accent
-    ? "border-primary/20 bg-primary/10"
-    : muted
-      ? "border-border/70 bg-muted/45"
-      : "border-border/60 bg-card";
-  return (
-    <div className={`rounded-2xl border p-4 shadow-sm print-avoid-break ${tone}`}>
-      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{title}</div>
-      <p className="mt-2 text-xs leading-relaxed text-foreground/90">{body}</p>
-    </div>
-  );
-}
-
-function MicroRoleCompactCard({
-  index,
-  role,
-  score,
-  scoreLabel,
-  children,
-  mutedIndex,
-}: {
-  index: number;
-  role: MicroRoleScore;
-  score: number;
-  scoreLabel: string;
-  children: ReactNode;
-  mutedIndex?: boolean;
-}) {
-  return (
-    <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-bold ${mutedIndex ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-            {index}
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{role.family}</div>
-            <h3 className="mt-1 font-bold text-foreground">{role.name}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{role.tagline}</p>
-          </div>
-        </div>
-        <div className="shrink-0 text-right">
-          <ScoreBadge score={score} muted={mutedIndex} />
-          <div className="mt-1 text-[10px] text-muted-foreground">{scoreLabel}</div>
-        </div>
-      </div>
-      <dl className="mt-4 space-y-2 text-xs">{children}</dl>
-    </div>
-  );
-}
-
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-3">
-      <dt className="font-semibold text-muted-foreground">{k}</dt>
-      <dd className="leading-relaxed text-foreground/90">{v}</dd>
-    </div>
-  );
-}
-
 function scoreTone(score: number, muted?: boolean) {
-  if (muted) return "border-border bg-muted text-muted-foreground";
+  if (muted) return "border-border bg-background text-muted-foreground";
   if (score >= 80) return "border-[var(--rank-dominant-border)] bg-[var(--rank-dominant-soft)] text-[var(--rank-dominant-ink)]";
   if (score >= 64) return "border-[var(--rank-medium-border)] bg-[var(--rank-medium-soft)] text-[var(--rank-medium-ink)]";
   if (score >= 45) return "border-border bg-[var(--rank-neutral)] text-foreground";
@@ -626,9 +594,5 @@ function scoreTone(score: number, muted?: boolean) {
 }
 
 function ScoreBadge({ score, muted }: { score: number; muted?: boolean }) {
-  return (
-    <div className={`rounded-full border px-2.5 py-1 text-xs font-bold tabular-nums ${scoreTone(score, muted)}`}>
-      {score}
-    </div>
-  );
+  return <div className={`rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums ${scoreTone(score, muted)}`}>{score}</div>;
 }
