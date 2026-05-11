@@ -3,8 +3,7 @@ import type { Cluster } from "@/types/assessment";
 export interface Typology {
   name: string;
   tagline: string;
-  experience: string;
-  alive: string;
+  summary: string;
 }
 
 export function pickTypology(topClusters: Cluster[]): Typology {
@@ -15,63 +14,62 @@ export function pickTypology(topClusters: Cluster[]): Typology {
   if (set.has("Thinking") && set.has("Influencing"))
     return {
       name: "Strategic Explainer",
-      tagline: "Penerjemah ide rumit jadi gerakan nyata.",
-      experience: "Anda terlihat seperti orang yang mampu menyederhanakan kerumitan dan membuat orang lain mengangguk.",
-      alive: "Saat bisa menjelaskan, meyakinkan, dan melihat ide Anda mulai dijalankan.",
+      tagline: "Kuat dalam memahami pola, menyusun pesan, dan menjelaskan arah dengan jelas.",
+      summary:
+        "Profil ini menunjukkan kecenderungan untuk mengolah ide menjadi penjelasan yang dapat dipahami orang lain, terutama ketika konteks dan tujuan sudah jelas.",
     };
   if (set.has("Operating") && set.has("Supporting"))
     return {
       name: "Quiet Stabilizer",
-      tagline: "Penjaga ritme yang membuat semuanya tetap utuh.",
-      experience: "Anda terlihat seperti fondasi diam-diam yang membuat tim tidak runtuh.",
-      alive: "Saat sistem berjalan rapi dan orang-orang bisa bekerja dengan tenang.",
+      tagline: "Kuat dalam menjaga keteraturan, konsistensi, dan dukungan praktis bagi lingkungan.",
+      summary:
+        "Profil ini menunjukkan kecenderungan menjadi penopang yang membuat proses lebih rapi, tenang, dan dapat diandalkan.",
     };
   if (set.has("Relating") && set.has("Supporting"))
     return {
       name: "Human Developer",
-      tagline: "Penumbuh manusia di balik layar.",
-      experience: "Anda terlihat seperti orang yang membuat orang lain merasa lebih kuat setelah bicara dengan Anda.",
-      alive: "Saat melihat orang yang Anda bantu bertumbuh.",
+      tagline: "Kuat dalam membaca kebutuhan manusia dan mendukung pertumbuhan orang lain.",
+      summary:
+        "Profil ini menunjukkan kepekaan relasional yang dapat membantu orang lain merasa didengar, dipahami, dan didukung secara lebih tepat.",
     };
   if (set.has("Thinking") && set.has("Analyzing"))
     return {
       name: "Pattern Builder",
-      tagline: "Pencari pola di balik kebisingan.",
-      experience: "Anda terlihat seperti orang yang bisa menemukan benang merah saat orang lain hanya melihat kekacauan.",
-      alive: "Saat menemukan struktur tersembunyi dan bisa menjelaskannya.",
+      tagline: "Kuat dalam menemukan struktur, pola, dan hubungan logis di balik informasi.",
+      summary:
+        "Profil ini menunjukkan kecenderungan mengurai kerumitan, mencari benang merah, dan membangun pemahaman yang lebih sistematis.",
     };
   if (set.has("Operating") && set.has("Analyzing"))
     return {
       name: "Practical Guardian",
-      tagline: "Penjaga kualitas yang teliti dan andal.",
-      experience: "Anda terlihat seperti orang yang membuat hal penting tidak meleset.",
-      alive: "Saat detail terjaga dan hasilnya bisa dipercaya.",
+      tagline: "Kuat dalam menjaga kualitas, keteraturan, dan akurasi pelaksanaan.",
+      summary:
+        "Profil ini menunjukkan kecenderungan memastikan hal penting berjalan sesuai standar, dengan perhatian tinggi pada detail dan konsistensi.",
     };
   if (set.has("Relating") && set.has("Influencing"))
     return {
       name: "Energy Connector",
-      tagline: "Penghubung yang menghidupkan ruangan.",
-      experience: "Anda terlihat seperti orang yang membuat orang asing merasa seperti teman lama.",
-      alive: "Saat menjadi jembatan antara orang-orang yang sebelumnya tidak terhubung.",
+      tagline: "Kuat dalam membangun hubungan, membuka komunikasi, dan menggerakkan suasana.",
+      summary:
+        "Profil ini menunjukkan kecenderungan menjembatani orang, membuat komunikasi lebih hidup, dan membawa energi sosial ke dalam kelompok.",
     };
   if (set.has("Creating") && set.has("Striving"))
     return {
       name: "System Improver",
-      tagline: "Pemberani yang terus mendorong perbaikan.",
-      experience: "Anda terlihat seperti orang yang tidak puas pada 'cukup baik' dan terus menaikkan standar.",
-      alive: "Saat melihat sesuatu yang biasa berubah menjadi lebih baik karena tangan Anda.",
+      tagline: "Kuat dalam melihat peluang perbaikan dan mendorong ide menjadi hasil nyata.",
+      summary:
+        "Profil ini menunjukkan kecenderungan tidak berhenti pada kondisi yang biasa saja, tetapi mencari cara membuat sesuatu menjadi lebih baik.",
     };
   if (set.has("Creating"))
     return {
       name: "Imaginative Maker",
-      tagline: "Pencipta yang melihat kemungkinan sebelum yang lain.",
-      experience: "Anda terlihat seperti orang yang membawa rasa baru ke ruangan.",
-      alive: "Saat ide menjadi sesuatu yang nyata dan bisa dirasakan.",
+      tagline: "Kuat dalam membayangkan kemungkinan baru dan mengembangkan bentuk yang berbeda.",
+      summary:
+        "Profil ini menunjukkan kecenderungan menciptakan alternatif, merancang pendekatan baru, dan melihat peluang yang belum tampak bagi orang lain.",
     };
   return {
-    name: `${top} ${second ?? ""} Synthesizer`.trim(),
-    tagline: "Perpaduan unik dari beberapa kekuatan.",
-    experience: `Anda terlihat seperti orang yang menggabungkan kekuatan ${top}${second ? ` dan ${second}` : ""} dengan cara yang khas.`,
-    alive: `Saat bisa menggunakan kombinasi ${top}${second ? ` + ${second}` : ""} dalam satu peran.`,
+    name: `${top}${second ? `–${second}` : ""} Profile`,
+    tagline: "Profil gabungan dari beberapa kecenderungan utama.",
+    summary: `Profil ini menunjukkan kombinasi menonjol pada area ${top}${second ? ` dan ${second}` : ""}, yang perlu dibaca bersama dengan konteks peran, pengalaman, dan lingkungan Anda saat ini.`,
   };
 }

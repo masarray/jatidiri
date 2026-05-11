@@ -3,7 +3,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { Printer, RotateCcw, Home, AlertCircle } from "lucide-react";
 import { useAssessmentStore } from "@/store/assessmentStore";
-import { buildClusterReports, topClusters, bottomClusters, progressFor, getNextAssessmentTarget, isAssessmentComplete } from "@/engine/scoring";
+import {
+  buildClusterReports,
+  topClusters,
+  bottomClusters,
+  progressFor,
+  getNextAssessmentTarget,
+  isAssessmentComplete,
+} from "@/engine/scoring";
 import { CLUSTER_META } from "@/data/clusterMeta";
 import { pickTypology } from "@/data/typology";
 import { ClusterRadar } from "@/components/result/ClusterRadar";
@@ -13,7 +20,7 @@ export const Route = createFileRoute("/result")({
   head: () => ({
     meta: [
       { title: "Hasil Peta Jati Diri Anda" },
-      { name: "description", content: "Ringkasan bakat alami, kekuatan, dan zona energi Anda." },
+      { name: "description", content: "Ringkasan kecenderungan alami, kekuatan aktivitas, dan area pengelolaan energi." },
     ],
   }),
   component: ResultPage,
@@ -25,9 +32,14 @@ function ResultPage() {
   const naturalProg = progressFor("natural", answers);
   const strengthProg = progressFor("strength", answers);
   const reports = useMemo(() => buildClusterReports(answers), [answers]);
-  const top = useMemo(() => topClusters(reports, 3), [reports]);
+  const topNatural = useMemo(() => topClusters(reports, 5), [reports]);
+  const topThree = topNatural.slice(0, 3);
   const bottom = useMemo(() => bottomClusters(reports, 3), [reports]);
-  const typology = useMemo(() => pickTypology(top), [top]);
+  const topActivity = useMemo(
+    () => [...reports].sort((a, b) => b.strength - a.strength).slice(0, 3).map((r) => r.cluster),
+    [reports],
+  );
+  const typology = useMemo(() => pickTypology(topThree), [topThree]);
 
   useEffect(() => {
     if (!identity) navigate({ to: "/" });
@@ -64,7 +76,7 @@ function ResultPage() {
             </div>
             <h1 className="mt-5 text-2xl font-bold text-foreground">Asesmen belum lengkap</h1>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Hasil peta diri baru ditampilkan setelah kedua sesi selesai, agar kesimpulannya tidak menyesatkan.
+              Hasil baru ditampilkan setelah kedua sesi selesai agar pembacaan tidak terpotong dan tidak menyesatkan.
             </p>
             <div className="mt-5 rounded-2xl bg-muted/50 p-4 text-sm">
               <div className="flex justify-between gap-3">
@@ -79,7 +91,7 @@ function ResultPage() {
             <button
               type="button"
               onClick={continueAssessment}
-              className="mt-6 w-full rounded-2xl bg-primary py-4 font-semibold text-primary-foreground shadow-lg shadow-primary/20 active:scale-[0.98] transition"
+              className="mt-6 w-full rounded-2xl bg-primary py-4 font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition active:scale-[0.98]"
             >
               Lanjutkan Asesmen
             </button>
@@ -89,145 +101,130 @@ function ResultPage() {
     );
   }
 
+  const reportDate = new Date(identity.startedAt).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <main className="min-h-dvh bg-background">
-      <div className="max-w-3xl mx-auto px-5 py-8 sm:py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between no-print mb-8">
+      <div className="mx-auto max-w-3xl px-5 py-8 sm:py-12">
+        <div className="no-print mb-8 flex items-center justify-between">
           <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
             <Home className="size-4" /> Beranda
           </Link>
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm"
             >
               <Printer className="size-3.5" /> Cetak / PDF
             </button>
             <button
               onClick={() => {
-                if (confirm("Mulai dari awal? Jawaban Anda akan dihapus.")) {
+                if (confirm("Mulai dari awal? Jawaban Anda akan dihapus dari perangkat ini.")) {
                   reset();
                   navigate({ to: "/" });
                 }
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm"
             >
               <RotateCcw className="size-3.5" /> Ulang
             </button>
           </div>
         </div>
 
-        {/* Hero */}
-        <section className="rounded-3xl bg-gradient-to-br from-primary/15 via-card to-[var(--ember)]/10 border border-border/60 p-6 sm:p-8">
-          <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Peta Jati Diri · {new Date(identity.startedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+        <section className="report-hero rounded-3xl border border-border/60 bg-gradient-to-br from-primary/15 via-card to-[var(--ember)]/10 p-6 shadow-sm sm:p-8">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+            Peta Jati Diri · Hasil Asesmen
           </div>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-bold text-foreground">{identity.name}</h1>
-          <div className="mt-6">
-            <div className="text-xs text-muted-foreground">Indikasi Tipologi Energi</div>
-            <div className="mt-1 text-2xl sm:text-3xl font-bold text-primary">{typology.name}</div>
-            <p className="mt-3 text-sm text-foreground/90 leading-relaxed">{typology.tagline}</p>
+          <div className="mt-5 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{identity.name}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">Tanggal asesmen: {reportDate}</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/70 px-4 py-3 text-left sm:text-right">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Indikasi Tipologi
+              </div>
+              <div className="mt-1 text-xl font-bold text-primary">{typology.name}</div>
+            </div>
           </div>
+          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-foreground/85">{typology.tagline}</p>
         </section>
 
-        <div className="mt-4 rounded-2xl border border-border/60 bg-card p-4 text-xs leading-relaxed text-muted-foreground">
-          Hasil ini adalah peta refleksi diri berdasarkan jawaban Anda, bukan diagnosis klinis, bukan tes rekrutmen, dan bukan label permanen. Gunakan sebagai bahan mengenal pola energi, komunikasi, dan area pengembangan.
+        <div className="mt-4 rounded-2xl border border-border/60 bg-card p-4 text-xs leading-relaxed text-muted-foreground shadow-sm">
+          Hasil ini adalah peta refleksi berdasarkan jawaban Anda. Hasil tidak dimaksudkan sebagai diagnosis klinis, tes rekrutmen, atau label permanen. Gunakan sebagai bahan membaca pola energi, komunikasi, dan arah pengembangan diri.
         </div>
 
-        {/* Snapshot */}
-        <Section title="Human Snapshot">
-          <p className="text-sm sm:text-base leading-relaxed text-foreground/90">
-            Berdasarkan pola jawaban Anda, {typology.experience.toLowerCase()} <strong>Anda tampak hidup</strong> {typology.alive.toLowerCase()} Tiga
-            energi inti yang tampak menonjol berada di area{" "}
-            <strong>{top.map((c) => CLUSTER_META[c].label).join(", ")}</strong>. Sebaliknya, Anda
-            cenderung lebih cepat lelah pada area{" "}
-            <strong>{bottom.map((c) => CLUSTER_META[c].label).join(", ")}</strong>.
-          </p>
+        <Section title="Ringkasan Profil" kicker="Executive Summary">
+          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
+            <p className="text-sm leading-relaxed text-foreground/90 sm:text-base">
+              Berdasarkan pola jawaban, area <strong>{topThree.map((c) => CLUSTER_META[c].label).join(", ")}</strong> tampak sebagai kecenderungan alami yang paling menonjol. Pada sisi aktivitas, area <strong>{topActivity.map((c) => CLUSTER_META[c].label).join(", ")}</strong> tampak sebagai kekuatan yang relatif lebih sering atau lebih percaya diri dijalani. Area <strong>{bottom.map((c) => CLUSTER_META[c].label).join(", ")}</strong> perlu dikelola dengan lebih sadar agar tidak menjadi sumber kelelahan utama.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{typology.summary}</p>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <SummaryCard title="Alami Dominan" items={topThree.map((c) => CLUSTER_META[c].label)} />
+            <SummaryCard title="Aktivitas Kuat" items={topActivity.map((c) => CLUSTER_META[c].label)} />
+            <SummaryCard title="Perlu Dikelola" items={bottom.map((c) => CLUSTER_META[c].label)} />
+          </div>
         </Section>
 
-        {/* Cluster Map */}
-        <Section title="Strength Cluster Map">
-          <p className="text-xs text-muted-foreground mb-2">
-            Bandingkan bakat alami (Natural) dan kekuatan aktivitas (Aktivitas) di 8 cluster.
-          </p>
-          <ClusterRadar reports={reports} />
-        </Section>
-
-        {/* Top Talents */}
-        <Section title="Top Bakat Alami">
+        <Section title="Kecenderungan Alami Dominan" kicker="Natural Patterns">
           <div className="space-y-3">
-            {top.map((c, i) => {
+            {topNatural.map((c, i) => {
               const m = CLUSTER_META[c];
               const r = reports.find((x) => x.cluster === c)!;
               return (
-                <div key={c} className="rounded-2xl bg-card border border-border/60 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-semibold text-primary uppercase tracking-wider">
-                        #{i + 1} · {c}
-                      </div>
-                      <h3 className="mt-1 font-bold text-base">{m.label}</h3>
-                    </div>
-                    <ScoreBadge score={r.natural} />
-                  </div>
-                  <p className="mt-2 text-sm text-foreground/90 italic">{m.tagline}</p>
-                  <dl className="mt-4 space-y-2 text-xs">
-                    <Row k="Terlihat sebagai" v={m.observable} />
-                    <Row k="Pengisi energi" v={m.recharge} />
-                    <Row k="Pemicu hidup" v={m.trigger} />
-                    <Row k="Blind spot" v={m.blindspot} />
-                  </dl>
-                </div>
+                <InsightCard key={c} index={i + 1} title={m.label} score={r.natural} subtitle={m.tagline}>
+                  <Row k="Terlihat sebagai" v={m.observable} />
+                  <Row k="Pengisi energi" v={m.recharge} />
+                  <Row k="Hal yang perlu dijaga" v={m.blindspot} />
+                </InsightCard>
               );
             })}
           </div>
         </Section>
 
-        {/* Bottom Draining */}
-        <Section title="Zona Penguras Energi">
+        <Section title="Kekuatan Aktivitas Terlatih" kicker="Explored Strengths">
           <div className="space-y-3">
-            {bottom.map((c) => {
+            {topActivity.map((c, i) => {
               const m = CLUSTER_META[c];
               const r = reports.find((x) => x.cluster === c)!;
               return (
-                <div key={c} className="rounded-2xl bg-muted/40 border border-border/60 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        {c}
-                      </div>
-                      <h3 className="mt-1 font-bold text-base">{m.label}</h3>
-                    </div>
-                    <ScoreBadge score={r.natural} muted />
-                  </div>
-                  <dl className="mt-4 space-y-2 text-xs">
-                    <Row k="Yang menguras" v={m.drain} />
-                    <Row k="Cara kompensasi" v={m.compensate} />
-                  </dl>
-                </div>
+                <InsightCard key={c} index={i + 1} title={m.label} score={r.strength} subtitle={m.observable} mutedIndex>
+                  <Row k="Aktivitas yang mendukung" v={m.trigger} />
+                  <Row k="Agar tetap sehat" v={m.compensate} />
+                </InsightCard>
               );
             })}
           </div>
         </Section>
 
-        {/* Zone Matrix */}
-        <Section title="Natural vs Aktivitas Matrix">
+        <Section title="Matriks Alami vs Aktivitas" kicker="Natural–Activity Gap">
+          <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+            Bagian ini membandingkan kecenderungan alami dengan kekuatan aktivitas. Pembacaan ini membantu membedakan area yang sudah menjadi kekuatan utama, potensi yang belum terlatih, kemampuan adaptif, dan area yang perlu dibantu sistem atau kolaborasi.
+          </p>
           <ZoneMatrix reports={reports} />
         </Section>
 
-        {/* Communication Guide */}
-        <Section title="Panduan Komunikasi">
+        <Section title="Peta Cluster Kekuatan" kicker="Cluster Score">
+          <ClusterRadar reports={reports} />
+        </Section>
+
+        <Section title="Panduan Komunikasi" kicker="Communication Notes">
           <div className="space-y-3">
-            {top.slice(0, 2).map((c) => {
+            {topThree.slice(0, 2).map((c) => {
               const m = CLUSTER_META[c];
               return (
-                <div key={c} className="rounded-2xl bg-card border border-border/60 p-5">
-                  <div className="text-xs font-semibold text-primary mb-2">{m.label}</div>
-                  <dl className="space-y-2 text-xs">
-                    <Row k="Cara terbaik berbicara" v={m.commGood} />
-                    <Row k="Yang membuat defensif" v={m.commBad} />
-                    <Row k="Cara memberi kritik" v={m.critique} />
+                <div key={c} className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
+                  <div className="text-sm font-bold text-foreground">{m.label}</div>
+                  <dl className="mt-4 space-y-2 text-xs">
+                    <Row k="Cara terbaik" v={m.commGood} />
+                    <Row k="Kurang efektif" v={m.commBad} />
+                    <Row k="Saat memberi kritik" v={m.critique} />
                   </dl>
                 </div>
               );
@@ -235,29 +232,41 @@ function ResultPage() {
           </div>
         </Section>
 
-        {/* Burnout */}
-        <Section title="Burnout & Recharge Map">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-primary/10 border border-primary/30 p-4">
-              <div className="text-xs font-semibold text-primary mb-2">Yang menghidupkan</div>
-              <ul className="space-y-1.5 text-xs">
-                {top.map((c) => (
-                  <li key={c} className="leading-snug">• {CLUSTER_META[c].recharge}</li>
+        <Section title="Peta Energi & Pemulihan" kicker="Recharge & Drain">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-3xl border border-primary/25 bg-primary/10 p-5 print-avoid-break">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Cenderung Mengisi Energi</div>
+              <ul className="mt-4 space-y-2 text-xs leading-relaxed text-foreground/90">
+                {topThree.map((c) => (
+                  <li key={c}>• {CLUSTER_META[c].recharge}</li>
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl bg-[var(--ember)]/10 border border-[var(--ember)]/30 p-4">
-              <div className="text-xs font-semibold text-[var(--ember)] mb-2">Yang menguras</div>
-              <ul className="space-y-1.5 text-xs">
+            <div className="rounded-3xl border border-border/70 bg-muted/55 p-5 print-avoid-break">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cenderung Menguras Energi</div>
+              <ul className="mt-4 space-y-2 text-xs leading-relaxed text-foreground/90">
                 {bottom.map((c) => (
-                  <li key={c} className="leading-snug">• {CLUSTER_META[c].drain}</li>
+                  <li key={c}>• {CLUSTER_META[c].drain}</li>
                 ))}
               </ul>
             </div>
           </div>
         </Section>
 
-        <footer className="mt-12 text-center text-xs text-muted-foreground no-print">
+        <Section title="Catatan Refleksi 7 Hari" kicker="Next Step">
+          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Gunakan hasil ini sebagai bahan observasi selama satu minggu. Tidak perlu langsung mengubah banyak hal; cukup perhatikan pola yang paling sering muncul.
+            </p>
+            <ol className="mt-4 space-y-3 text-sm text-foreground/90">
+              <li><strong>1.</strong> Aktivitas apa yang terasa memberi energi paling besar?</li>
+              <li><strong>2.</strong> Aktivitas apa yang dapat dilakukan, tetapi membutuhkan pemulihan lebih banyak?</li>
+              <li><strong>3.</strong> Pola komunikasi seperti apa yang membuat Anda lebih mudah bekerja sama?</li>
+            </ol>
+          </div>
+        </Section>
+
+        <footer className="no-print mt-12 text-center text-xs text-muted-foreground">
           Peta Jati Diri · Self-awareness assessment
         </footer>
       </div>
@@ -265,20 +274,66 @@ function ResultPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, kicker, children }: { title: string; kicker?: string; children: ReactNode }) {
   return (
-    <section className="mt-10 print-page">
-      <h2 className="text-lg font-bold text-foreground mb-4">{title}</h2>
+    <section className="report-section mt-10">
+      {kicker && <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">{kicker}</div>}
+      <h2 className="mb-4 text-xl font-bold tracking-tight text-foreground">{title}</h2>
       {children}
     </section>
   );
 }
 
+function SummaryCard({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm print-avoid-break">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{title}</div>
+      <ul className="mt-3 space-y-1.5 text-xs font-medium leading-relaxed text-foreground/90">
+        {items.map((item) => <li key={item}>• {item}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+function InsightCard({
+  index,
+  title,
+  score,
+  subtitle,
+  children,
+  mutedIndex,
+}: {
+  index: number;
+  title: string;
+  score: number;
+  subtitle: string;
+  children: ReactNode;
+  mutedIndex?: boolean;
+}) {
+  return (
+    <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold ${mutedIndex ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+            {index}
+          </div>
+          <div>
+            <h3 className="font-bold text-foreground">{title}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
+          </div>
+        </div>
+        <ScoreBadge score={score} muted={mutedIndex} />
+      </div>
+      <dl className="mt-4 space-y-2 text-xs">{children}</dl>
+    </div>
+  );
+}
+
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex gap-2">
-      <dt className="font-semibold text-muted-foreground shrink-0 min-w-[110px]">{k}</dt>
-      <dd className="text-foreground/90 leading-relaxed">{v}</dd>
+    <div className="grid gap-1 sm:grid-cols-[9rem_1fr] sm:gap-3">
+      <dt className="font-semibold text-muted-foreground">{k}</dt>
+      <dd className="leading-relaxed text-foreground/90">{v}</dd>
     </div>
   );
 }

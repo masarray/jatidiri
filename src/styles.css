@@ -103,9 +103,46 @@
 }
 
 @media print {
-  .no-print { display: none !important; }
-  body { background: white !important; }
-  .print-page { break-after: page; }
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html, body {
+    background: white !important;
+  }
+
+  body {
+    color: #172033 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .report-hero,
+  .report-section,
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-section {
+    margin-top: 20mm !important;
+  }
+
+  .report-section:nth-of-type(4),
+  .report-section:nth-of-type(7) {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .shadow-sm,
+  .shadow-lg {
+    box-shadow: none !important;
+  }
 }
 
 .question-card {
