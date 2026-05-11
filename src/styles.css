@@ -130,11 +130,11 @@
   }
 
   .report-section {
-    margin-top: 20mm !important;
+    margin-top: 18mm !important;
   }
 
   .report-section:nth-of-type(4),
-  .report-section:nth-of-type(7) {
+  .report-section:nth-of-type(8) {
     break-before: page;
     page-break-before: always;
   }

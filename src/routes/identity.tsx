@@ -8,13 +8,13 @@ export const Route = createFileRoute("/identity")({
   head: () => ({
     meta: [
       { title: "Mulai Asesmen — Peta Jati Diri" },
-      { name: "description", content: "Masukkan nama dan tujuan asesmen Anda." },
+      { name: "description", content: "Masukkan nama dan konteks pembacaan hasil asesmen Anda." },
     ],
   }),
   component: IdentityPage,
 });
 
-const PURPOSES = ["Pribadi", "Pasangan", "Karier", "Tim", "Parenting"];
+const PURPOSES = ["Pribadi", "Pasangan & Keluarga", "Karier", "Tim"];
 
 function IdentityPage() {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ function IdentityPage() {
       </Link>
       <h1 className="mt-6 text-2xl font-bold text-foreground">Sebelum mulai</h1>
       <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-        Masukkan nama untuk ditampilkan pada hasil. Data asesmen hanya disimpan di browser perangkat ini.
+        Masukkan nama untuk ditampilkan pada hasil. Pilihan tujuan membantu sistem menyesuaikan bahasa laporan tanpa mengubah skor dasar.
       </p>
 
       <div className="mt-5 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground">
@@ -74,7 +74,7 @@ function IdentityPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Tujuan (opsional)</label>
+          <label className="block text-sm font-medium mb-2">Tujuan pembacaan (opsional)</label>
           <div className="grid grid-cols-2 gap-2">
             {PURPOSES.map((p) => (
               <button

@@ -33,8 +33,12 @@ export interface Answers {
 
 export interface ClusterScore {
   cluster: Cluster;
-  natural: number; // 0-100
-  strength: number; // 0-100
+  natural: number; // 0-100, already adjusted for response-quality guardrails
+  strength: number; // 0-100, already adjusted for response-quality guardrails
+  naturalRaw: number; // 0-100, direct average before adjustment
+  strengthRaw: number; // 0-100, direct average before adjustment
+  naturalItems: number;
+  strengthItems: number;
 }
 
 export type Zone =
@@ -45,4 +49,22 @@ export type Zone =
 
 export interface ClusterReport extends ClusterScore {
   zone: Zone;
+}
+
+export type ReadingQualityLevel = "Stabil" | "Cukup Stabil" | "Perlu Dibaca Hati-hati";
+
+export interface ReadingQuality {
+  score: number; // 0-100
+  level: ReadingQualityLevel;
+  summary: string;
+  notes: string[];
+  metrics: {
+    completionPercent: number;
+    variation: number;
+    dominantAnswerRatio: number;
+    neutralRatio: number;
+    extremeHighRatio: number;
+    extremeLowRatio: number;
+    socialDesirabilityScore: number;
+  };
 }
