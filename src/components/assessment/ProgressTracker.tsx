@@ -4,32 +4,33 @@ interface Props {
   label?: string;
 }
 
+const MILESTONES = [0, 25, 50, 75, 100];
+
 export function ProgressTracker({ current, total, label }: Props) {
-  const percent = total === 0 ? 0 : Math.min(100, (current / total) * 100);
+  const safeTotal = Math.max(total, 1);
+  const percent = Math.max(0, Math.min(100, (current / safeTotal) * 100));
+  const rounded = Math.round(percent);
+
   return (
-    <div className="w-full">
-      <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted-foreground">
-        <span>{label ?? "Progress"}</span>
-        <span className="tabular-nums">
-          {current} / {total}
-        </span>
+    <div className="calm-progress-card" aria-label={`Progress ${current} dari ${total}`}>
+      <div className="calm-progress-head">
+        <div className="min-w-0">
+          <div className="calm-progress-label">{label ?? "Progress asesmen"}</div>
+          <div className="calm-progress-title tabular-nums">Pertanyaan {current} / {total}</div>
+        </div>
+        <div className="calm-progress-percent tabular-nums">{rounded}%</div>
       </div>
-      <div className="relative h-1.5 overflow-hidden rounded-full bg-muted">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-300 ease-out"
-          style={{
-            width: `${percent}%`,
-            background:
-              "linear-gradient(90deg, var(--primary), color-mix(in oklab, var(--primary) 60%, var(--ember)))",
-          }}
-        />
-        {[25, 50, 75].map((p) => (
+
+      <div className="calm-progress-track" aria-hidden="true">
+        <span className="calm-progress-fill" style={{ width: `${percent}%` }} />
+        {MILESTONES.map((milestone) => (
           <span
-            key={p}
-            className="absolute top-1/2 size-1.5 -translate-y-1/2 rounded-full border border-border bg-background"
-            style={{ left: `calc(${p}% - 3px)` }}
+            key={milestone}
+            className={`calm-progress-node ${percent >= milestone ? "is-done" : ""}`}
+            style={{ left: `${milestone}%` }}
           />
         ))}
+        <span className="calm-progress-active-node" style={{ left: `${percent}%` }} />
       </div>
     </div>
   );

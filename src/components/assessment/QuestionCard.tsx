@@ -9,14 +9,17 @@ interface Props {
 
 export function QuestionCard({ number, total, text, children }: Props) {
   return (
-    <div key={number} className="question-card compact-question-card rounded-[1.65rem] border border-border/60 bg-card p-4 shadow-sm sm:p-6">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-primary/70">
-        Pertanyaan {number} dari {total}
+    <section className="question-card calm-question-card" aria-labelledby={`question-${number}`}>
+      <div className="calm-question-meta">
+        <span>Pertanyaan</span>
+        <span className="tabular-nums">{number} / {total}</span>
       </div>
-      <h2 className="mt-2 min-h-[4.2rem] text-[1.22rem] font-semibold leading-snug text-foreground sm:text-xl">
+
+      <h2 id={`question-${number}`} className="calm-question-text">
         {text}
       </h2>
-      <div className="mt-4">{children}</div>
-    </div>
+
+      <div className="calm-question-answer-area">{children}</div>
+    </section>
   );
 }

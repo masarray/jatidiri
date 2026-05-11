@@ -1,16 +1,12 @@
-import { copyFileSync, existsSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-const distDir = resolve("dist");
-const indexFile = resolve(distDir, "index.html");
-const fallbackFile = resolve(distDir, "404.html");
-const noJekyllFile = resolve(distDir, ".nojekyll");
+const indexPath = resolve("dist", "index.html");
+const notFoundPath = resolve("dist", "404.html");
 
-if (!existsSync(indexFile)) {
-  throw new Error("dist/index.html tidak ditemukan. Jalankan vite build terlebih dahulu.");
+if (existsSync(indexPath)) {
+  copyFileSync(indexPath, notFoundPath);
+  console.log("Created dist/404.html for SPA fallback.");
+} else {
+  console.warn("dist/index.html not found. Skipping 404 fallback copy.");
 }
-
-copyFileSync(indexFile, fallbackFile);
-writeFileSync(noJekyllFile, "");
-
-console.log("GitHub Pages SPA fallback ready: dist/404.html + dist/.nojekyll");
