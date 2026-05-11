@@ -4,32 +4,31 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Local dev uses root: http://localhost:5173/
-// GitHub Actions sets VITE_BASE_PATH to /<repo-name>/ for GitHub Pages project sites.
 const base = process.env.VITE_BASE_PATH || "/";
 
 export default defineConfig({
   base,
-  plugins: [
-    TanStackRouterVite({
-      target: "react",
-      autoCodeSplitting: true,
-    }),
-    react(),
-    tailwindcss(),
-    tsconfigPaths(),
-  ],
+  plugins: [react(), tailwindcss(), tsconfigPaths()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 5173,
+    strictPort: false,
+  },
+  build: {
+    target: "es2020",
+    cssMinify: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
 });

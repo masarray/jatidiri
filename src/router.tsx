@@ -1,4 +1,3 @@
-import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
@@ -12,16 +11,11 @@ function getGithubPagesBasepath() {
   return baseUrl.replace(/\/$/, "");
 }
 
-export const getRouter = () => {
-  const queryClient = new QueryClient();
-
-  const router = createRouter({
+export const getRouter = () =>
+  createRouter({
     routeTree,
-    context: { queryClient },
     scrollRestoration: true,
+    defaultPreload: false,
     defaultPreloadStaleTime: 0,
     basepath: getGithubPagesBasepath(),
   });
-
-  return router;
-};

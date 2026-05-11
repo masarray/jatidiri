@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import type { AnswerValue } from "@/types/assessment";
 
 interface Props {
@@ -18,7 +17,6 @@ export function AnswerScale({ value, onSelect, leftLabel, rightLabel }: Props) {
           const v = n as AnswerValue;
           const selected = value === v;
           const size = SIZES[n - 1];
-          // left = cool, right = ember
           const isHot = n >= 5;
           const isCool = n <= 3;
           const baseColor = isHot
@@ -31,28 +29,22 @@ export function AnswerScale({ value, onSelect, leftLabel, rightLabel }: Props) {
             : isCool
               ? "bg-[var(--cool)]"
               : "bg-muted-foreground/60";
+
           return (
             <button
               key={n}
               type="button"
               onClick={() => onSelect(v)}
               aria-label={`Pilih ${n}`}
-              className="relative grid place-items-center transition-transform active:scale-95"
+              className="relative grid place-items-center transition-transform duration-150 active:scale-95"
               style={{ width: size + 12, height: size + 12 }}
             >
-              <motion.span
-                animate={{ scale: selected ? 1.15 : 1 }}
-                transition={{ type: "spring", stiffness: 400, damping: 22 }}
-                className={`rounded-full border-2 ${baseColor} ${selected ? fillColor : "bg-transparent"}`}
+              <span
+                className={`rounded-full border-2 transition-all duration-150 ease-out ${baseColor} ${
+                  selected ? `${fillColor} scale-110 answer-selected` : "bg-transparent scale-100"
+                }`}
                 style={{ width: size, height: size }}
               />
-              {selected && (
-                <motion.span
-                  layoutId="selection-glow"
-                  className="absolute inset-0 rounded-full"
-                  style={{ boxShadow: "0 0 0 4px color-mix(in oklab, var(--ember) 25%, transparent)" }}
-                />
-              )}
             </button>
           );
         })}
