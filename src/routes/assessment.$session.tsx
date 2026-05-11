@@ -114,6 +114,7 @@ function AssessmentPage() {
             onSelect={handleSelect}
             leftLabel={LABELS[s].left}
             rightLabel={LABELS[s].right}
+            session={s}
           />
         </QuestionCard>
 

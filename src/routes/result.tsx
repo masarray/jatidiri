@@ -12,6 +12,7 @@ import {
   isAssessmentComplete,
   computeReadingQuality,
 } from "@/engine/scoring";
+import { buildPatternSignatureReport, type MicroRoleScore } from "@/engine/patternSignature";
 import { CLUSTER_META } from "@/data/clusterMeta";
 import { pickTypology } from "@/data/typology";
 import { ClusterRadar } from "@/components/result/ClusterRadar";
@@ -26,7 +27,7 @@ export const Route = createFileRoute("/result")({
   head: () => ({
     meta: [
       { title: "Hasil Peta Jati Diri Anda" },
-      { name: "description", content: "Ringkasan kecenderungan alami, kekuatan aktivitas, dan panduan kontekstual." },
+      { name: "description", content: "Ringkasan kecenderungan alami, kekuatan aktivitas, dan pola inti diri." },
     ],
   }),
   component: ResultPage,
@@ -38,10 +39,11 @@ function ResultPage() {
   const naturalProg = progressFor("natural", answers);
   const strengthProg = progressFor("strength", answers);
   const reports = useMemo(() => buildClusterReports(answers), [answers]);
-  const topNatural = useMemo(() => topClusters(reports, 5), [reports]);
-  const topThree = topNatural.slice(0, 3);
+  const patternReport = useMemo(() => buildPatternSignatureReport(answers, reports), [answers, reports]);
+  const topNaturalClusters = useMemo(() => topClusters(reports, 5), [reports]);
+  const topThree = topNaturalClusters.slice(0, 3);
   const bottom = useMemo(() => bottomClusters(reports, 3), [reports]);
-  const topActivity = useMemo(
+  const topActivityClusters = useMemo(
     () => [...reports].sort((a, b) => b.strength - a.strength).slice(0, 3).map((r) => r.cluster),
     [reports],
   );
@@ -164,79 +166,110 @@ function ResultPage() {
             </div>
           </div>
           <div className="mt-6 max-w-2xl">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Indikasi Tipologi</div>
-            <div className="mt-1 text-2xl font-bold text-primary">{typology.name}</div>
-            <p className="mt-3 text-sm leading-relaxed text-foreground/85">{typology.tagline}</p>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pola Inti</div>
+            <div className="mt-1 text-2xl font-bold text-primary">{patternReport.core.title}</div>
+            <p className="mt-3 text-sm leading-relaxed text-foreground/85">{patternReport.core.subtitle}</p>
           </div>
         </section>
+
+        <Section title="Pola Inti yang Terbaca" kicker="Core Signature">
+          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
+            <p className="text-sm leading-relaxed text-foreground/90 sm:text-base">{patternReport.core.summary}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {patternReport.core.evidence.map((role) => (
+                <span key={role.id} className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+                  {role.name}
+                </span>
+              ))}
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <SignatureNote title="Yang tampak dari luar" body={patternReport.core.visiblePattern} />
+              <SignatureNote title="Energi terdalam" body={patternReport.core.hiddenEnergy} />
+              <SignatureNote title="Risiko salah tempat" body={patternReport.core.riskIfMisplaced} />
+              <SignatureNote title="Cara memakai dengan sehat" body={patternReport.core.healthyUse} />
+            </div>
+          </div>
+        </Section>
 
         <Section title={lens.summaryTitle} kicker="Executive Summary">
           <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
             <p className="text-sm leading-relaxed text-muted-foreground">{lens.summaryFrame}</p>
             <p className="mt-4 text-sm leading-relaxed text-foreground/90 sm:text-base">
-              {purposeSummaryText(lens, topThree, topActivity, bottom)}
+              {purposeSummaryText(lens, topThree, topActivityClusters, bottom)}
             </p>
-            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{typology.summary}</p>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              Indikasi tipologi cluster: <strong className="font-semibold text-foreground/90">{typology.name}</strong>. {typology.summary}
+            </p>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <SummaryCard
               title="Kekuatan Alami"
-              caption="Potensi dominan yang cenderung memberi energi dan muncul lebih spontan."
-              items={topThree.map((c) => CLUSTER_META[c].label)}
+              caption="Micro-role dominan yang cenderung memberi energi dan muncul lebih spontan."
+              items={patternReport.topNaturalRoles.slice(0, 3).map((role) => role.name)}
             />
             <SummaryCard
               title="Kekuatan Terlatih"
-              caption="Aktivitas yang relatif lebih sering digunakan atau lebih percaya diri dijalani."
-              items={topActivity.map((c) => CLUSTER_META[c].label)}
+              caption="Aktivitas/role yang relatif lebih sering digunakan atau lebih percaya diri dijalani."
+              items={patternReport.topTrainedRoles.slice(0, 3).map((role) => role.name)}
             />
             <SummaryCard
               title="Titik Rentan Energi"
               caption="Area yang tetap bisa dikelola, namun cenderung lebih menguras jika menjadi tuntutan utama."
-              items={bottom.map((c) => CLUSTER_META[c].label)}
+              items={patternReport.drainingRoles.slice(0, 3).map((role) => role.name)}
             />
           </div>
         </Section>
 
-        <Section title="Kekuatan Alami" kicker="Natural Strengths">
+        <Section title="Kekuatan Alami" kicker="Natural Micro Roles">
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-            Potensi dominan yang cenderung memberi energi, muncul lebih spontan, dan relatif mudah berkembang ketika mendapat ruang yang sesuai.
+            Bagian ini membaca potensi dominan pada level micro-role, bukan hanya cluster besar. Di titik inilah hasil biasanya mulai terasa lebih personal.
           </p>
           <div className="space-y-3">
-            {topNatural.map((c, i) => {
-              const m = CLUSTER_META[c];
-              const r = reports.find((x) => x.cluster === c)!;
-              return (
-                <InsightCard key={c} index={i + 1} title={m.label} score={r.natural} subtitle={m.tagline}>
-                  <Row k="Terlihat sebagai" v={m.observable} />
-                  <Row k="Pengisi energi" v={m.recharge} />
-                  <Row k="Hal yang perlu dijaga" v={m.blindspot} />
-                </InsightCard>
-              );
-            })}
+            {patternReport.topNaturalRoles.map((role, i) => (
+              <MicroRoleInsightCard key={role.id} index={i + 1} role={role} score={role.natural} scoreLabel="Natural">
+                <Row k="Terlihat sebagai" v={role.visible} />
+                <Row k="Pengisi energi" v={role.energy} />
+                <Row k="Hal yang perlu dijaga" v={role.risk} />
+              </MicroRoleInsightCard>
+            ))}
           </div>
         </Section>
 
-        <Section title="Kekuatan Terlatih" kicker="Explored Strengths">
+        <Section title="Kekuatan Terlatih" kicker="Explored Activity Roles">
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-            Aktivitas atau kemampuan yang sudah cukup sering digunakan, dilatih, atau terlihat dalam pengalaman sehari-hari.
+            Bagian ini menunjukkan role atau aktivitas yang tampak sudah lebih sering digunakan, dilatih, atau lebih percaya diri dijalani dalam pengalaman nyata.
           </p>
           <div className="space-y-3">
-            {topActivity.map((c, i) => {
-              const m = CLUSTER_META[c];
-              const r = reports.find((x) => x.cluster === c)!;
-              return (
-                <InsightCard key={c} index={i + 1} title={m.label} score={r.strength} subtitle={m.observable} mutedIndex>
-                  <Row k="Aktivitas yang mendukung" v={m.trigger} />
-                  <Row k="Agar tetap sehat" v={m.compensate} />
-                </InsightCard>
-              );
-            })}
+            {patternReport.topTrainedRoles.map((role, i) => (
+              <MicroRoleInsightCard key={role.id} index={i + 1} role={role} score={role.strength} scoreLabel="Aktivitas" mutedIndex>
+                <Row k="Aktivitas yang tampak" v={role.visible} />
+                <Row k="Jika selaras" v={role.energy} />
+                <Row k="Agar tetap sehat" v={role.healthyUse} />
+              </MicroRoleInsightCard>
+            ))}
           </div>
         </Section>
+
+        {patternReport.adaptiveRoles.length > 0 && (
+          <Section title="Kemampuan Adaptif" kicker="Learned Behavior">
+            <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+              Area ini tampak bisa dijalankan, tetapi belum tentu menjadi sumber energi alami utama. Ini sering muncul karena tuntutan peran, pengalaman, atau kebutuhan lingkungan.
+            </p>
+            <div className="space-y-3">
+              {patternReport.adaptiveRoles.map((role, i) => (
+                <MicroRoleInsightCard key={role.id} index={i + 1} role={role} score={role.strength} scoreLabel="Adaptif" mutedIndex>
+                  <Row k="Kemampuan terlihat" v={role.visible} />
+                  <Row k="Catatan energi" v="Bedakan antara 'saya bisa melakukan ini' dan 'ini benar-benar membuat saya hidup'." />
+                  <Row k="Cara mengelola" v={role.healthyUse} />
+                </MicroRoleInsightCard>
+              ))}
+            </div>
+          </Section>
+        )}
 
         <Section title="Matriks Alami vs Aktivitas" kicker="Natural–Activity Gap">
           <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-            Bagian ini membandingkan kecenderungan alami dengan kekuatan aktivitas. Pembacaan ini membantu membedakan area yang sudah menjadi kekuatan utama, potensi yang belum terlatih, kemampuan adaptif, dan titik rentan energi.
+            Bagian ini membandingkan kecenderungan alami dengan kekuatan aktivitas pada peta cluster. Gunakan sebagai jembatan untuk membedakan kekuatan hidup, potensi belum terlatih, kemampuan adaptif, dan titik rentan energi.
           </p>
           <ZoneMatrix reports={reports} />
         </Section>
@@ -258,25 +291,43 @@ function ResultPage() {
             Area ini bukan berarti tidak bisa dilakukan. Namun apabila menjadi tuntutan utama dalam jangka panjang, area ini cenderung membutuhkan usaha, dukungan sistem, atau waktu pemulihan yang lebih besar.
           </p>
           <div className="space-y-3">
-            {bottom.map((c) => {
-              const m = CLUSTER_META[c];
-              const r = reports.find((x) => x.cluster === c)!;
-              return (
-                <div key={c} className="rounded-3xl border border-border/60 bg-muted/45 p-5 shadow-sm print-avoid-break">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-bold text-foreground">{m.label}</h3>
-                      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{m.tagline}</p>
-                    </div>
-                    <ScoreBadge score={r.natural} muted />
+            {patternReport.drainingRoles.map((role) => (
+              <div key={role.id} className="rounded-3xl border border-border/60 bg-muted/45 p-5 shadow-sm print-avoid-break">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{role.family}</div>
+                    <h3 className="mt-1 font-bold text-foreground">{role.name}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{role.tagline}</p>
                   </div>
-                  <dl className="mt-4 space-y-2 text-xs">
-                    <Row k="Yang menguras" v={m.drain} />
-                    <Row k="Cara mengelola" v={m.compensate} />
-                  </dl>
+                  <ScoreBadge score={role.natural} muted />
                 </div>
-              );
-            })}
+                <dl className="mt-4 space-y-2 text-xs">
+                  <Row k="Yang menguras" v={role.risk} />
+                  <Row k="Cara mengelola" v={role.healthyUse} />
+                </dl>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Peta Keluarga Peran" kicker="Role Family Map">
+          <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Peta ini merangkum micro-role ke dalam keluarga peran agar pola besar tetap mudah dibaca.
+            </p>
+            <div className="mt-4 space-y-3">
+              {patternReport.roleFamilies.map((family) => (
+                <div key={family.family}>
+                  <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                    <span className="font-semibold text-foreground">{family.family}</span>
+                    <span className="text-muted-foreground">Natural {family.natural} · Aktivitas {family.strength}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${family.natural}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </Section>
 
@@ -289,16 +340,16 @@ function ResultPage() {
             <div className="rounded-3xl border border-primary/25 bg-primary/10 p-5 print-avoid-break">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Cenderung Mengisi Energi</div>
               <ul className="mt-4 space-y-2 text-xs leading-relaxed text-foreground/90">
-                {topThree.map((c) => (
-                  <li key={c}>• {CLUSTER_META[c].recharge}</li>
+                {patternReport.topNaturalRoles.slice(0, 4).map((role) => (
+                  <li key={role.id}>• {role.energy}</li>
                 ))}
               </ul>
             </div>
             <div className="rounded-3xl border border-border/70 bg-muted/55 p-5 print-avoid-break">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cenderung Menguras Energi</div>
               <ul className="mt-4 space-y-2 text-xs leading-relaxed text-foreground/90">
-                {bottom.map((c) => (
-                  <li key={c}>• {CLUSTER_META[c].drain}</li>
+                {patternReport.drainingRoles.slice(0, 4).map((role) => (
+                  <li key={role.id}>• {role.risk}</li>
                 ))}
               </ul>
             </div>
@@ -366,6 +417,15 @@ function Section({ title, kicker, children }: { title: string; kicker?: string; 
   );
 }
 
+function SignatureNote({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-muted/35 p-4">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{title}</div>
+      <p className="mt-2 text-xs leading-relaxed text-foreground/90">{body}</p>
+    </div>
+  );
+}
+
 function SummaryCard({ title, caption, items }: { title: string; caption: string; items: string[] }) {
   return (
     <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm print-avoid-break">
@@ -378,18 +438,18 @@ function SummaryCard({ title, caption, items }: { title: string; caption: string
   );
 }
 
-function InsightCard({
+function MicroRoleInsightCard({
   index,
-  title,
+  role,
   score,
-  subtitle,
+  scoreLabel,
   children,
   mutedIndex,
 }: {
   index: number;
-  title: string;
+  role: MicroRoleScore;
   score: number;
-  subtitle: string;
+  scoreLabel: string;
   children: ReactNode;
   mutedIndex?: boolean;
 }) {
@@ -401,11 +461,15 @@ function InsightCard({
             {index}
           </div>
           <div>
-            <h3 className="font-bold text-foreground">{title}</h3>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{role.family}</div>
+            <h3 className="mt-1 font-bold text-foreground">{role.name}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{role.tagline}</p>
           </div>
         </div>
-        <ScoreBadge score={score} muted={mutedIndex} />
+        <div className="shrink-0 text-right">
+          <ScoreBadge score={score} muted={mutedIndex} />
+          <div className="mt-1 text-[10px] text-muted-foreground">{scoreLabel}</div>
+        </div>
       </div>
       <dl className="mt-4 space-y-2 text-xs">{children}</dl>
     </div>

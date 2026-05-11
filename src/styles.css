@@ -103,46 +103,9 @@
 }
 
 @media print {
-  @page {
-    size: A4;
-    margin: 14mm;
-  }
-
-  html, body {
-    background: white !important;
-  }
-
-  body {
-    color: #172033 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .report-hero,
-  .report-section,
-  .print-avoid-break {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .report-section {
-    margin-top: 18mm !important;
-  }
-
-  .report-section:nth-of-type(4),
-  .report-section:nth-of-type(8) {
-    break-before: page;
-    page-break-before: always;
-  }
-
-  .shadow-sm,
-  .shadow-lg {
-    box-shadow: none !important;
-  }
+  .no-print { display: none !important; }
+  body { background: white !important; }
+  .print-page { break-after: page; }
 }
 
 .question-card {
@@ -165,3 +128,109 @@
     scroll-behavior: auto !important;
   }
 }
+
+.answer-pill-indicator {
+  border: 2px solid var(--active-scale-border, var(--primary));
+  background: var(--active-scale-soft, color-mix(in oklab, var(--primary) 8%, transparent));
+  box-shadow:
+    0 12px 26px var(--active-scale-glow, color-mix(in oklab, var(--primary) 18%, transparent)),
+    inset 0 0 0 1px rgba(255,255,255,0.58);
+  transition:
+    transform 220ms cubic-bezier(0.18, 0.85, 0.22, 1),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease;
+}
+
+.answer-pill-option {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  border: 1px solid transparent;
+  background: transparent;
+  will-change: transform, box-shadow;
+}
+
+.answer-pill-option::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: inherit;
+  border: 1px solid var(--scale-border);
+  opacity: 0;
+  transform: scale(0.985);
+  pointer-events: none;
+}
+
+.answer-pill-number {
+  border-color: var(--scale-border);
+  background: var(--scale-soft);
+  color: var(--foreground);
+}
+
+.answer-pill-dot {
+  border-color: var(--scale-border);
+  background: color-mix(in oklab, var(--scale-fill) 18%, white);
+}
+
+@media (hover: hover) {
+  .answer-pill-option:hover {
+    border-color: var(--scale-border);
+    background: var(--scale-soft);
+    box-shadow:
+      inset 0 0 0 1px var(--scale-border),
+      0 8px 18px var(--scale-glow);
+    transform: translateY(-1px);
+  }
+
+  .answer-pill-option:hover .answer-pill-number {
+    box-shadow: 0 0 0 3px var(--scale-glow);
+  }
+}
+
+.answer-pill-option:active {
+  transform: translateY(1px) scale(0.985);
+  border-color: var(--scale-border);
+  background: var(--scale-soft);
+  box-shadow:
+    inset 0 0 0 1px var(--scale-border),
+    0 0 0 4px var(--scale-glow),
+    0 8px 18px var(--scale-glow);
+}
+
+.answer-pill-option.is-selected {
+  animation: answer-pill-press 240ms cubic-bezier(0.2, 0.85, 0.2, 1) both;
+}
+
+.answer-pill-option.is-selected::after {
+  animation: answer-pill-ring 340ms ease-out both;
+}
+
+.answer-pill-option.is-selected .answer-pill-number {
+  background: var(--scale-fill);
+  border-color: var(--scale-fill);
+  color: var(--scale-ink);
+  box-shadow:
+    0 0 0 3px var(--scale-glow),
+    0 8px 16px var(--scale-glow);
+}
+
+.answer-pill-option.is-selected .answer-pill-dot {
+  background: var(--scale-fill);
+  border-color: var(--scale-fill);
+  box-shadow: 0 0 0 3px var(--scale-glow);
+}
+
+@keyframes answer-pill-press {
+  0% { transform: scale(1); }
+  38% { transform: scale(0.978) translateX(-0.8px); }
+  62% { transform: scale(1.012) translateX(0.8px); }
+  100% { transform: scale(1); }
+}
+
+@keyframes answer-pill-ring {
+  0% { opacity: 0.9; transform: scale(0.985); }
+  65% { opacity: 0.28; transform: scale(1.018); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
