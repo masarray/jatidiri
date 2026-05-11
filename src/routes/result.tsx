@@ -324,6 +324,19 @@ function ResultPage() {
           </div>
         </Section>
 
+        {patternReport.adaptiveGapInsights.length > 0 && (
+          <Section title="Jalur Kekuatan Adaptif" kicker="Natural vs Adaptive Gap">
+            <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+              Bagian ini membedakan area yang terlihat kuat karena sering dilakukan dengan jalur energi yang sebenarnya membuatnya hidup. Fokusnya bukan hanya "bisa", tetapi "kuat lewat jalur apa" dan "kapan mulai menguras energi".
+            </p>
+            <div className="space-y-3">
+              {patternReport.adaptiveGapInsights.map((insight) => (
+                <AdaptiveGapCard key={insight.id} insight={insight} />
+              ))}
+            </div>
+          </Section>
+        )}
+
         {patternReport.adaptiveRoles.length > 0 && (
           <Section title="Kemampuan Adaptif" kicker="Learned Behavior">
             <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
@@ -460,6 +473,39 @@ function ResultPage() {
         </footer>
       </div>
     </main>
+  );
+}
+
+function AdaptiveGapCard({
+  insight,
+}: {
+  insight: import("@/engine/patternSignature").AdaptiveGapInsight;
+}) {
+  return (
+    <div className="rounded-3xl border border-amber-500/25 bg-card p-5 shadow-sm print-avoid-break">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">Kemampuan adaptif</div>
+          <h3 className="mt-1 text-base font-bold text-foreground">{insight.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{insight.interpretation}</p>
+        </div>
+        <div className="shrink-0 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Terlihat kuat</div>
+          <div className="text-lg font-bold text-[var(--ember)]">{insight.score}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <SignatureNote title="Jalur yang menghidupkan" body={insight.routeLabel} />
+        <SignatureNote title="Jalur yang lebih melelahkan" body={insight.notRouteLabel} />
+      </div>
+
+      <dl className="mt-4 space-y-2 text-xs">
+        <Row k="Paling sehat" v={insight.bestUse} />
+        <Row k="Biaya energi" v={insight.energyCost} />
+        <Row k="Strategi dukungan" v={insight.supportStrategy} />
+      </dl>
+    </div>
   );
 }
 

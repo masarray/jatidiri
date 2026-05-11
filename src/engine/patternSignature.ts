@@ -28,6 +28,23 @@ export interface RoleFamilyScore {
   roleCount: number;
 }
 
+export type AdaptiveGapKind = "marketing" | "administrative" | "service" | "generic";
+
+export interface AdaptiveGapInsight {
+  id: string;
+  kind: AdaptiveGapKind;
+  title: string;
+  score: number;
+  naturalRouteScore: number;
+  adaptiveLoadScore: number;
+  routeLabel: string;
+  notRouteLabel: string;
+  interpretation: string;
+  bestUse: string;
+  energyCost: string;
+  supportStrategy: string;
+}
+
 export interface CoreSignature {
   title: string;
   subtitle: string;
@@ -45,6 +62,7 @@ export interface PatternSignatureReport {
   topNaturalRoles: MicroRoleScore[];
   topTrainedRoles: MicroRoleScore[];
   adaptiveRoles: MicroRoleScore[];
+  adaptiveGapInsights: AdaptiveGapInsight[];
   drainingRoles: MicroRoleScore[];
   roleFamilies: RoleFamilyScore[];
 }
@@ -266,6 +284,207 @@ export function buildMicroRoleScores(answers: Answers): MicroRoleScore[] {
   });
 }
 
+function mean(values: number[]): number {
+  const valid = values.filter((value) => Number.isFinite(value));
+  if (valid.length === 0) return 0;
+  return Math.round(valid.reduce((sum, value) => sum + value, 0) / valid.length);
+}
+
+function directStrengthScore(answers: Answers, ids: string[]): number {
+  return scoreFromIds(answers.strength, ids).score;
+}
+
+function directNaturalScore(answers: Answers, ids: string[]): number {
+  return scoreFromIds(answers.natural, ids).score;
+}
+
+function roleScore(roles: MicroRoleScore[], id: MicroRoleId): MicroRoleScore | undefined {
+  return roles.find((role) => role.id === id);
+}
+
+function averageRoleNatural(roles: MicroRoleScore[], ids: MicroRoleId[]): number {
+  return mean(ids.map((id) => roleScore(roles, id)?.natural ?? 0));
+}
+
+function averageRoleStrength(roles: MicroRoleScore[], ids: MicroRoleId[]): number {
+  return mean(ids.map((id) => roleScore(roles, id)?.strength ?? 0));
+}
+
+function buildMarketingGapInsight(answers: Answers, roles: MicroRoleScore[]): AdaptiveGapInsight | null {
+  const marketingStrength = directStrengthScore(answers, [
+    "strength-44",
+    "strength-45",
+    "strength-46",
+    "strength-47",
+    "strength-65",
+    "strength-66",
+    "strength-79",
+    "strength-81",
+  ]);
+
+  const conceptRoute = mean([
+    averageRoleNatural(roles, ["idea_translator", "idea_synthesizer", "strategy_designer", "pattern_reader", "information_collector"]),
+    averageRoleStrength(roles, ["idea_translator", "idea_synthesizer", "strategy_designer"]),
+  ]);
+  const socialSalesRoute = averageRoleNatural(roles, ["social_connector", "achievement_driver", "decision_director", "emotion_reader"]);
+
+  if (marketingStrength < 58) return null;
+
+  if (conceptRoute >= socialSalesRoute + 8 || socialSalesRoute < 55) {
+    return {
+      id: "marketing_concept_route",
+      kind: "marketing",
+      title: "Marketing lewat jalur ide, strategi, dan edukasi",
+      score: marketingStrength,
+      naturalRouteScore: conceptRoute,
+      adaptiveLoadScore: socialSalesRoute,
+      routeLabel: "Jalur utama: konsep, strategi, penjelasan nilai",
+      notRouteLabel: "Bukan jalur utama: basa-basi sosial, cold selling, kompetisi jualan",
+      interpretation:
+        "Anda dapat terlihat kuat dalam promosi, positioning, atau menjelaskan nilai sebuah produk. Namun kekuatan ini lebih mungkin keluar lewat kemampuan menyusun ide, strategi, cerita, dan edukasi; bukan semata-mata karena kebutuhan sosial untuk dikenal banyak orang.",
+      bestUse:
+        "Paling sehat digunakan untuk marketing berbasis edukasi, storytelling, proposal, demo produk, konten penjelasan, atau positioning nilai.",
+      energyCost:
+        "Dapat menguras energi bila bentuk marketing-nya terlalu banyak cold approach, basa-basi sosial, follow-up repetitif, atau tuntutan ramah ke semua orang sepanjang hari.",
+      supportStrategy:
+        "Pisahkan fase strategi/konten dari fase follow-up sosial. Gunakan template, sistem CRM sederhana, partner relasi, atau jadwal pemulihan sosial setelah aktivitas promosi intensif.",
+    };
+  }
+
+  return {
+    id: "marketing_relationship_route",
+    kind: "marketing",
+    title: "Meyakinkan lewat relasi dan kepercayaan",
+    score: marketingStrength,
+    naturalRouteScore: socialSalesRoute,
+    adaptiveLoadScore: conceptRoute,
+    routeLabel: "Jalur utama: kepercayaan, relasi, pelayanan",
+    notRouteLabel: "Bukan jalur utama: promosi agresif tanpa kedekatan",
+    interpretation:
+      "Anda dapat meyakinkan orang ketika ada rasa percaya, manfaat nyata, dan konteks relasi yang cukup aman. Gaya meyakinkan ini lebih kuat ketika Anda percaya pada hal yang dibawa, bukan saat sekadar mengejar target.",
+    bestUse:
+      "Paling sehat digunakan untuk penjualan konsultatif, pelayanan bernilai, rekomendasi personal, atau edukasi kepada orang yang sudah mulai percaya.",
+    energyCost:
+      "Dapat menguras energi bila harus terus tampil agresif, memaksa keputusan, atau menjual sesuatu yang tidak diyakini manfaatnya.",
+    supportStrategy:
+      "Bangun bahan penjelasan yang jujur, proses follow-up yang ringan, dan batas target yang tidak membuat relasi terasa transaksional.",
+  };
+}
+
+function buildAdministrativeGapInsight(answers: Answers, roles: MicroRoleScore[]): AdaptiveGapInsight | null {
+  const administrativeStrength = directStrengthScore(answers, [
+    "strength-9",
+    "strength-10",
+    "strength-11",
+    "strength-12",
+    "strength-13",
+    "strength-14",
+    "strength-95",
+    "strength-97",
+    "strength-98",
+    "strength-99",
+    "strength-100",
+  ]);
+  const naturalAdminRoute = averageRoleNatural(roles, ["system_organizer", "operational_executor", "commitment_keeper", "quality_evaluator"]);
+  const responsibilityPush = mean([
+    roleScore(roles, "commitment_keeper")?.natural ?? 0,
+    directNaturalScore(answers, ["natural-7", "natural-43", "natural-79", "natural-115", "natural-151"]),
+  ]);
+
+  if (administrativeStrength < 58 || naturalAdminRoute >= 58) return null;
+
+  return {
+    id: "administrative_responsibility_route",
+    kind: "administrative",
+    title: "Administrasi karena tanggung jawab, bukan rumah energi utama",
+    score: administrativeStrength,
+    naturalRouteScore: responsibilityPush,
+    adaptiveLoadScore: naturalAdminRoute,
+    routeLabel: "Jalur yang mendorong: tanggung jawab, standar, kebutuhan peran",
+    notRouteLabel: "Bukan rumah energi utama: rutinitas administratif berulang",
+    interpretation:
+      "Anda bisa mengurus file, laporan, data, jadwal, atau proses administratif ketika keadaan menuntut. Namun bila struktur operasional bukan area alami yang tinggi, kemampuan ini lebih tepat dibaca sebagai kemampuan adaptif karena tanggung jawab.",
+    bestUse:
+      "Gunakan untuk memastikan hal penting tidak tercecer, terutama ketika ada tujuan yang jelas dan dampaknya terasa penting.",
+    energyCost:
+      "Akan lebih cepat menguras energi bila menjadi pekerjaan utama harian yang repetitif, detail-heavy, dan tidak memberi ruang berpikir atau makna.",
+    supportStrategy:
+      "Pakai checklist, template, folder standar, reminder otomatis, delegasi, atau batching waktu agar administrasi tidak memakan energi terbaik.",
+  };
+}
+
+function buildServiceGapInsight(answers: Answers, roles: MicroRoleScore[]): AdaptiveGapInsight | null {
+  const serviceStrength = directStrengthScore(answers, [
+    "strength-54",
+    "strength-57",
+    "strength-58",
+    "strength-59",
+    "strength-61",
+    "strength-62",
+    "strength-85",
+    "strength-86",
+    "strength-87",
+    "strength-88",
+  ]);
+  const naturalCareRoute = averageRoleNatural(roles, ["people_developer", "relationship_keeper", "emotion_reader", "harmony_keeper", "mentor_coach"]);
+  const dutyRoute = averageRoleNatural(roles, ["commitment_keeper", "meaning_keeper", "consistency_guardian"]);
+
+  if (serviceStrength < 60 || naturalCareRoute >= 60) return null;
+
+  return {
+    id: "service_duty_route",
+    kind: "service",
+    title: "Membantu karena nilai dan tanggung jawab",
+    score: serviceStrength,
+    naturalRouteScore: dutyRoute,
+    adaptiveLoadScore: naturalCareRoute,
+    routeLabel: "Jalur yang mendorong: nilai, kepedulian, tanggung jawab",
+    notRouteLabel: "Bukan berarti selalu siap menampung semua beban emosi",
+    interpretation:
+      "Anda dapat terlihat kuat dalam membantu, melayani, atau mendampingi orang lain. Namun bila kepekaan relasional bukan energi utama, bantuan itu lebih mungkin muncul karena nilai, tanggung jawab, atau rasa perlu melakukan yang benar.",
+    bestUse:
+      "Paling sehat digunakan untuk bantuan yang punya batas jelas, tujuan jelas, dan tidak membuat Anda mengambil alih seluruh beban orang lain.",
+    energyCost:
+      "Dapat melelahkan bila orang lain terus meminta perhatian emosional, bantuan spontan, atau dukungan tanpa batas yang jelas.",
+    supportStrategy:
+      "Buat batas bantuan, sepakati peran, gunakan jadwal, dan bedakan antara mendukung orang lain dengan memikul hidupnya.",
+  };
+}
+
+function buildGenericAdaptiveInsights(roles: MicroRoleScore[]): AdaptiveGapInsight[] {
+  return roles
+    .filter((role) => role.zone === "Adaptive / Survival")
+    .sort((a, b) => b.strength - a.strength)
+    .slice(0, 3)
+    .map((role) => ({
+      id: `generic_${role.id}`,
+      kind: "generic" as const,
+      title: `${role.name} sebagai kemampuan adaptif`,
+      score: role.strength,
+      naturalRouteScore: role.natural,
+      adaptiveLoadScore: role.strength - role.natural,
+      routeLabel: "Terlihat kuat karena sering digunakan atau dituntut peran",
+      notRouteLabel: "Belum tentu menjadi sumber energi alami utama",
+      interpretation: `Area ${role.name.toLowerCase()} tampak dapat Anda jalankan, tetapi skor alami yang lebih rendah menunjukkan bahwa kekuatan ini perlu dibaca sebagai kemampuan yang mungkin terbentuk karena tuntutan hidup, pekerjaan, keluarga, atau lingkungan.`,
+      bestUse: role.healthyUse,
+      energyCost: "Jika menjadi tuntutan utama terus-menerus, area ini dapat membuat Anda terlihat mampu di luar tetapi lebih cepat lelah di dalam.",
+      supportStrategy: "Gunakan sistem, pembagian peran, template, jadwal pemulihan, atau partner yang lebih natural di area ini agar tidak menjadi beban berkepanjangan.",
+    }));
+}
+
+function buildAdaptiveGapInsights(answers: Answers, roles: MicroRoleScore[]): AdaptiveGapInsight[] {
+  const specific = [
+    buildMarketingGapInsight(answers, roles),
+    buildAdministrativeGapInsight(answers, roles),
+    buildServiceGapInsight(answers, roles),
+  ].filter((item): item is AdaptiveGapInsight => Boolean(item));
+
+  const existingIds = new Set(specific.map((item) => item.id));
+  const generic = buildGenericAdaptiveInsights(roles).filter((item) => !existingIds.has(item.id));
+
+  return [...specific, ...generic].slice(0, 5);
+}
+
 export function buildRoleFamilyScores(roles: MicroRoleScore[]): RoleFamilyScore[] {
   return ROLE_FAMILIES.map((family) => {
     const selected = roles.filter((role) => role.family === family);
@@ -289,6 +508,7 @@ export function buildPatternSignatureReport(answers: Answers, reports: ClusterRe
     .filter((role) => role.strength >= STR_HI && role.natural < NAT_HI)
     .sort((a, b) => b.strength - a.strength)
     .slice(0, 5);
+  const adaptiveGapInsights = buildAdaptiveGapInsights(answers, roles);
   const drainingRoles = [...roles]
     .filter((role) => role.naturalItems > 0)
     .sort((a, b) => a.natural - b.natural)
@@ -303,6 +523,7 @@ export function buildPatternSignatureReport(answers: Answers, reports: ClusterRe
     topNaturalRoles,
     topTrainedRoles,
     adaptiveRoles,
+    adaptiveGapInsights,
     drainingRoles,
     roleFamilies: buildRoleFamilyScores(roles),
   };
