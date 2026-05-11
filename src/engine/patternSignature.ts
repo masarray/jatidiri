@@ -87,7 +87,7 @@ const SIGNATURE_RULES: SignatureRule[] = [
     hiddenEnergy:
       "Energi terdalamnya bukan hanya berbicara atau tampil, tetapi memahami bahan yang kompleks, menemukan benang merah, lalu memberi bahasa yang lebih jelas.",
     riskIfMisplaced:
-      "Jika terlalu lama ditempatkan hanya pada pekerjaan eksekusi berulang tanpa ruang belajar dan menyusun makna, Anda mungkin tetap bisa menjalankannya, tetapi rasa hidupnya menurun.",
+      "Jika terlalu lama ditempatkan hanya pada pekerjaan eksekusi berulang tanpa ruang belajar dan menyusun makna, Anda mungkin tetap bisa menjalankannya, tetapi semangat dan energi Anda dapat cepat turun.",
     healthyUse:
       "Gunakan kekuatan ini dalam peran yang melibatkan belajar, menulis, mengajar, menyusun konsep, mempresentasikan ide, atau menjembatani informasi rumit menjadi keputusan.",
   },
@@ -126,7 +126,7 @@ const SIGNATURE_RULES: SignatureRule[] = [
     hiddenEnergy:
       "Energi terdalam muncul ketika sistem rapi, tugas jelas, dan hasil dapat dipertanggungjawabkan tanpa banyak ketidakpastian.",
     riskIfMisplaced:
-      "Jika terlalu sering berhadapan dengan perubahan mendadak, aturan yang tidak konsisten, atau pekerjaan tanpa standar, energi bisa cepat terkuras.",
+      "Jika terlalu sering berhadapan dengan perubahan mendadak, aturan yang tidak konsisten, atau pekerjaan tanpa standar, semangat dan energi Anda dapat cepat turun.",
     healthyUse:
       "Gunakan kekuatan ini untuk membuat prosedur, menjaga mutu, mengelola jadwal, dan merapikan proses; tetap beri ruang fleksibilitas agar sistem tidak terasa kaku.",
   },
@@ -165,7 +165,7 @@ const SIGNATURE_RULES: SignatureRule[] = [
     hiddenEnergy:
       "Energi terdalam muncul ketika relasi terasa aman, hangat, dan tidak sekadar transaksional.",
     riskIfMisplaced:
-      "Jika relasi terasa dingin, sepihak, atau konflik dibiarkan menggantung, energi emosional Anda dapat cepat terkuras.",
+      "Jika relasi terasa dingin, sepihak, atau konflik dibiarkan menggantung, semangat dan energi emosional Anda dapat cepat turun.",
     healthyUse:
       "Gunakan kekuatan ini untuk membangun komunikasi keluarga, merawat kedekatan, dan menjaga iklim kelompok; tetap bicarakan batas dan pembagian peran secara jelas.",
   },
@@ -401,9 +401,9 @@ function buildAdministrativeGapInsight(answers: Answers, roles: MicroRoleScore[]
     naturalRouteScore: responsibilityPush,
     adaptiveLoadScore: naturalAdminRoute,
     routeLabel: "Jalur yang mendorong: tanggung jawab, standar, kebutuhan peran",
-    notRouteLabel: "Bukan rumah energi utama: rutinitas administratif berulang",
+    notRouteLabel: "Bukan sumber energi dan semangat utama: rutinitas administratif berulang",
     interpretation:
-      "Anda bisa mengurus file, laporan, data, jadwal, atau proses administratif ketika keadaan menuntut. Namun bila struktur operasional bukan Natural Talent yang kuat, kemampuan ini lebih tepat dibaca sebagai Adaptive / Survival Strength: muncul karena tanggung jawab, jabatan, tuntutan keluarga, atau kebutuhan lingkungan.",
+      "Anda bisa mengurus file, laporan, data, jadwal, atau proses administratif ketika keadaan menuntut. Namun bila struktur operasional bukan Natural Talent yang kuat, kemampuan ini lebih tepat dibaca sebagai Adaptive / Survival Strength: muncul karena tanggung jawab, jabatan, tuntutan keluarga, atau kebutuhan lingkungan; bukan karena area itu menjadi sumber energi dan semangat utama.",
     bestUse:
       "Gunakan untuk memastikan hal penting tidak tercecer, terutama ketika ada tujuan yang jelas dan dampaknya terasa penting.",
     energyCost:
@@ -441,7 +441,7 @@ function buildServiceGapInsight(answers: Answers, roles: MicroRoleScore[]): Adap
     routeLabel: "Jalur yang mendorong: nilai, kepedulian, tanggung jawab",
     notRouteLabel: "Bukan berarti selalu siap menampung semua beban emosi",
     interpretation:
-      "Anda dapat terlihat kuat dalam membantu, melayani, atau mendampingi orang lain. Namun bila kepekaan relasional bukan rumah energi utama, bantuan itu lebih mungkin muncul karena nilai, tanggung jawab, ketulusan, atau rasa perlu melakukan yang benar; bukan karena selalu siap menampung semua kebutuhan emosional orang lain.",
+      "Anda dapat terlihat kuat dalam membantu, melayani, atau mendampingi orang lain. Namun bila kepekaan relasional bukan sumber energi dan semangat utama, bantuan itu lebih mungkin muncul karena nilai, tanggung jawab, ketulusan, atau rasa perlu melakukan yang benar; bukan karena selalu siap menampung semua kebutuhan emosional orang lain.",
     bestUse:
       "Paling sehat digunakan untuk bantuan yang punya batas jelas, tujuan jelas, dan tidak membuat Anda mengambil alih seluruh beban orang lain.",
     energyCost:
@@ -464,10 +464,10 @@ function buildGenericAdaptiveInsights(roles: MicroRoleScore[]): AdaptiveGapInsig
       naturalRouteScore: role.natural,
       adaptiveLoadScore: role.strength - role.natural,
       routeLabel: "Terlihat kuat karena sering digunakan atau dituntut peran",
-      notRouteLabel: "Belum tentu menjadi sumber energi alami utama",
+      notRouteLabel: "Belum tentu menjadi sumber energi dan semangat utama",
       interpretation: `Area ${role.name} tampak dapat Anda jalankan, tetapi skor alami yang lebih rendah menunjukkan bahwa kekuatan ini perlu dibaca sebagai kemampuan yang mungkin terbentuk karena tuntutan hidup, pekerjaan, keluarga, atau lingkungan.`,
       bestUse: role.healthyUse,
-      energyCost: "Jika menjadi tuntutan utama terus-menerus, area ini dapat membuat Anda terlihat mampu di luar tetapi lebih cepat lelah di dalam.",
+      energyCost: "Jika menjadi tuntutan utama terus-menerus, area ini dapat membuat Anda terlihat mampu di luar, tetapi semangat dan energi Anda dapat cepat turun di dalam.",
       supportStrategy: "Gunakan sistem, pembagian peran, template, jadwal pemulihan, atau partner yang lebih natural di area ini agar tidak menjadi beban berkepanjangan.",
     }));
 }

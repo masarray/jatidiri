@@ -137,16 +137,16 @@ export function buildPurposeGuidance(lens: PurposeLens, top: Cluster[], bottom: 
   if (lens.key === "relationship_family") {
     return [
       {
-        title: "Cara pasangan sebaiknya memahami Anda",
-        body: `Pasangan sebaiknya melihat Anda melalui pola energi utama: ${primaryMeta.label} dan ${secondaryMeta.label}. Anda cenderung lebih mudah terbuka ketika ${primaryMeta.commGood.toLowerCase()} Dalam relasi, hal ini berarti pasangan perlu memahami cara Anda memproses situasi sebelum menuntut respons yang terlalu cepat.`,
+        title: "Prinsip membaca pasangan",
+        body: `Jangan hanya bertanya “apa yang harus dilakukan?”, tetapi “pintu masuk seperti apa yang membuat orang ini hidup?”. Area ${primaryMeta.label} dan ${secondaryMeta.label} menunjukkan bahasa yang cenderung lebih mudah menyalakan energi. Aktivitas yang sama bisa terasa berat atau ringan tergantung cara membungkusnya.`,
       },
       {
-        title: "Cara berkomunikasi yang lebih tepat",
-        body: `${primaryMeta.commGood} Saat ada perbedaan pendapat, gunakan kalimat yang spesifik, tenang, dan tidak menyudutkan. Hindari pola yang membuat Anda defensif: ${primaryMeta.commBad.toLowerCase()}`,
+        title: "Cara mengurangi resistensi",
+        body: `Masuklah melalui konteks, rasa aman, dan tujuan bersama sebelum memberi instruksi atau koreksi. Hindari pola yang membuat pesan terasa seperti tekanan: ${primaryMeta.commBad.toLowerCase()} Pasangan tidak perlu selalu setuju, tetapi perlu merasa dipahami sebelum diajak berubah.`,
       },
       {
-        title: "Saat konflik atau tekanan",
-        body: `Area ${vulnerableMeta.label} tampak perlu dikelola lebih hati-hati. Ketika area ini menjadi tuntutan utama, Anda bisa lebih cepat lelah. Pasangan dapat membantu dengan ${vulnerableMeta.compensate.toLowerCase()}`,
+        title: "Area yang perlu dibantu pasangan",
+        body: `Area ${vulnerableMeta.label} tampak perlu dikelola lebih hati-hati. Jika area ini terus menjadi tuntutan utama, semangat dan energi dapat cepat turun. Pasangan dapat membantu dengan ${vulnerableMeta.compensate.toLowerCase()}`,
       },
       {
         title: "Strategi parenting bersama Anda",
@@ -154,7 +154,7 @@ export function buildPurposeGuidance(lens: PurposeLens, top: Cluster[], bottom: 
       },
       {
         title: "Visi keluarga yang lebih sesuai",
-        body: `Bangun visi keluarga dengan menggabungkan kehangatan, struktur, dan pembagian peran yang realistis. Anda tidak perlu menjadi kuat di semua area. Yang penting adalah pasangan memahami area yang menghidupkan, area yang menguras, dan cara saling menutup kelemahan tanpa saling menyalahkan.`,
+        body: `Bangun visi keluarga dengan prinsip: gunakan kekuatan masing-masing, jangan memaksa satu orang kuat di semua area, dan buat sistem agar tugas rutin tidak selalu bergantung pada mood. Parenting yang stabil membutuhkan kehangatan, batas yang jelas, dan pembagian peran yang sadar.`,
       },
     ];
   }
