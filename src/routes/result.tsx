@@ -24,12 +24,10 @@ import {
 } from "@/data/purposeLens";
 import {
   buildAnalogies,
-  buildBlindSpots,
   buildCommunicationOn,
   buildCommunicationResistance,
   buildDailyHabits,
   buildObservablePatterns,
-  buildPressurePatterns,
   getMicroRoleNarrative,
 } from "@/data/observableNarratives";
 
@@ -66,11 +64,9 @@ function ResultPage() {
   );
   const observablePatterns = useMemo(() => buildObservablePatterns(patternReport.topNaturalRoles), [patternReport]);
   const dailyHabits = useMemo(() => buildDailyHabits(patternReport.topNaturalRoles), [patternReport]);
-  const pressurePatterns = useMemo(() => buildPressurePatterns(patternReport.topNaturalRoles), [patternReport]);
   const communicationOn = useMemo(() => buildCommunicationOn(patternReport.topNaturalRoles), [patternReport]);
   const communicationResistance = useMemo(() => buildCommunicationResistance(patternReport.topNaturalRoles), [patternReport]);
   const analogies = useMemo(() => buildAnalogies(patternReport.topNaturalRoles), [patternReport]);
-  const blindSpots = useMemo(() => buildBlindSpots(patternReport.topNaturalRoles), [patternReport]);
 
   useEffect(() => {
     if (!identity) navigate({ to: "/" });
@@ -231,22 +227,6 @@ function ResultPage() {
           </div>
         </Section>
 
-        <Section title="Saat Terdesak" kicker="Pressure Pattern">
-          <div className="grid gap-3 sm:grid-cols-[1.1fr_0.9fr]">
-            <BulletPanel
-              title="Respons yang cenderung muncul"
-              intro="Pola ini bukan diagnosis stres, tetapi petunjuk bagaimana kekuatan alami dapat muncul ketika ada tekanan."
-              items={pressurePatterns}
-            />
-            <BulletPanel
-              title="Blind spot yang perlu dijaga"
-              intro="Sisi bayangan dari kekuatan utama agar tetap sehat dan tidak berubah menjadi sumber konflik."
-              items={blindSpots}
-              muted
-            />
-          </div>
-        </Section>
-
         <Section title="Panduan Komunikasi Praktis" kicker="Communication Trigger">
           <div className="grid gap-3 sm:grid-cols-2">
             <BulletPanel
@@ -275,24 +255,24 @@ function ResultPage() {
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <SummaryCard
-              title="Kekuatan Alami"
-              caption="Micro-role dominan yang cenderung memberi energi dan muncul lebih spontan."
+              title="Natural Talent"
+              caption="Micro-role yang cenderung muncul lebih spontan, terasa lebih hidup, dan relatif tidak cepat menguras energi."
               items={patternReport.topNaturalRoles.slice(0, 3).map((role) => role.name)}
             />
             <SummaryCard
-              title="Kekuatan Terlatih"
-              caption="Aktivitas/role yang relatif lebih sering digunakan atau lebih percaya diri dijalani."
+              title="Explored Strength"
+              caption="Aktivitas atau peran yang sudah lebih sering digunakan, dilatih, atau terbentuk dari pengalaman nyata."
               items={patternReport.topTrainedRoles.slice(0, 3).map((role) => role.name)}
             />
             <SummaryCard
-              title="Titik Rentan Energi"
-              caption="Area yang tetap bisa dikelola, namun cenderung lebih menguras jika menjadi tuntutan utama."
+              title="Draining Role"
+              caption="Peran yang bisa saja dilakukan, tetapi lebih cepat menguras energi jika terlalu sering menjadi tuntutan utama."
               items={patternReport.drainingRoles.slice(0, 3).map((role) => role.name)}
             />
           </div>
         </Section>
 
-        <Section title="Kekuatan Alami" kicker="Natural Micro Roles">
+        <Section title="Natural Talent" kicker="Natural Talent">
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
             Bagian ini membaca potensi dominan pada level micro-role. Gunakan warna sebagai kode cepat: dominan, berkembang, netral, perlu dukungan, dan titik rentan energi.
           </p>
@@ -309,7 +289,7 @@ function ResultPage() {
           </div>
         </Section>
 
-        <Section title="Kekuatan Terlatih" kicker="Explored Activity Roles">
+        <Section title="Explored Strength" kicker="Explored Strength">
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
             Bagian ini menunjukkan role atau aktivitas yang tampak sudah lebih sering digunakan, dilatih, atau lebih percaya diri dijalani dalam pengalaman nyata.
           </p>
@@ -325,9 +305,9 @@ function ResultPage() {
         </Section>
 
         {patternReport.adaptiveGapInsights.length > 0 && (
-          <Section title="Jalur Kekuatan Adaptif" kicker="Natural vs Adaptive Gap">
+          <Section title="Adaptive / Survival Strength" kicker="Natural vs Adaptive Gap">
             <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-              Bagian ini membedakan area yang terlihat kuat karena sering dilakukan dengan jalur energi yang sebenarnya membuatnya hidup. Fokusnya bukan hanya "bisa", tetapi "kuat lewat jalur apa" dan "kapan mulai menguras energi".
+              Bagian ini membaca kemampuan yang tampak kuat karena tuntutan hidup, jabatan, keluarga, target, atau kebutuhan sosial. Fokusnya bukan sekadar “Anda kuat di apa”, tetapi “Anda kuat lewat jalur apa” dan apakah jalur itu mengisi energi atau justru menguras.
             </p>
             <div className="space-y-3">
               {patternReport.adaptiveGapInsights.map((insight) => (
@@ -338,9 +318,9 @@ function ResultPage() {
         )}
 
         {patternReport.adaptiveRoles.length > 0 && (
-          <Section title="Kemampuan Adaptif" kicker="Learned Behavior">
+          <Section title="Adaptive Capability" kicker="Adaptive Capability">
             <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
-              Area ini tampak bisa dijalankan, tetapi belum tentu menjadi sumber energi alami utama. Ini sering muncul karena tuntutan peran, pengalaman, atau kebutuhan lingkungan.
+              Area ini dapat dijalankan dengan cukup baik, tetapi belum tentu menjadi rumah energi utama. Biasanya area seperti ini terbentuk karena pengalaman, tanggung jawab, survival, atau kebutuhan lingkungan.
             </p>
             <div className="space-y-3">
               {patternReport.adaptiveRoles.map((role, i) => (
@@ -354,7 +334,7 @@ function ResultPage() {
           </Section>
         )}
 
-        <Section title="Matriks Alami vs Aktivitas" kicker="Natural–Activity Gap">
+        <Section title="Natural vs Adaptive Map" kicker="Natural vs Adaptive Gap">
           <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
             Bagian ini membandingkan kecenderungan alami dengan kekuatan aktivitas pada peta cluster. Gunakan sebagai jembatan untuk membedakan kekuatan hidup, potensi belum terlatih, kemampuan adaptif, dan titik rentan energi.
           </p>
@@ -373,7 +353,7 @@ function ResultPage() {
           </div>
         </Section>
 
-        <Section title="Titik Rentan Energi" kicker="Energy Risk Notes">
+        <Section title="Draining Role" kicker="Draining Role">
           <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
             Area ini bukan berarti tidak bisa dilakukan. Namun apabila menjadi tuntutan utama dalam jangka panjang, area ini cenderung membutuhkan usaha, dukungan sistem, atau waktu pemulihan yang lebih besar.
           </p>
@@ -397,7 +377,7 @@ function ResultPage() {
           </div>
         </Section>
 
-        <Section title="Peta Keluarga Peran" kicker="Role Family Map">
+        <Section title="Role Family Map" kicker="Role Family Map">
           <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
             <p className="text-xs leading-relaxed text-muted-foreground">
               Peta ini merangkum micro-role ke dalam keluarga peran agar pola besar tetap mudah dibaca.
@@ -418,14 +398,14 @@ function ResultPage() {
           </div>
         </Section>
 
-        <Section title="Peta Cluster Kekuatan" kicker="Cluster Score">
+        <Section title="Strength Cluster Map" kicker="Cluster Score">
           <div className="mb-3 rounded-3xl border border-border/60 bg-card p-5 text-xs leading-relaxed text-muted-foreground shadow-sm print-avoid-break">
             Maksud peta ini dalam hidup sehari-hari: cluster menunjukkan wilayah besar energi Anda. Micro-role menjelaskan perilaku konkretnya. Jadi diagram bukan untuk dilihat sebagai angka semata, tetapi sebagai peta arah: area mana yang menghidupkan, area mana yang terlatih, dan area mana yang perlu dikelola agar tidak menjadi sumber lelah.
           </div>
           <ClusterRadar reports={reports} />
         </Section>
 
-        <Section title="Peta Energi & Pemulihan" kicker="Recharge & Drain">
+        <Section title="Energy & Recovery Map" kicker="Recharge & Drain">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="rounded-3xl border border-primary/25 bg-primary/10 p-5 print-avoid-break">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Cenderung Mengisi Energi</div>
@@ -485,25 +465,25 @@ function AdaptiveGapCard({
     <div className="rounded-3xl border border-amber-500/25 bg-card p-5 shadow-sm print-avoid-break">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">Kemampuan adaptif</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">Adaptive / Survival</div>
           <h3 className="mt-1 text-base font-bold text-foreground">{insight.title}</h3>
           <p className="mt-2 text-sm leading-relaxed text-foreground/90">{insight.interpretation}</p>
         </div>
         <div className="shrink-0 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Terlihat kuat</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Visible strength</div>
           <div className="text-lg font-bold text-[var(--ember)]">{insight.score}</div>
         </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <SignatureNote title="Jalur yang menghidupkan" body={insight.routeLabel} />
-        <SignatureNote title="Jalur yang lebih melelahkan" body={insight.notRouteLabel} />
+        <SignatureNote title="Energizing route" body={insight.routeLabel} />
+        <SignatureNote title="Draining route" body={insight.notRouteLabel} />
       </div>
 
       <dl className="mt-4 space-y-2 text-xs">
-        <Row k="Paling sehat" v={insight.bestUse} />
-        <Row k="Biaya energi" v={insight.energyCost} />
-        <Row k="Strategi dukungan" v={insight.supportStrategy} />
+        <Row k="Best-fit use" v={insight.bestUse} />
+        <Row k="Energy cost" v={insight.energyCost} />
+        <Row k="Support strategy" v={insight.supportStrategy} />
       </dl>
     </div>
   );

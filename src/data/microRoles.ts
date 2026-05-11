@@ -1,14 +1,14 @@
 import type { Cluster } from "@/types/assessment";
 
 export type RoleFamily =
-  | "Pengarah Peran"
-  | "Penghubung Relasi"
-  | "Pendamping Manusia"
-  | "Pemikir Analitis"
-  | "Penalar Masalah"
-  | "Pembangun Gagasan"
-  | "Pengelola Sistem"
-  | "Pelaksana Teknis";
+  | "Direction & Leadership"
+  | "Connection & Influence"
+  | "Human Support"
+  | "Analytical Thinking"
+  | "Problem Reasoning"
+  | "Idea Generation"
+  | "System Management"
+  | "Technical Execution";
 
 export type MicroRoleId =
   | "information_collector"
@@ -59,21 +59,21 @@ export interface MicroRoleItemMap {
 }
 
 export const ROLE_FAMILIES: RoleFamily[] = [
-  "Pengarah Peran",
-  "Penghubung Relasi",
-  "Pendamping Manusia",
-  "Pemikir Analitis",
-  "Penalar Masalah",
-  "Pembangun Gagasan",
-  "Pengelola Sistem",
-  "Pelaksana Teknis",
+  "Direction & Leadership",
+  "Connection & Influence",
+  "Human Support",
+  "Analytical Thinking",
+  "Problem Reasoning",
+  "Idea Generation",
+  "System Management",
+  "Technical Execution",
 ];
 
 export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = {
   information_collector: {
     id: "information_collector",
-    name: "Pengumpul Informasi",
-    family: "Pemikir Analitis",
+    name: "Information Collector",
+    family: "Analytical Thinking",
     cluster: "Thinking",
     tagline: "Tertarik mengumpulkan bahan, referensi, dan sudut pandang sebelum menyimpulkan.",
     visible: "Sering bertanya, mencari referensi, dan menyimpan hal yang menurutnya berguna.",
@@ -83,8 +83,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   fast_learner: {
     id: "fast_learner",
-    name: "Pembelajar Cepat",
-    family: "Pemikir Analitis",
+    name: "Fast Learner",
+    family: "Analytical Thinking",
     cluster: "Thinking",
     tagline: "Mudah hidup ketika ada ruang belajar, memahami hal baru, dan menaikkan kapasitas diri.",
     visible: "Cepat tertarik pada pengetahuan, metode, atau bidang baru yang memberi rasa berkembang.",
@@ -94,8 +94,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   deep_thinker: {
     id: "deep_thinker",
-    name: "Pemikir Mendalam",
-    family: "Pemikir Analitis",
+    name: "Deep Thinker",
+    family: "Analytical Thinking",
     cluster: "Thinking",
     tagline: "Cenderung memproses sesuatu melalui perenungan, makna, dan pemahaman yang lebih dalam.",
     visible: "Tidak selalu langsung merespons, tetapi sering membawa sudut pandang yang lebih matang setelah berpikir.",
@@ -105,8 +105,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   idea_translator: {
     id: "idea_translator",
-    name: "Penerjemah Gagasan",
-    family: "Pembangun Gagasan",
+    name: "Knowledge Translator",
+    family: "Idea Generation",
     cluster: "Influencing",
     tagline: "Mengubah hal yang rumit menjadi penjelasan yang lebih mudah dipahami orang lain.",
     visible: "Mampu menjelaskan, mempresentasikan, atau memberi bahasa pada ide yang sebelumnya terasa abstrak.",
@@ -116,8 +116,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   strategy_designer: {
     id: "strategy_designer",
-    name: "Penyusun Strategi",
-    family: "Pengarah Peran",
+    name: "Strategic Designer",
+    family: "Direction & Leadership",
     cluster: "Striving",
     tagline: "Mencari jalan terbaik, alternatif rute, dan prioritas menuju tujuan.",
     visible: "Cepat membaca opsi, konsekuensi, dan kemungkinan jalan keluar saat orang lain masih melihat kebuntuan.",
@@ -127,8 +127,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   idea_synthesizer: {
     id: "idea_synthesizer",
-    name: "Pengolah Ide",
-    family: "Pembangun Gagasan",
+    name: "Idea Synthesizer",
+    family: "Idea Generation",
     cluster: "Creating",
     tagline: "Menggabungkan informasi dan ide menjadi bentuk baru yang lebih utuh.",
     visible: "Sering melihat hubungan antaride dan menawarkan bentuk baru dari bahan yang sudah ada.",
@@ -138,8 +138,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   pattern_reader: {
     id: "pattern_reader",
-    name: "Pembaca Pola",
-    family: "Penalar Masalah",
+    name: "Pattern Analyst",
+    family: "Problem Reasoning",
     cluster: "Analyzing",
     tagline: "Melihat hubungan, data, dan pola yang menjadi dasar kesimpulan.",
     visible: "Sering mempertanyakan data, mencari bukti, dan tidak puas dengan jawaban yang terlalu umum.",
@@ -149,8 +149,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   problem_restorer: {
     id: "problem_restorer",
-    name: "Pemulih Masalah",
-    family: "Penalar Masalah",
+    name: "Problem Solver",
+    family: "Problem Reasoning",
     cluster: "Operating",
     tagline: "Tertarik menemukan penyebab masalah dan mengembalikan sesuatu ke kondisi yang lebih baik.",
     visible: "Cenderung mencari akar masalah, memperbaiki, dan membuat sesuatu yang rusak kembali berjalan.",
@@ -160,8 +160,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   people_developer: {
     id: "people_developer",
-    name: "Pengembang Orang",
-    family: "Pendamping Manusia",
+    name: "People Developer",
+    family: "Human Support",
     cluster: "Supporting",
     tagline: "Mendapat energi ketika melihat orang lain bertumbuh dan lebih mampu.",
     visible: "Mudah melihat potensi, memberi dorongan, dan membantu orang lain naik kapasitas.",
@@ -171,8 +171,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   commitment_keeper: {
     id: "commitment_keeper",
-    name: "Penjaga Komitmen",
-    family: "Pengelola Sistem",
+    name: "Commitment Keeper",
+    family: "System Management",
     cluster: "Striving",
     tagline: "Menjaga janji, kualitas, dan tanggung jawab agar tidak mudah meleset.",
     visible: "Terlihat dapat diandalkan, serius pada kewajiban, dan tidak nyaman jika hasil asal selesai.",
@@ -182,8 +182,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   system_organizer: {
     id: "system_organizer",
-    name: "Penata Sistem",
-    family: "Pengelola Sistem",
+    name: "System Organizer",
+    family: "System Management",
     cluster: "Operating",
     tagline: "Menyukai keteraturan, jadwal, struktur, dan proses yang dapat diikuti.",
     visible: "Membuat hal yang berantakan menjadi lebih rapi, tertata, dan mudah dijalankan.",
@@ -193,8 +193,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   action_mover: {
     id: "action_mover",
-    name: "Penggerak Aksi",
-    family: "Pengarah Peran",
+    name: "Action Driver",
+    family: "Direction & Leadership",
     cluster: "Influencing",
     tagline: "Cenderung bergerak cepat setelah arah dianggap cukup jelas.",
     visible: "Mendorong keputusan menjadi tindakan dan tidak betah terlalu lama di tahap wacana.",
@@ -204,8 +204,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   social_connector: {
     id: "social_connector",
-    name: "Penghubung Sosial",
-    family: "Penghubung Relasi",
+    name: "Social Connector",
+    family: "Connection & Influence",
     cluster: "Relating",
     tagline: "Mudah membuka percakapan, menjembatani orang, dan membuat suasana lebih hidup.",
     visible: "Terlihat mudah menyapa, membangun jejaring, dan membuat orang merasa diterima.",
@@ -215,8 +215,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   harmony_keeper: {
     id: "harmony_keeper",
-    name: "Penjaga Harmoni",
-    family: "Penghubung Relasi",
+    name: "Harmony Builder",
+    family: "Connection & Influence",
     cluster: "Relating",
     tagline: "Mencari titik temu, menurunkan konflik, dan menjaga agar perbedaan tetap bisa dibicarakan.",
     visible: "Cenderung menenangkan suasana dan mencari alasan yang dapat diterima berbagai pihak.",
@@ -226,8 +226,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   decision_director: {
     id: "decision_director",
-    name: "Pengarah Keputusan",
-    family: "Pengarah Peran",
+    name: "Decision Driver",
+    family: "Direction & Leadership",
     cluster: "Influencing",
     tagline: "Berani mengambil posisi, memberi arah, dan menghadapi keputusan sulit.",
     visible: "Terlihat tegas, terus terang, dan tidak takut masuk ke percakapan yang menentukan arah.",
@@ -237,8 +237,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   quality_evaluator: {
     id: "quality_evaluator",
-    name: "Penilai Kualitas",
-    family: "Penalar Masalah",
+    name: "Quality Evaluator",
+    family: "Problem Reasoning",
     cluster: "Analyzing",
     tagline: "Memastikan sesuatu benar, layak, aman, dan dapat dipertanggungjawabkan.",
     visible: "Teliti memeriksa, membandingkan, dan mencari bagian yang belum sesuai.",
@@ -248,8 +248,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   operational_executor: {
     id: "operational_executor",
-    name: "Pelaksana Operasional",
-    family: "Pelaksana Teknis",
+    name: "Operational Executor",
+    family: "Technical Execution",
     cluster: "Operating",
     tagline: "Menjalankan proses, prosedur, dan pekerjaan teknis agar hasil nyata terjadi.",
     visible: "Cenderung mampu menjaga pekerjaan tetap berjalan dan memastikan hal praktis terselesaikan.",
@@ -259,8 +259,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   creative_designer: {
     id: "creative_designer",
-    name: "Perancang Kreatif",
-    family: "Pembangun Gagasan",
+    name: "Creative Designer",
+    family: "Idea Generation",
     cluster: "Creating",
     tagline: "Menggunakan imajinasi, bentuk, dan rasa untuk menciptakan sesuatu yang baru atau menarik.",
     visible: "Mudah membayangkan kemungkinan, tampilan, cerita, atau bentuk baru.",
@@ -270,8 +270,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   achievement_driver: {
     id: "achievement_driver",
-    name: "Pendorong Prestasi",
-    family: "Pengarah Peran",
+    name: "Achievement Driver",
+    family: "Direction & Leadership",
     cluster: "Striving",
     tagline: "Terdorong oleh kemajuan, standar tinggi, dan hasil yang terlihat.",
     visible: "Sering menaikkan target, mengejar hasil, dan tidak mudah puas pada yang biasa-biasa saja.",
@@ -281,8 +281,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   meaning_keeper: {
     id: "meaning_keeper",
-    name: "Penjaga Makna",
-    family: "Pendamping Manusia",
+    name: "Meaning Maker",
+    family: "Human Support",
     cluster: "Supporting",
     tagline: "Menghubungkan tindakan dengan nilai, manfaat, dan tujuan yang lebih besar.",
     visible: "Sering mencari hikmah, manfaat, nilai, atau alasan moral di balik tindakan.",
@@ -292,8 +292,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   consistency_guardian: {
     id: "consistency_guardian",
-    name: "Penjaga Konsistensi",
-    family: "Pengelola Sistem",
+    name: "Consistency Guardian",
+    family: "System Management",
     cluster: "Operating",
     tagline: "Menjaga aturan, keadilan proses, dan perlakuan yang konsisten.",
     visible: "Cenderung memperhatikan aturan, fairness, dan perlakuan yang tidak berubah-ubah.",
@@ -303,8 +303,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   relationship_keeper: {
     id: "relationship_keeper",
-    name: "Perawat Relasi",
-    family: "Penghubung Relasi",
+    name: "Relationship Builder",
+    family: "Connection & Influence",
     cluster: "Relating",
     tagline: "Menjaga kedekatan, kepercayaan, dan hubungan yang sudah terbangun.",
     visible: "Ingin tahu keadaan orang dekat, menjaga kontak, dan memperdalam hubungan yang berarti.",
@@ -314,8 +314,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   emotion_reader: {
     id: "emotion_reader",
-    name: "Pembaca Emosi",
-    family: "Pendamping Manusia",
+    name: "Emotional Reader",
+    family: "Human Support",
     cluster: "Relating",
     tagline: "Peka menangkap perasaan, nada, atau kebutuhan emosional yang tidak selalu diucapkan.",
     visible: "Mudah merasakan suasana, memahami emosi orang, dan menangkap hal yang tidak dikatakan langsung.",
@@ -325,8 +325,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   group_includer: {
     id: "group_includer",
-    name: "Penyambut Kelompok",
-    family: "Penghubung Relasi",
+    name: "Inclusion Builder",
+    family: "Connection & Influence",
     cluster: "Relating",
     tagline: "Membuat orang merasa diterima, dilibatkan, dan tidak diabaikan.",
     visible: "Cenderung memperhatikan siapa yang tersisih dan berusaha membuat ruang lebih inklusif.",
@@ -336,8 +336,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   complexity_arranger: {
     id: "complexity_arranger",
-    name: "Pengatur Kompleksitas",
-    family: "Pengelola Sistem",
+    name: "Complexity Organizer",
+    family: "System Management",
     cluster: "Operating",
     tagline: "Mampu mengatur banyak bagian agar menjadi susunan yang lebih dapat dijalankan.",
     visible: "Mudah melihat siapa/apa ditempatkan di mana agar kerja menjadi lebih efektif.",
@@ -347,8 +347,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   mentor_coach: {
     id: "mentor_coach",
-    name: "Pembimbing Praktis",
-    family: "Pendamping Manusia",
+    name: "Mentor Coach",
+    family: "Human Support",
     cluster: "Supporting",
     tagline: "Memberi arahan, bimbingan, dan langkah belajar yang membantu orang lain berkembang.",
     visible: "Mampu menasihati, mengajarkan, atau mendampingi orang sampai lebih mampu bergerak.",
@@ -358,8 +358,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   risk_checker: {
     id: "risk_checker",
-    name: "Pemeriksa Risiko",
-    family: "Penalar Masalah",
+    name: "Risk Assessor",
+    family: "Problem Reasoning",
     cluster: "Analyzing",
     tagline: "Mengantisipasi dampak negatif sebelum keputusan atau tindakan diambil.",
     visible: "Cenderung hati-hati, mempertimbangkan konsekuensi, dan melihat potensi masalah sejak awal.",
@@ -369,8 +369,8 @@ export const MICRO_ROLE_DEFINITIONS: Record<MicroRoleId, MicroRoleDefinition> = 
   },
   future_mapper: {
     id: "future_mapper",
-    name: "Pembaca Arah Masa Depan",
-    family: "Pembangun Gagasan",
+    name: "Future Mapper",
+    family: "Idea Generation",
     cluster: "Creating",
     tagline: "Membayangkan kemungkinan masa depan dan menyusun arah yang lebih jauh.",
     visible: "Sering membicarakan visi, kemungkinan, dan gambaran yang belum terjadi.",

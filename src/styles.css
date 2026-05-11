@@ -450,3 +450,106 @@
   62% { transform: scale(1.14); }
   100% { transform: scale(1); }
 }
+
+/* Patch Q — compact mobile assessment layout
+   Goal: question + all seven answer choices visible on common phone screens. */
+.assessment-shell {
+  min-height: 100dvh;
+}
+
+.compact-question-card {
+  animation: question-enter 160ms ease-out both;
+}
+
+.compact-answer-group .answer-pill-indicator {
+  height: 40px;
+  border-width: 1.5px;
+  box-shadow:
+    0 8px 18px color-mix(in oklab, var(--active-scale-glow, color-mix(in oklab, var(--primary) 18%, transparent)) 76%, transparent),
+    inset 0 0 0 1px rgba(255,255,255,0.56);
+}
+
+.compact-answer-option {
+  min-height: 40px;
+  border: 1px solid transparent;
+}
+
+.compact-answer-option .answer-pill-number {
+  width: 1.75rem;
+  height: 1.75rem;
+  background: color-mix(in oklab, var(--scale-soft) 68%, white);
+}
+
+.compact-answer-option.is-selected .answer-pill-number {
+  background: var(--scale-fill);
+  border-color: var(--scale-fill);
+  color: var(--scale-ink);
+}
+
+/* On real mobile heights, prioritize full visibility over decorative spacing. */
+@media (max-height: 760px) and (max-width: 520px) {
+  .assessment-shell .sticky > div {
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .assessment-shell .relative.h-1\.5 {
+    height: 0.25rem;
+  }
+
+  .compact-question-card {
+    border-radius: 1.35rem;
+    padding: 0.88rem;
+  }
+
+  .compact-question-card h2 {
+    min-height: 3.4rem;
+    margin-top: 0.35rem;
+    font-size: clamp(1.03rem, 4.15vw, 1.22rem);
+    line-height: 1.22;
+  }
+
+  .compact-question-card > div:last-child {
+    margin-top: 0.75rem;
+  }
+
+  .answer-scale-caption {
+    margin-bottom: 0.3rem;
+  }
+
+  .compact-answer-group {
+    border-radius: 1.1rem;
+    padding: 0.3rem;
+  }
+
+  .compact-answer-option {
+    gap: 0.55rem;
+    padding-left: 0.5rem;
+    padding-right: 0.75rem;
+  }
+
+  .compact-answer-option .answer-pill-number {
+    width: 1.62rem;
+    height: 1.62rem;
+    font-size: 10px;
+  }
+
+  .compact-answer-option span.block.truncate {
+    font-size: 12.7px;
+  }
+
+  .answer-scale-footnote {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .compact-question-card {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .compact-answer-option span.block.truncate {
+    font-size: 12.3px;
+  }
+}

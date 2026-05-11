@@ -19,13 +19,13 @@ const LABELS: Record<AssessmentSession, { left: string; right: string; title: st
     left: "Sangat bukan saya banget",
     right: "Sangat saya banget",
     title: "Sesi 1 — Bakat Alami",
-    help: "Pilih jawaban yang spontan muncul di pikiran Anda.",
+    help: "Jawab spontan sesuai pola yang paling terasa.",
   },
   strength: {
     left: "Sangat Lemah",
     right: "Sangat Kuat",
     title: "Sesi 2 — Kekuatan Aktivitas",
-    help: "Pilih berdasarkan kekuatan aktivitas yang Anda rasakan dalam pengalaman nyata.",
+    help: "Jawab berdasarkan pengalaman nyata.",
   },
 };
 
@@ -88,18 +88,18 @@ function AssessmentPage() {
   if (!question) return null;
 
   return (
-    <main className="min-h-dvh bg-background flex flex-col">
-      <div className="sticky top-0 z-10 bg-background/85 backdrop-blur-md border-b border-border/40">
-        <div className="max-w-md mx-auto px-5 py-3">
-          <div className="flex items-center justify-between mb-2">
+    <main className="assessment-shell min-h-dvh bg-background flex flex-col">
+      <div className="sticky top-0 z-10 border-b border-border/40 bg-background/88 backdrop-blur-md">
+        <div className="mx-auto max-w-md px-3.5 py-2.5 sm:px-5">
+          <div className="mb-1.5 flex items-center justify-between">
             <button
               onClick={goBack}
               disabled={idx === 0}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground disabled:opacity-30"
+              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground disabled:opacity-30"
             >
               <ChevronLeft className="size-3.5" /> Sebelumnya
             </button>
-            <Link to="/" className="text-xs text-muted-foreground">
+            <Link to="/" className="text-[11px] text-muted-foreground">
               Jeda
             </Link>
           </div>
@@ -107,19 +107,22 @@ function AssessmentPage() {
         </div>
       </div>
 
-      <div className="flex-1 px-5 py-6 max-w-md mx-auto w-full">
-        <QuestionCard number={question.number} total={questions.length} text={question.text}>
-          <AnswerScale
-            value={sessionAnswers[question.id]}
-            onSelect={handleSelect}
-            leftLabel={LABELS[s].left}
-            rightLabel={LABELS[s].right}
-          />
-        </QuestionCard>
+      <div className="mx-auto flex w-full max-w-md flex-1 px-3.5 py-3 sm:px-5 sm:py-5">
+        <div className="w-full">
+          <QuestionCard number={question.number} total={questions.length} text={question.text}>
+            <AnswerScale
+              value={sessionAnswers[question.id]}
+              onSelect={handleSelect}
+              leftLabel={LABELS[s].left}
+              rightLabel={LABELS[s].right}
+              session={s}
+            />
+          </QuestionCard>
 
-        <p className="mt-6 text-center text-[11px] text-muted-foreground">
-          {LABELS[s].help} <span className="hidden sm:inline">Desktop: tekan angka 1–7.</span>
-        </p>
+          <p className="mt-2 text-center text-[10.5px] leading-tight text-muted-foreground sm:mt-4 sm:text-[11px]">
+            {LABELS[s].help} <span className="hidden sm:inline">Desktop: tekan angka 1–7.</span>
+          </p>
+        </div>
       </div>
     </main>
   );
