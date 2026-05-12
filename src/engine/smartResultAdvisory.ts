@@ -6,6 +6,7 @@ import type {
   PatternSignatureReport,
 } from "@/engine/patternSignature";
 import type { MicroRoleId } from "@/data/microRoles";
+import { displayMicroRoleName } from "@/utils/displayNames";
 
 export type AdvisoryTone = "teal" | "amber" | "rose" | "slate" | "sky";
 
@@ -116,6 +117,8 @@ function cleanLanguage(value: string | null | undefined): string {
     .replace(/rumah energi(?: alami)?(?:mu| kamu)?/gi, "zona kekuatan alami kamu")
     .replace(/sumber energi alamimu/gi, "zona kekuatan alami kamu")
     .replace(/\bundefined\b/gi, "")
+    .replace(/social breadth/gi, "relasi sosial yang terlalu melebar")
+    .replace(/\.\s+kamu/g, ". Kamu")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -605,9 +608,9 @@ function buildAdaptiveAdvisories(report: PatternSignatureReport): AdvisoryAdapti
     .slice(0, Math.max(0, 3 - specific.length))
     .map((role) => ({
       id: role.id,
-      title: `${role.name} yang sudah terbentuk karena pengalaman`,
+      title: `${displayMicroRoleName(role)} yang sudah terbentuk karena pengalaman`,
       headline: "Kamu bisa menjalankan area ini, tetapi perlu jujur apakah ini mengisi atau menguras energi.",
-      body: `Area ${role.name} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada zona kekuatan alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan.`,
+      body: `Area ${displayMicroRoleName(role)} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada zona kekuatan alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan.`,
       emotionalNote:
         "Kamu boleh merasa capek setelah menjalankan peran ini. Mampu melakukan sesuatu tidak selalu berarti itu zona kekuatan alami.",
       recovery:
@@ -622,7 +625,7 @@ function buildAdaptiveAdvisories(report: PatternSignatureReport): AdvisoryAdapti
 }
 
 function names(roles: MicroRoleScore[], limit = 3) {
-  const selected = roles.slice(0, limit).map((role) => role.name);
+  const selected = roles.slice(0, limit).map((role) => displayMicroRoleName(role));
   if (selected.length === 0) return "beberapa pola energi utama";
   if (selected.length === 1) return selected[0];
   if (selected.length === 2) return `${selected[0]} dan ${selected[1]}`;
@@ -657,26 +660,30 @@ function buildMirror(
 
   if (alignedCount >= 6) {
     lines.push(
-      "Kamu tampak sudah cukup mengenal zona kekuatan alami kamu. Banyak potensi alami tidak hanya muncul sebagai bakat, tetapi juga sudah kamu pakai dalam aktivitas nyata.",
+      "Kamu tampak sudah cukup mengenal zona kekuatan alami kamu. Banyak potensi alami bukan hanya muncul sebagai bakat, tetapi sudah berubah menjadi kekuatan nyata dalam aktivitas hidupmu.",
     );
   } else {
     lines.push(
-      "Hasil ini membaca pola energi kamu: area yang membuatmu lebih hidup, area yang masih bisa dikembangkan, dan area yang perlu batas agar tidak menguras tenaga.",
+      "Hasil ini membaca peta energi kamu: bagian yang membuatmu menyala, bagian yang masih bisa diberi ruang, dan bagian yang perlu batas agar tidak menguras tenaga.",
     );
   }
 
   if (first && second) {
     lines.push(
-      `Kamu cenderung lebih menyala ketika ${first.shortTitle.toLowerCase()} bertemu dengan ${second.shortTitle.toLowerCase()}. Bukan sekadar menjalankan tugas, kamu butuh cara kerja yang terasa punya arah dan makna.`,
+      `Kamu adalah tipe orang yang lebih hidup ketika ${first.shortTitle.toLowerCase()} bertemu dengan ${second.shortTitle.toLowerCase()}. Kamu tidak sekadar ingin menyelesaikan tugas; kamu ingin melihat arah, makna, dan bentuk yang lebih jelas dari sesuatu.`,
     );
   } else if (first) {
     lines.push(first.headline);
   }
 
-  if (first) lines.push(first.body);
+  if (first) {
+    lines.push(
+      `${first.body} Di titik terbaikmu, pengetahuan, pengalaman, dan ide tidak berhenti di kepala; kamu ingin mengubahnya menjadi penjelasan, arah, atau karya yang bisa dipakai orang lain.`,
+    );
+  }
 
   if (third) {
-    lines.push(`Pola lain yang ikut memberi warna: ${third.title.toLowerCase()}. Area ini bisa menjadi jalur tambahan untuk membuat hidup dan pekerjaan terasa lebih hidup.`);
+    lines.push(`Pola lain yang ikut memberi warna adalah ${third.title.toLowerCase()}. Area ini bisa menjadi jalur tambahan agar hidup dan pekerjaan tidak hanya terasa sebagai kewajiban, tetapi juga ruang bertumbuh.`);
   }
 
   if (mainAdaptive) {

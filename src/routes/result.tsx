@@ -21,6 +21,7 @@ import {
 import { ClusterRadar } from "@/components/result/ClusterRadar";
 import { getPurposeLens } from "@/data/purposeLens";
 import { generateJatiDiriPdf } from "@/pdf/generateJatiDiriPdf";
+import { displayMicroRoleName, displayRoleFamilyName } from "@/utils/displayNames";
 
 export const Route = createFileRoute("/result")({
   head: () => ({
@@ -433,7 +434,7 @@ function Evidence({ roles }: { roles: MicroRoleScore[] }) {
     <div className="mt-4 flex flex-wrap gap-2">
       {roles.slice(0, 4).map((role) => (
         <span key={role.id} className="rounded-full border border-background/70 bg-background/65 px-3 py-1 text-[11px] text-muted-foreground">
-          {role.name} · alami {role.natural} · terlatih {role.strength}
+          {displayMicroRoleName(role)} · alami {role.natural} · terlatih {role.strength}
         </span>
       ))}
     </div>
@@ -478,7 +479,7 @@ function RoleFamilySummary({ families }: { families: { family: string; natural: 
         {families.map((family) => (
           <div key={family.family}>
             <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-              <span className="font-medium text-foreground">{family.family}</span>
+              <span className="font-medium text-foreground">{displayRoleFamilyName(family.family)}</span>
               <span className="text-muted-foreground">
                 Alami {family.natural} · Terlatih {family.strength}
               </span>
@@ -503,7 +504,7 @@ function RoleScoreList({ title, roles, mode }: { title: string; roles: MicroRole
           return (
             <div key={role.id}>
               <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-                <span className="font-medium text-foreground">{role.name}</span>
+                <span className="font-medium text-foreground">{displayMicroRoleName(role)}</span>
                 <span className="text-muted-foreground">{value}</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">

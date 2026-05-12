@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import type { PatternSignatureReport, MicroRoleScore } from "@/engine/patternSignature";
 import type { SmartResultAdvisory, AdvisoryAdaptive, AdvisoryTheme, AdvisoryVulnerability } from "@/engine/smartResultAdvisory";
 import type { ReadingQuality } from "@/types/assessment";
+import { displayMicroRoleName, displayRoleFamilyName } from "@/utils/displayNames";
 
 type PdfReportInput = {
   name: string;
@@ -68,6 +69,8 @@ function cleanText(text: string | null | undefined): string {
     .replace(/rumah energi(?: alami)?(?:mu| kamu)?/gi, "zona kekuatan alami kamu")
     .replace(/sumber energi alamimu/gi, "zona kekuatan alami kamu")
     .replace(/\bundefined\b/gi, "")
+    .replace(/social breadth/gi, "relasi sosial yang terlalu melebar")
+    .replace(/\.\s+kamu/g, ". Kamu")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -403,7 +406,7 @@ function adaptiveBody(item: AdvisoryAdaptive) {
 
 function roleBody(role: MicroRoleScore, mode: "natural" | "strength") {
   const score = mode === "natural" ? role.natural : role.strength;
-  return `${role.name} (${score}). ${role.visible} ${role.healthyUse}`;
+  return `${displayMicroRoleName(role)} (${score}). ${role.visible} ${role.healthyUse}`;
 }
 
 export async function generateJatiDiriPdf(input: PdfReportInput) {
@@ -473,14 +476,14 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
   pdf.card("Cara membaca bagian ini", "Bagian ini adalah pendukung teknis. Pembacaan utama tetap ada pada Cermin Jati Diri, sumber energi, titik lelah, dan mode adaptif.", { tone: "slate" });
 
   pdf.addSection("alami", "Top Zona Kekuatan Alami");
-  input.patternReport.topNaturalRoles.slice(0, 8).forEach((role) => pdf.scoreBar(role.name, role.natural, COLOR.teal));
+  input.patternReport.topNaturalRoles.slice(0, 8).forEach((role) => pdf.scoreBar(displayMicroRoleName(role), role.natural, COLOR.teal));
 
   pdf.addSection("terlatih", "Kekuatan Aktivitas yang Sudah Terlihat");
-  input.patternReport.topTrainedRoles.slice(0, 8).forEach((role) => pdf.scoreBar(role.name, role.strength, COLOR.amber));
+  input.patternReport.topTrainedRoles.slice(0, 8).forEach((role) => pdf.scoreBar(displayMicroRoleName(role), role.strength, COLOR.amber));
 
   pdf.addSection("wilayah peran", "Peta Wilayah Peran");
   input.patternReport.roleFamilies.slice(0, 8).forEach((family) => {
-    pdf.roleFamilyComparison(family.family, family.natural, family.strength);
+    pdf.roleFamilyComparison(displayRoleFamilyName(family.family), family.natural, family.strength);
   });
 
   pdf.addSection("catatan", "Batas Pembacaan");
