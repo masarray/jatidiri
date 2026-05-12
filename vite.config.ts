@@ -13,6 +13,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), tsconfigPaths()],
   resolve: {
     alias: {
+      "@tanstack/react-router": path.resolve(__dirname, "./src/lib/tanstackRouterShim.tsx"),
       "@": path.resolve(__dirname, "./src"),
     },
   },
