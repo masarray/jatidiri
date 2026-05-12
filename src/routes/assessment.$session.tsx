@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useAssessmentStore } from "@/store/assessmentStore";
 import { naturalQuestions } from "@/data/questionsNatural";
@@ -14,16 +14,12 @@ export const Route = createFileRoute("/assessment/$session")({
   component: AssessmentPage,
 });
 
-const LABELS: Record<AssessmentSession, { left: string; right: string; title: string; help: string }> = {
+const LABELS: Record<AssessmentSession, { title: string; help: string }> = {
   natural: {
-    left: "Sangat bukan saya banget",
-    right: "Sangat saya banget",
     title: "Sesi 1 — Bakat Alami",
     help: "Jawab spontan sesuai pola yang paling terasa.",
   },
   strength: {
-    left: "Sangat Lemah",
-    right: "Sangat Kuat",
     title: "Sesi 2 — Kekuatan Aktivitas",
     help: "Jawab berdasarkan pengalaman nyata.",
   },
@@ -34,12 +30,20 @@ function AssessmentPage() {
   const s = session as AssessmentSession;
   const navigate = useNavigate();
   const { identity, answers, currentIndex, setAnswer, setCurrentIndex } = useAssessmentStore();
+  const [locked, setLocked] = useState(false);
+  const unlockTimerRef = useRef<number | null>(null);
 
   const questions = useMemo(() => (s === "natural" ? naturalQuestions : strengthQuestions), [s]);
   const sessionAnswers = answers[s];
   const idx = Math.min(Math.max(currentIndex[s] ?? 0, 0), questions.length - 1);
   const question = questions[idx];
   const naturalProgress = progressFor("natural", answers);
+
+  useEffect(() => {
+    return () => {
+      if (unlockTimerRef.current) window.clearTimeout(unlockTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!identity) {
@@ -53,18 +57,21 @@ function AssessmentPage() {
 
   const handleSelect = useCallback(
     (value: AnswerValue) => {
-      if (!question) return;
+      if (!question || locked) return;
+      setLocked(true);
       setAnswer(s, question.id, value);
-      setTimeout(() => {
+
+      window.setTimeout(() => {
         if (idx + 1 >= questions.length) {
           if (s === "natural") navigate({ to: "/transition" });
           else navigate({ to: "/completion" });
         } else {
           setCurrentIndex(s, idx + 1);
+          unlockTimerRef.current = window.setTimeout(() => setLocked(false), 42);
         }
-      }, 430);
+      }, 74);
     },
-    [idx, navigate, question, questions.length, s, setAnswer, setCurrentIndex],
+    [idx, locked, navigate, question, questions.length, s, setAnswer, setCurrentIndex],
   );
 
   useEffect(() => {
@@ -82,45 +89,43 @@ function AssessmentPage() {
   }, [handleSelect]);
 
   function goBack() {
-    if (idx > 0) setCurrentIndex(s, idx - 1);
+    if (idx > 0 && !locked) setCurrentIndex(s, idx - 1);
   }
 
   if (!question) return null;
 
   return (
-    <main className="assessment-shell min-h-dvh bg-background flex flex-col">
-      <div className="sticky top-0 z-10 border-b border-border/40 bg-background/88 backdrop-blur-md">
-        <div className="mx-auto max-w-md px-3.5 py-2.5 sm:px-5">
-          <div className="mb-1.5 flex items-center justify-between">
+    <main className="h-[100svh] overflow-hidden bg-background text-foreground">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col px-3 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-5 sm:py-4">
+        <div className="shrink-0">
+          <div className="mb-2 flex items-center justify-between px-1">
             <button
+              type="button"
               onClick={goBack}
-              disabled={idx === 0}
-              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground disabled:opacity-30"
+              disabled={idx === 0 || locked}
+              className="inline-flex items-center gap-1 rounded-full px-1.5 py-1 text-[11px] text-muted-foreground transition active:scale-[0.98] disabled:opacity-30"
             >
               <ChevronLeft className="size-3.5" /> Sebelumnya
             </button>
-            <Link to="/" className="text-[11px] text-muted-foreground">
+            <Link to="/" className="rounded-full px-2 py-1 text-[11px] text-muted-foreground transition active:scale-[0.98]">
               Jeda
             </Link>
           </div>
           <ProgressTracker current={idx + 1} total={questions.length} label={LABELS[s].title} />
         </div>
-      </div>
 
-      <div className="mx-auto flex w-full max-w-md flex-1 px-3.5 py-3 sm:px-5 sm:py-5">
-        <div className="w-full">
+        <div className="min-h-0 flex-1 overflow-hidden pt-3">
           <QuestionCard number={question.number} total={questions.length} text={question.text}>
             <AnswerScale
               value={sessionAnswers[question.id]}
               onSelect={handleSelect}
-              leftLabel={LABELS[s].left}
-              rightLabel={LABELS[s].right}
               session={s}
+              disabled={locked}
             />
           </QuestionCard>
 
-          <p className="mt-2 text-center text-[10.5px] leading-tight text-muted-foreground sm:mt-4 sm:text-[11px]">
-            {LABELS[s].help} <span className="hidden sm:inline">Desktop: tekan angka 1–7.</span>
+          <p className="mt-1.5 hidden text-center text-[10.5px] leading-tight text-muted-foreground sm:block">
+            {LABELS[s].help} Desktop: tekan angka 1–7.
           </p>
         </div>
       </div>
