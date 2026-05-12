@@ -30,6 +30,7 @@ export interface AdvisoryVulnerability {
   headline: string;
   body: string;
   support: string;
+  triggerWords: string[];
   evidence: MicroRoleScore[];
   naturalScore: number;
   strengthScore: number;
@@ -496,6 +497,7 @@ function buildVulnerabilities(report: PatternSignatureReport, energyThemeIds: Se
         headline: rule.headline,
         body: rule.body,
         support: rule.support,
+        triggerWords: rule.triggerWords,
         evidence,
         naturalScore,
         strengthScore,
@@ -667,8 +669,24 @@ function buildOnSwitch(energyThemes: AdvisoryTheme[]) {
 }
 
 function buildForOthers(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[]) {
-  const lines = energyThemes.slice(0, 3).map((theme) => theme.forOthers);
-  if (vulnerabilities[0]) lines.push(`Hindari memulai dengan pola yang membuatnya berat: ${vulnerabilities[0].triggerWords.slice(0, 2).join(" / ")}. Masuklah dengan konteks dan kalimat yang lebih tenang.`);
+  const lines = energyThemes
+    .slice(0, 3)
+    .map((theme) => theme.forOthers)
+    .filter(Boolean);
+
+  const firstRisk = vulnerabilities[0];
+  const triggerWords = firstRisk?.triggerWords ?? [];
+
+  if (firstRisk && triggerWords.length > 0) {
+    lines.push(
+      `Hindari memulai dengan pola yang membuatnya berat: ${triggerWords.slice(0, 2).join(" / ")}. Masuklah dengan konteks dan kalimat yang lebih tenang.`,
+    );
+  } else if (firstRisk) {
+    lines.push(
+      "Hindari memulai dengan tekanan atau instruksi yang terlalu mendadak. Masuklah dengan konteks, alasan, dan kalimat yang lebih tenang.",
+    );
+  }
+
   return [...new Set(lines)].slice(0, 4);
 }
 

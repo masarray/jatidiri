@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
-import { AlertCircle, ChevronDown, Home, Printer, RotateCcw, Sparkles } from "lucide-react";
+import { AlertCircle, ChevronDown, FileDown, Home, Printer, RotateCcw, Sparkles } from "lucide-react";
 import { useAssessmentStore } from "@/store/assessmentStore";
 import {
   buildClusterReports,
@@ -20,6 +20,7 @@ import {
 } from "@/engine/smartResultAdvisory";
 import { ClusterRadar } from "@/components/result/ClusterRadar";
 import { getPurposeLens } from "@/data/purposeLens";
+import { generateJatiDiriPdf } from "@/pdf/generateJatiDiriPdf";
 
 export const Route = createFileRoute("/result")({
   head: () => ({
@@ -127,10 +128,25 @@ function ResultPage() {
           </Link>
           <div className="flex items-center gap-2">
             <button
+              onClick={() =>
+                generateJatiDiriPdf({
+                  name: identity.name,
+                  date: reportDate,
+                  context: lens.label,
+                  advisory,
+                  patternReport,
+                  readingQuality,
+                })
+              }
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-xs font-medium text-primary shadow-sm transition hover:bg-primary/15 active:scale-[0.98]"
+            >
+              <FileDown className="size-3.5" /> PDF Report
+            </button>
+            <button
               onClick={() => window.print()}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm transition hover:bg-muted/50 active:scale-[0.98]"
             >
-              <Printer className="size-3.5" /> Cetak / PDF
+              <Printer className="size-3.5" /> Print
             </button>
             <button
               onClick={() => {
