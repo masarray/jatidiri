@@ -25,7 +25,7 @@ import { generateJatiDiriPdf } from "@/pdf/generateJatiDiriPdf";
 export const Route = createFileRoute("/result")({
   head: () => ({
     meta: [
-      { title: "Hasil Peta Jati Diri Anda" },
+      { title: "Hasil Peta Jati Diri Kamu" },
       {
         name: "description",
         content: "Pembacaan jati diri, sumber energi, titik rentan energi, dan kemampuan adaptif.",
@@ -150,7 +150,7 @@ function ResultPage() {
             </button>
             <button
               onClick={() => {
-                if (confirm("Mulai dari awal? Jawaban Anda akan dihapus dari perangkat ini.")) {
+                if (confirm("Mulai dari awal? Jawaban kamu akan dihapus dari perangkat ini.")) {
                   reset();
                   navigate({ to: "/" });
                 }
@@ -183,7 +183,7 @@ function ResultPage() {
           </article>
         </Section>
 
-        <Section title="Seberapa Kamu Sudah Hidup Dekat dengan Energi Alamimu" kicker="alignment reading">
+        <Section title="Seberapa Kamu Sudah Selaras dengan Zona Kekuatan Alami" kicker="alignment reading">
           <article className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
             <h3 className="text-lg font-medium leading-snug text-foreground">{advisory.alignment.title}</h3>
             <p className="mt-3 text-sm leading-relaxed text-foreground/90">{advisory.alignment.headline}</p>
@@ -196,9 +196,9 @@ function ResultPage() {
           </article>
         </Section>
 
-        <Section title="Kenapa Kamu Menyala" kicker="sumber energi utama">
+        <Section title="Kenapa Kamu Menyala" kicker="zona kekuatan alami">
           <p className="section-lead">
-            Bagian ini menggabungkan beberapa elemen yang saling berkaitan. Tujuannya bukan memberi banyak label, tetapi menjawab: area apa yang membuat kamu merasa hidup?
+            Bagian ini menggabungkan beberapa elemen yang saling berkaitan. Tujuannya bukan memberi banyak label, tetapi menjawab: area apa yang membuat kamu merasa hidup dan bertenaga?
           </p>
           <div className="mt-4 grid gap-3">
             {advisory.energyThemes.map((theme, index) => (
@@ -210,7 +210,7 @@ function ResultPage() {
         <Section title="Kenapa Kamu Bisa Lelah" kicker="titik rentan energi">
           <article className="rounded-[2rem] border border-amber-300/55 bg-amber-50/60 p-5 shadow-sm sm:p-6 print-avoid-break">
             <p className="text-[15px] leading-relaxed text-foreground/90">
-              Kelelahan emosi tidak selalu muncul karena kamu tidak mampu. Kadang justru karena kamu mampu menjalankan banyak peran, tetapi terlalu lama berada di area yang bukan sumber energi alami.
+              Kelelahan emosi tidak selalu muncul karena kamu tidak mampu. Kadang justru karena kamu mampu menjalankan banyak peran, tetapi terlalu lama berada di area yang bukan zona kekuatan alami kamu.
             </p>
           </article>
           <div className="mt-4 grid gap-3">
@@ -221,9 +221,9 @@ function ResultPage() {
         </Section>
 
         {advisory.adaptiveThemes.length > 0 && (
-          <Section title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="mode adaptif">
+          <Section title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="kemampuan adaptif">
             <p className="section-lead">
-              Ini adalah bagian penting. Area di bawah ini mungkin sudah kamu eksplorasi cukup jauh karena pekerjaan, tanggung jawab, atau tuntutan hidup. Kamu bisa melakukannya, tetapi belum tentu ini rumah energimu.
+              Ini adalah bagian penting. Area di bawah ini mungkin sudah kamu eksplorasi cukup jauh karena pekerjaan, tanggung jawab, atau tuntutan hidup. Kamu bisa melakukannya, tetapi belum tentu ini zona kekuatan alami kamu.
             </p>
             <div className="mt-4 grid gap-3">
               {advisory.adaptiveThemes.map((item) => (
@@ -392,7 +392,7 @@ function VulnerabilityCard({ item, index }: { item: AdvisoryVulnerability; index
 function AdaptiveCard({ item }: { item: AdvisoryAdaptive }) {
   return (
     <article className="rounded-[1.75rem] border border-amber-300/60 bg-amber-50/60 p-5 shadow-sm print-avoid-break">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">mode adaptif</div>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">kemampuan adaptif</div>
       <h3 className="mt-2 text-base font-medium text-foreground">{item.title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.headline}</p>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
@@ -472,7 +472,7 @@ function RoleFamilySummary({ families }: { families: { family: string; natural: 
     <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
       <div className="text-sm font-medium text-foreground">Peta Wilayah Peran</div>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-        Ini peta pendukung. Pembacaan utama tetap ada di Cermin Jati Diri, sumber energi, dan mode adaptif di atas.
+        Ini peta pendukung. Pembacaan utama tetap ada di Cermin Jati Diri, sumber energi, dan kemampuan adaptif di atas.
       </p>
       <div className="mt-4 space-y-3">
         {families.map((family) => (

@@ -327,7 +327,7 @@ class PdfWriter {
     this.doc.setFont("helvetica", "normal");
     this.doc.setFontSize(8.5);
     this.color(COLOR.muted, "text");
-    this.doc.text("Data disimpan di perangkat/browser pengguna kecuali Anda menghubungkannya ke layanan lain.", PAGE.mx, this.y);
+    this.doc.text("Data disimpan di perangkat/browser kamu kecuali kamu menghubungkannya ke layanan lain.", PAGE.mx, this.y);
     this.doc.text("Baca hasil ini sebagai cermin refleksi dan bahan percakapan yang lebih sehat.", PAGE.mx, this.y + 5);
     this.newPage();
   }
@@ -361,10 +361,10 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
   pdf.card("Kalimat paling ringkas", input.advisory.sharpSummary, { tone: "amber" });
   pdf.card("Terbaca dari pola jawaban", input.advisory.evidenceLine, { tone: "slate" });
 
-  pdf.addSection("alignment", "Seberapa Kamu Hidup Dekat dengan Energi Alamimu");
+  pdf.addSection("alignment", "Seberapa Kamu Selaras dengan Zona Kekuatan Alami");
   pdf.card(input.advisory.alignment.title, [input.advisory.alignment.headline, input.advisory.alignment.body], { tone: "teal" });
   pdf.twoColumnCards([
-    { title: `Selaras: ${input.advisory.alignment.alignedCount}`, body: "Area alami yang juga sudah sering kamu gunakan sebagai kekuatan nyata.", tone: "teal" },
+    { title: `Selaras: ${input.advisory.alignment.alignedCount}`, body: "Zona kekuatan alami yang juga sudah sering kamu gunakan sebagai kekuatan nyata.", tone: "teal" },
     { title: `Belum hidup: ${input.advisory.alignment.dormantCount}`, body: "Potensi yang punya sinyal alami, tetapi belum banyak menjadi aktivitas utama.", tone: "amber" },
     { title: `Adaptif: ${input.advisory.alignment.adaptiveCount}`, body: "Kemampuan yang bisa kamu lakukan karena tuntutan hidup/peran, namun perlu recovery.", tone: "rose" },
     { title: `Kualitas baca: ${input.readingQuality.score}/100`, body: input.readingQuality.summary, tone: "slate" },
@@ -377,7 +377,7 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
 
   pdf.addSection("titik rentan", "Kenapa Kamu Bisa Lelah");
   pdf.paragraph(
-    "Kelelahan emosi tidak selalu muncul karena kamu tidak mampu. Kadang justru karena kamu mampu menjalankan banyak peran, tetapi terlalu lama berada di area yang bukan sumber energi alami.",
+    "Kelelahan emosi tidak selalu muncul karena kamu tidak mampu. Kadang justru karena kamu mampu menjalankan banyak peran, tetapi terlalu lama berada di area yang bukan zona kekuatan alami kamu.",
     { fontSize: 9.7 },
   );
   input.advisory.vulnerabilities.forEach((item, idx) => {
@@ -387,7 +387,7 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
   if (input.advisory.adaptiveThemes.length > 0) {
     pdf.addSection("mode adaptif", "Kemampuan yang Bisa, Tapi Bisa Menguras");
     pdf.paragraph(
-      "Area ini mungkin sudah kamu eksplorasi cukup jauh karena pekerjaan, tanggung jawab, atau tuntutan hidup. Kamu bisa melakukannya, tetapi belum tentu itu rumah energimu.",
+      "Area ini mungkin sudah kamu eksplorasi cukup jauh karena pekerjaan, tanggung jawab, atau tuntutan hidup. Kamu bisa melakukannya, tetapi belum tentu menjadi zona kekuatan alami kamu.",
       { fontSize: 9.7 },
     );
     input.advisory.adaptiveThemes.forEach((item, idx) => {
@@ -407,17 +407,17 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
   pdf.addSection("catatan relasi", "Untuk Pasangan / Rekan Kerja");
   pdf.twoColumnCards([
     ...input.advisory.forOthers.slice(0, 4).map((item) => ({ title: "Cara masuk yang lebih sehat", body: item, tone: "sky" as Tone })),
-    ...input.advisory.resistance.slice(0, 4).map((item) => ({ title: "Yang mudah membuat resistan", body: item, tone: "rose" as Tone })),
+    ...input.advisory.resistance.slice(0, 4).map((item) => ({ title: "Yang bisa membuat kamu berat", body: item, tone: "rose" as Tone })),
   ]);
 
   pdf.addSection("pemulihan", "Cara Merawat Diri");
-  input.advisory.recoveryRituals.forEach((item) => pdf.card("Ritme pemulihan", item, { tone: "teal" }));
+  input.advisory.recoveryRituals.forEach((item) => pdf.card("Langkah pemulihan", item, { tone: "teal" }));
   input.advisory.selfCare.forEach((item) => pdf.paragraph(item, { fontSize: 9.4 }));
 
   pdf.addSection("detail peta", "Skor Pendukung");
   pdf.card("Cara membaca bagian ini", "Bagian ini adalah pendukung teknis. Pembacaan utama tetap ada pada Cermin Jati Diri, sumber energi, titik lelah, dan mode adaptif.", { tone: "slate" });
 
-  pdf.addSection("alami", "Top Sumber Energi Alami");
+  pdf.addSection("alami", "Top Zona Kekuatan Alami");
   input.patternReport.topNaturalRoles.slice(0, 8).forEach((role) => pdf.scoreBar(role.name, role.natural, COLOR.teal));
 
   pdf.addSection("terlatih", "Kekuatan Aktivitas yang Sudah Terlihat");

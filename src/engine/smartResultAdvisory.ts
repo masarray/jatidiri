@@ -22,6 +22,8 @@ export interface AdvisoryTheme {
   strengthScore: number;
   score: number;
   tone: AdvisoryTone;
+  onSwitch: string[];
+  forOthers: string;
 }
 
 export interface AdvisoryVulnerability {
@@ -337,7 +339,7 @@ const VULNERABILITY_RULES: VulnerabilityRule[] = [
     tone: "slate",
     headline: "Kamu bisa mengerjakan hal rutin, tetapi energi terbaikmu bisa habis jika terlalu lama hidup di detail kecil yang berulang.",
     body:
-      "Tugas administrasi, input data, file, jadwal, dan follow-up kecil bisa terlihat sederhana, tetapi secara psikologis tetap menyedot energi jika bukan rumah alami. Kamu mungkin tetap melakukannya karena tanggung jawab, bukan karena itu membuatmu hidup.",
+      "Tugas administrasi, input data, file, jadwal, dan follow-up kecil bisa terlihat sederhana, tetapi secara psikologis tetap menyedot energi jika bukan zona kekuatan alami. Kamu mungkin tetap melakukannya karena tanggung jawab, bukan karena itu membuatmu hidup.",
     support: "Pakai template, batching, reminder, checklist, dan pembagian peran. Jangan biarkan energi inti habis hanya untuk menjaga detail yang bisa disistemkan.",
     triggerWords: ["rapikan sekarang", "isi data", "ulang lagi", "detail kecil"],
   },
@@ -354,14 +356,14 @@ const VULNERABILITY_RULES: VulnerabilityRule[] = [
   },
   {
     id: "emotion_absorption_drain",
-    title: "Menampung emosi orang terlalu lama",
+    title: "Interaksi emosional yang terlalu panjang",
     roleIds: ["emotion_reader", "harmony_keeper", "people_developer", "relationship_keeper"],
     tone: "rose",
-    headline: "Kamu tidak harus selalu menjadi tempat semua orang menaruh beban emosinya.",
+    headline: "Kamu bisa cepat lelah jika percakapan terlalu lama berada di beban emosi tanpa arah yang jelas.",
     body:
-      "Mendengar dan peduli itu baik. Tetapi jika kamu terlalu lama memegang emosi orang lain, kamu bisa merasa lelah tanpa tahu sumbernya. Kadang yang melelahkan bukan tugasnya, melainkan beban rasa yang ikut kamu bawa.",
-    support: "Validasi perasaan, lalu buat batas. Kamu boleh berkata: ‘Aku dengerin, tapi aku perlu jeda dulu supaya bisa bantu dengan lebih jernih.’",
-    triggerWords: ["dengerin terus", "jangan bikin kecewa", "semua harus nyaman"],
+      "Ini bukan berarti kamu tidak peduli. Sebagian orang lebih kuat membantu lewat struktur, penjelasan, solusi, atau batas yang jernih daripada terus-menerus menampung rasa. Jika interaksi emosional terlalu panjang, kamu bisa merasa kosong walaupun niatmu baik.",
+    support: "Validasi secukupnya, lalu buat batas yang hangat. Kamu boleh berkata: ‘Aku dengerin, tapi aku perlu jeda supaya bisa bantu dengan lebih jernih.’",
+    triggerWords: ["dengerin terus", "semua harus nyaman", "jangan bikin kecewa"],
   },
   {
     id: "fast_action_drain",
@@ -447,6 +449,8 @@ function buildEnergyThemes(report: PatternSignatureReport): AdvisoryTheme[] {
         strengthScore,
         score,
         tone: rule.tone,
+        onSwitch: rule.onSwitch,
+        forOthers: rule.forOthers,
       };
     })
     .filter((theme) => theme.score >= 46 && theme.evidence.length > 0)
@@ -474,6 +478,8 @@ function buildDormantThemes(report: PatternSignatureReport, usedThemeIds: Set<st
         strengthScore,
         score: gap,
         tone: rule.tone,
+        onSwitch: rule.onSwitch,
+        forOthers: rule.forOthers,
       };
     })
     .filter((theme) => !usedThemeIds.has(theme.id) && theme.naturalScore >= 50 && theme.score >= 9 && theme.evidence.length > 0)
@@ -522,9 +528,9 @@ function transformSpecificAdaptive(insight: AdaptiveGapInsight, evidence: MicroR
     headline: "Kamu tampak mampu di area ini, tetapi energi asalnya belum tentu dari sana.",
     body: insight.interpretation,
     emotionalNote:
-      "Kalau area ini membuatmu cepat jenuh atau lelah secara emosi, itu bukan berarti kamu lemah. Bisa jadi kamu sedang memakai kemampuan yang terbentuk karena tuntutan hidup, bukan karena itu rumah energi alamimu.",
+      "Kalau area ini membuatmu cepat jenuh atau lelah secara emosi, itu bukan berarti kamu lemah. Bisa jadi kamu sedang memakai kemampuan yang terbentuk karena tuntutan hidup, bukan karena itu zona kekuatan alami kamu.",
     recovery:
-      "Setelah menjalankan peran ini, beri ruang pulih yang nyata. Kembali sebentar ke aktivitas yang membuatmu hidup: berpikir, berkarya, membantu, menata, atau belajar — sesuai sumber energi utamamu.",
+      "Setelah menjalankan peran ini, beri ruang pulih yang nyata. Kembali sebentar ke aktivitas yang membuatmu hidup: berpikir, berkarya, membantu, menata, atau belajar — sesuai sumber tenaga utamamu.",
     evidence,
     naturalScore: insight.naturalRouteScore,
     strengthScore: insight.adaptiveLoadScore,
@@ -548,9 +554,9 @@ function buildAdaptiveAdvisories(report: PatternSignatureReport): AdvisoryAdapti
       id: role.id,
       title: `${role.name} yang sudah terbentuk karena pengalaman`,
       headline: "Kamu bisa menjalankan area ini, tetapi perlu jujur apakah ini mengisi atau menguras energi.",
-      body: `Area ${role.name} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada energi alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan.`,
+      body: `Area ${role.name} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada zona kekuatan alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan.`,
       emotionalNote:
-        "Kamu boleh merasa capek setelah menjalankan peran ini. Mampu melakukan sesuatu tidak selalu berarti itu sumber energi utama.",
+        "Kamu boleh merasa capek setelah menjalankan peran ini. Mampu melakukan sesuatu tidak selalu berarti itu sumber tenaga utama.",
       recovery:
         "Jangan jadikan area ini pusat tuntutan tanpa sistem pendukung. Pakai template, batas waktu, partner, atau jeda pemulihan.",
       evidence: [role],
@@ -592,6 +598,7 @@ function buildMirror(
   const topRoles = names(report.topNaturalRoles, 3);
   const mainDrain = vulnerabilities[0];
   const mainAdaptive = adaptive[0];
+  const alignedCount = report.microRoles.filter((role) => role.natural >= 60 && role.strength >= 55).length;
 
   const lines = [
     `Kamu itu tipe orang yang lebih mudah hidup ketika kekuatan ${topRoles} diberi ruang yang tepat.`,
@@ -599,6 +606,12 @@ function buildMirror(
       ? first.headline
       : "Energi kamu biasanya muncul bukan hanya karena tugas selesai, tetapi karena ada cara kerja yang terasa sesuai dengan dirimu.",
   ];
+
+  if (alignedCount >= 6) {
+    lines.push(
+      "Kamu tampak sudah cukup mengenal zona kekuatan alami kamu. Beberapa potensi bukan hanya muncul sebagai sinyal bakat, tetapi juga sudah kamu pakai dalam aktivitas nyata.",
+    );
+  }
 
   if (second) {
     lines.push(`Pola kedua yang ikut kuat: ${second.body}`);
@@ -610,7 +623,7 @@ function buildMirror(
 
   if (mainAdaptive) {
     lines.push(
-      "Ada kemampuan yang mungkin sudah kamu kembangkan jauh karena tuntutan hidup. Dari luar kamu terlihat bisa, tetapi di dalam kamu tetap perlu ruang pulih karena tidak semua kemampuan itu berasal dari rumah energi alamimu.",
+      "Ada kemampuan yang mungkin sudah kamu kembangkan jauh karena tuntutan hidup. Dari luar kamu terlihat bisa, tetapi di dalam kamu tetap perlu ruang pulih karena tidak semua kemampuan itu berasal dari zona kekuatan alami kamu.",
     );
   }
 
@@ -618,22 +631,36 @@ function buildMirror(
 }
 
 function buildSharpSummary(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[]) {
-  const energy = energyThemes[0]?.shortTitle.toLowerCase() ?? "area yang sesuai dengan energi alamimu";
+  const energy = energyThemes[0]?.shortTitle.toLowerCase() ?? "zona kekuatan alami kamu";
   const drain = vulnerabilities[0]?.title.toLowerCase() ?? "tuntutan yang tidak selaras dengan caramu bekerja";
   return `Intinya: kamu lebih hidup ketika masuk lewat ${energy}. Kamu lebih mudah lelah ketika terlalu lama dipaksa berada di ${drain}.`;
 }
 
 function buildAlignment(report: PatternSignatureReport, adaptiveThemes: AdvisoryAdaptive[], dormantThemes: AdvisoryTheme[]): AlignmentReading {
   const alignedCount = report.microRoles.filter((role) => role.natural >= 60 && role.strength >= 55).length;
-  const dormantCount = dormantThemes.length || report.naturalDormantRoles.length;
+  const dormantCount = dormantThemes.length || ((report as { naturalDormantRoles?: unknown[] }).naturalDormantRoles?.length ?? 0);
   const adaptiveCount = adaptiveThemes.length || report.adaptiveRoles.length;
+
+  if (alignedCount >= 6 && adaptiveCount <= 1) {
+    return {
+      title: "Kamu sudah cukup dekat dengan zona kekuatan alami kamu",
+      headline: "Banyak potensi alami sudah berubah menjadi kekuatan nyata dalam aktivitas hidupmu.",
+      body:
+        dormantCount > 0
+          ? "Ini tanda yang sehat: kamu bukan hanya punya bakat, tetapi juga sudah cukup sering menggunakannya. Masih ada beberapa potensi yang bisa diberi panggung lebih luas, tetapi fondasi jati dirimu sudah mulai terbaca cukup selaras."
+          : "Ini tanda yang sehat: kamu bukan hanya punya bakat, tetapi juga sudah cukup sering menggunakannya. Pertahankan area ini sebagai zona kekuatan alami kamu, terutama saat hidup terasa berat atau terlalu penuh tuntutan.",
+      alignedCount,
+      dormantCount,
+      adaptiveCount,
+    };
+  }
 
   if (adaptiveCount >= 2) {
     return {
-      title: "Kamu sudah mengembangkan beberapa kemampuan di luar rumah energi alamimu",
-      headline: "Ini menunjukkan daya adaptasi yang kuat, tetapi juga menjelaskan kenapa kamu bisa merasa lelah meski terlihat produktif.",
+      title: "Kamu banyak mengembangkan kemampuan adaptif",
+      headline: "Ini menunjukkan daya tahan yang kuat, tetapi juga bisa menjelaskan kenapa kamu merasa lelah meski terlihat produktif.",
       body:
-        "Sebagian kekuatan yang tampak dari luar kemungkinan terbentuk karena pekerjaan, tanggung jawab, atau kebutuhan hidup. Ini patut dihargai, tetapi jangan lupa mengisi ulang energi dari area yang benar-benar natural.",
+        "Sebagian kekuatan yang tampak dari luar kemungkinan terbentuk karena pekerjaan, tanggung jawab, atau kebutuhan hidup. Ini patut dihargai, tetapi jangan lupa mengisi ulang tenaga dari zona kekuatan alami kamu.",
       alignedCount,
       dormantCount,
       adaptiveCount,
@@ -643,7 +670,7 @@ function buildAlignment(report: PatternSignatureReport, adaptiveThemes: Advisory
   if (dormantCount >= 2) {
     return {
       title: "Ada potensi alami yang belum sepenuhnya kamu hidupkan",
-      headline: "Kamu mungkin punya energi natural yang belum banyak diberi panggung dalam aktivitas sehari-hari.",
+      headline: "Kamu mungkin punya zona kekuatan alami yang belum banyak diberi panggung dalam aktivitas sehari-hari.",
       body:
         "Jika akhir-akhir ini kamu merasa biasa saja atau kurang menyala, bukan selalu karena tidak punya kemampuan. Bisa jadi ada area alami yang belum cukup sering kamu pakai.",
       alignedCount,
@@ -653,10 +680,10 @@ function buildAlignment(report: PatternSignatureReport, adaptiveThemes: Advisory
   }
 
   return {
-    title: "Sebagian kekuatanmu sudah cukup selaras antara energi alami dan aktivitas",
-    headline: "Ada tanda bahwa beberapa area natural sudah mulai digunakan sebagai kekuatan nyata.",
+    title: "Pola kamu masih campuran dan perlu dibaca sebagai peta awal",
+    headline: "Ada beberapa sinyal kekuatan, tetapi hasil ini sebaiknya dipakai sebagai bahan refleksi, bukan label final.",
     body:
-      "Pertahankan area ini sebagai rumah energi. Saat hidup terasa berat, kembali sebentar ke pola yang membuatmu merasa menjadi diri sendiri.",
+      "Amati selama 7 hari: aktivitas apa yang membuatmu lebih menyala, dan aktivitas apa yang membuatmu cepat habis. Dari situ peta diri akan terasa lebih nyata.",
     alignedCount,
     dormantCount,
     adaptiveCount,
@@ -664,8 +691,14 @@ function buildAlignment(report: PatternSignatureReport, adaptiveThemes: Advisory
 }
 
 function buildOnSwitch(energyThemes: AdvisoryTheme[]) {
-  const lines = energyThemes.flatMap((theme) => theme.onSwitch);
-  return [...new Set(lines)].slice(0, 6);
+  const lines = energyThemes.flatMap((theme) => theme.onSwitch).filter(Boolean);
+  const fallback = [
+    "Menurut kamu, pola masalahnya di mana?",
+    "Kalau dibuat lebih efektif, sistemnya seperti apa?",
+    "Apa ide kamu supaya ini bisa berjalan lebih baik?",
+  ];
+  const result = [...new Set(lines.length > 0 ? lines : fallback)].filter(Boolean);
+  return result.slice(0, 6);
 }
 
 function buildForOthers(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[]) {
@@ -700,11 +733,11 @@ function buildRecoveryRituals(energyThemes: AdvisoryTheme[], adaptiveThemes: Adv
     "Ambil jeda singkat setelah peran yang menguras. Jangan langsung menilai diri malas; cek dulu apakah kamu terlalu lama memakai mode adaptif.",
   ];
 
-  if (energyThemes[0]) rituals.push(`Kembalikan energi lewat area yang natural: ${energyThemes[0].shortTitle.toLowerCase()}. Jadikan ini sebagai aktivitas pemulihan kecil, bukan target berat.`);
+  if (energyThemes[0]) rituals.push(`Kembalikan tenaga lewat zona kekuatan alami: ${energyThemes[0].shortTitle.toLowerCase()}. Jadikan ini sebagai aktivitas pemulihan kecil, bukan target berat.`);
   if (energyThemes[1]) rituals.push(`Sisihkan waktu mingguan untuk ${energyThemes[1].shortTitle.toLowerCase()} agar hidup tidak hanya berisi tuntutan.`);
   if (adaptiveThemes[0]) rituals.push(adaptiveThemes[0].recovery);
 
-  rituals.push("Kamu tidak harus hebat di semua area. Kekuatan yang sehat dimulai dari mengenali mana sumber energi, mana area yang perlu sistem pendukung.");
+  rituals.push("Kamu tidak harus hebat di semua area. Kekuatan yang sehat dimulai dari mengenali mana zona kekuatan alami, mana area yang perlu sistem pendukung.");
 
   return [...new Set(rituals)].slice(0, 4);
 }
@@ -751,7 +784,7 @@ export function buildSmartResultAdvisory(
     selfCare: [
       contextPrefix,
       alignment.body,
-      "Kalau hasil ini terasa menampar pelan, jadikan ia peta, bukan penjara. Kamu tetap bisa bertumbuh, tetapi lebih sehat jika bertumbuh dari energi yang benar-benar milikmu.",
+      "Kalau hasil ini terasa menampar pelan, jadikan ia peta, bukan penjara. Kamu tetap bisa bertumbuh, tetapi lebih sehat jika bertumbuh dari zona kekuatan alami kamu.",
     ],
     evidenceLine: `Pembacaan ini terutama terlihat dari kombinasi ${names(report.topNaturalRoles, 4)}. Angka detail tetap tersedia di bagian peta pendukung, tetapi makna utamanya dibaca dari kombinasi pola, bukan skor tunggal.`,
     qualityNote: buildQualityNote(quality),
