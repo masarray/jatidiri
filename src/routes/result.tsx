@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
-import { AlertCircle, ChevronDown, Home, Printer, RotateCcw } from "lucide-react";
+import { AlertCircle, ChevronDown, Home, Printer, RotateCcw, Sparkles } from "lucide-react";
 import { useAssessmentStore } from "@/store/assessmentStore";
 import {
   buildClusterReports,
@@ -16,6 +16,7 @@ import {
   type AdvisoryAdaptive,
   type AdvisoryTheme,
   type AdvisoryVulnerability,
+  type AdvisoryTone,
 } from "@/engine/smartResultAdvisory";
 import { ClusterRadar } from "@/components/result/ClusterRadar";
 import { getPurposeLens } from "@/data/purposeLens";
@@ -76,7 +77,7 @@ function ResultPage() {
           <Link to="/" className="mb-8 inline-flex items-center gap-1 text-sm text-muted-foreground">
             <Home className="size-4" /> Beranda
           </Link>
-          <section className="rounded-3xl border border-amber-500/25 bg-card p-6 shadow-sm">
+          <section className="rounded-[2rem] border border-amber-500/25 bg-card p-6 shadow-sm">
             <div className="grid size-12 place-items-center rounded-full bg-amber-500/10 text-[var(--ember)]">
               <AlertCircle className="size-6" />
             </div>
@@ -119,15 +120,15 @@ function ResultPage() {
 
   return (
     <main className="min-h-dvh bg-background">
-      <div className="mx-auto max-w-3xl px-5 py-8 sm:py-12">
-        <div className="no-print mb-8 flex items-center justify-between gap-3">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-12">
+        <div className="no-print mb-6 flex items-center justify-between gap-3">
           <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
             <Home className="size-4" /> Beranda
           </Link>
           <div className="flex items-center gap-2">
             <button
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm transition active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm transition hover:bg-muted/50 active:scale-[0.98]"
             >
               <Printer className="size-3.5" /> Cetak / PDF
             </button>
@@ -138,7 +139,7 @@ function ResultPage() {
                   navigate({ to: "/" });
                 }
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm transition active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm transition hover:bg-muted/50 active:scale-[0.98]"
             >
               <RotateCcw className="size-3.5" /> Ulang
             </button>
@@ -148,22 +149,40 @@ function ResultPage() {
         <HeroCard name={identity.name} date={reportDate} context={lens.label} archetype={advisory.archetype} />
 
         <Section title="Cermin Jati Diri" kicker="pembacaan utama">
-          <div className="rounded-[2rem] border border-primary/15 bg-card p-5 shadow-sm sm:p-7 print-avoid-break">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Kamu itu orang yang...</div>
-            <div className="mt-4 space-y-4 text-[15px] leading-[1.75] text-foreground/90 sm:text-base">
+          <article className="rounded-[2rem] border border-primary/15 bg-card p-5 shadow-sm sm:p-7 print-avoid-break">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[11px] font-medium text-primary">
+              <Sparkles className="size-3.5" /> {advisory.mirrorTitle}
+            </div>
+            <div className="mt-5 space-y-4 text-[15px] leading-[1.75] text-foreground/90 sm:text-base">
               {advisory.mirror.map((line) => (
                 <p key={line}>{line}</p>
               ))}
             </div>
-            <p className="mt-5 rounded-2xl border border-border/60 bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+            <div className="mt-6 rounded-2xl border border-amber-200/70 bg-amber-50/55 p-4 text-sm leading-relaxed text-foreground/90">
+              {advisory.sharpSummary}
+            </div>
+            <p className="mt-4 rounded-2xl border border-border/60 bg-muted/35 p-4 text-xs leading-relaxed text-muted-foreground">
               {advisory.evidenceLine}
             </p>
-          </div>
+          </article>
+        </Section>
+
+        <Section title="Seberapa Kamu Sudah Hidup Dekat dengan Energi Alamimu" kicker="alignment reading">
+          <article className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
+            <h3 className="text-lg font-medium leading-snug text-foreground">{advisory.alignment.title}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-foreground/90">{advisory.alignment.headline}</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{advisory.alignment.body}</p>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+              <MetricPill label="Selaras" value={advisory.alignment.alignedCount} tone="teal" />
+              <MetricPill label="Belum hidup" value={advisory.alignment.dormantCount} tone="amber" />
+              <MetricPill label="Adaptif" value={advisory.alignment.adaptiveCount} tone="rose" />
+            </div>
+          </article>
         </Section>
 
         <Section title="Kenapa Kamu Menyala" kicker="sumber energi utama">
           <p className="section-lead">
-            Bagian ini tidak dipaksa menjadi tujuh poin. Engine menggabungkan beberapa elemen yang saling berkaitan agar hasilnya lebih mudah dicerna sebagai pola diri, bukan daftar istilah.
+            Bagian ini menggabungkan beberapa elemen yang saling berkaitan. Tujuannya bukan memberi banyak label, tetapi menjawab: area apa yang membuat kamu merasa hidup?
           </p>
           <div className="mt-4 grid gap-3">
             {advisory.energyThemes.map((theme, index) => (
@@ -173,11 +192,11 @@ function ResultPage() {
         </Section>
 
         <Section title="Kenapa Kamu Bisa Lelah" kicker="titik rentan energi">
-          <div className="rounded-[2rem] border border-amber-300/55 bg-amber-50/60 p-5 shadow-sm sm:p-6 print-avoid-break">
+          <article className="rounded-[2rem] border border-amber-300/55 bg-amber-50/60 p-5 shadow-sm sm:p-6 print-avoid-break">
             <p className="text-[15px] leading-relaxed text-foreground/90">
-              Kamu bisa merasa lelah bukan hanya karena tugasnya berat. Kadang yang melelahkan adalah terlalu lama hidup di area yang bukan rumah energi alami, tetapi tetap harus dijalankan karena pekerjaan, keluarga, atau tanggung jawab.
+              Kelelahan emosi tidak selalu muncul karena kamu tidak mampu. Kadang justru karena kamu mampu menjalankan banyak peran, tetapi terlalu lama berada di area yang bukan sumber energi alami.
             </p>
-          </div>
+          </article>
           <div className="mt-4 grid gap-3">
             {advisory.vulnerabilities.map((item, index) => (
               <VulnerabilityCard key={item.id} item={item} index={index + 1} />
@@ -186,9 +205,9 @@ function ResultPage() {
         </Section>
 
         {advisory.adaptiveThemes.length > 0 && (
-          <Section title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="adaptive / survival mode">
+          <Section title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="mode adaptif">
             <p className="section-lead">
-              Ini adalah area yang tampak sudah kamu jalankan cukup jauh, tetapi belum tentu menjadi sumber energi alami. Bagian ini sering menjelaskan kenapa seseorang terlihat mampu di luar, tetapi merasa lelah di dalam.
+              Ini adalah bagian penting. Area di bawah ini mungkin sudah kamu eksplorasi cukup jauh karena pekerjaan, tanggung jawab, atau tuntutan hidup. Kamu bisa melakukannya, tetapi belum tentu ini rumah energimu.
             </p>
             <div className="mt-4 grid gap-3">
               {advisory.adaptiveThemes.map((item) => (
@@ -201,7 +220,7 @@ function ResultPage() {
         {advisory.dormantThemes.length > 0 && (
           <Section title="Potensi yang Belum Banyak Kamu Hidupkan" kicker="natural but dormant">
             <p className="section-lead">
-              Ini adalah area yang punya sinyal alami, tetapi belum tentu sudah sering kamu eksplorasi sebagai aktivitas nyata. Bagian ini bisa menjadi arah eksperimen pengembangan diri.
+              Area ini punya sinyal alami, tetapi mungkin belum cukup sering kamu pakai sebagai aktivitas nyata. Ini bisa menjadi arah eksperimen diri berikutnya.
             </p>
             <div className="mt-4 grid gap-3">
               {advisory.dormantThemes.map((theme, index) => (
@@ -211,12 +230,12 @@ function ResultPage() {
           </Section>
         )}
 
-        <Section title="Kalimat yang Menyalakan Energi Kamu" kicker="manual komunikasi diri">
+        <Section title="Kalimat yang Menyalakan Energi Kamu" kicker="manual komunikasi">
           <div className="rounded-[2rem] border border-primary/15 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
             <p className="text-sm leading-relaxed text-muted-foreground">
               Bagian ini dibaca oleh kamu terlebih dahulu. Ini membantu kamu mengenali bahasa seperti apa yang biasanya membuatmu lebih ON, lebih semangat, dan lebih tidak defensif.
             </p>
-            <div className="mt-4 grid gap-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {advisory.onSwitch.map((item) => (
                 <QuotePill key={item}>{item}</QuotePill>
               ))}
@@ -224,22 +243,29 @@ function ResultPage() {
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <MiniPanel title="Kalau orang lain ingin mengajak kamu bergerak" items={advisory.onSwitch} />
+            <MiniPanel title="Catatan untuk pasangan / rekan kerja" items={advisory.forOthers} />
             <MiniPanel title="Yang mudah membuat kamu resistan" items={advisory.resistance} muted />
           </div>
         </Section>
 
         <Section title="Cara Merawat Diri" kicker="self advisory">
-          <div className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
+          <article className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
             <div className="space-y-3 text-sm leading-relaxed text-foreground/90">
-              {advisory.selfCare.map((item) => (
+              {advisory.recoveryRituals.map((item) => (
                 <p key={item}>{item}</p>
               ))}
             </div>
-            <p className="mt-5 rounded-2xl bg-muted/45 p-4 text-xs leading-relaxed text-muted-foreground">
+            <div className="mt-5 rounded-2xl border border-primary/10 bg-primary/6 p-4 text-xs leading-relaxed text-muted-foreground">
+              {advisory.selfCare.map((item) => (
+                <p key={item} className="mt-2 first:mt-0">
+                  {item}
+                </p>
+              ))}
+            </div>
+            <p className="mt-4 rounded-2xl bg-muted/45 p-4 text-xs leading-relaxed text-muted-foreground">
               {advisory.qualityNote}
             </p>
-          </div>
+          </article>
         </Section>
 
         <details className="mt-10 group rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
@@ -250,6 +276,8 @@ function ResultPage() {
           <div className="mt-5 space-y-5">
             <ClusterRadar reports={reports} />
             <RoleFamilySummary families={patternReport.roleFamilies.slice(0, 8)} />
+            <RoleScoreList title="Sinyal natural paling kuat" roles={patternReport.topNaturalRoles.slice(0, 7)} mode="natural" />
+            <RoleScoreList title="Kekuatan aktivitas yang terlihat" roles={patternReport.topTrainedRoles.slice(0, 7)} mode="strength" />
             <ReadingQualityNote quality={readingQuality} />
           </div>
         </details>
@@ -264,8 +292,8 @@ function ResultPage() {
 
 function HeroCard({ name, date, context, archetype }: { name: string; date: string; context: string; archetype: string }) {
   return (
-    <section className="rounded-[2rem] border border-border/60 bg-gradient-to-br from-primary/10 via-card to-[var(--ember)]/7 p-6 shadow-sm sm:p-8 print-avoid-break">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Peta Jati Diri · Smart Advisory</div>
+    <section className="rounded-[2rem] border border-border/60 bg-gradient-to-br from-primary/10 via-card to-amber-50/70 p-6 shadow-sm sm:p-8 print-avoid-break">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Peta Jati Diri · Smart Advisory V5</div>
       <div className="mt-5 grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
           <h1 className="text-2xl font-medium tracking-tight text-foreground sm:text-3xl">{name}</h1>
@@ -277,7 +305,7 @@ function HeroCard({ name, date, context, archetype }: { name: string; date: stri
         </div>
       </div>
       <div className="mt-7 max-w-2xl">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Ringkasan jati diri</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Kesimpulan jati diri</div>
         <div className="mt-2 text-2xl font-medium leading-snug text-primary sm:text-3xl">{archetype}</div>
       </div>
     </section>
@@ -294,15 +322,30 @@ function Section({ title, kicker, children }: { title: string; kicker?: string; 
   );
 }
 
+function toneClass(tone: AdvisoryTone, soft = false) {
+  const variants: Record<AdvisoryTone, string> = {
+    teal: soft ? "border-teal-200/70 bg-teal-50/45" : "border-teal-200/70 bg-teal-50/55",
+    amber: soft ? "border-amber-200/70 bg-amber-50/45" : "border-amber-200/80 bg-amber-50/60",
+    rose: soft ? "border-rose-200/70 bg-rose-50/45" : "border-rose-200/80 bg-rose-50/60",
+    slate: soft ? "border-slate-200/80 bg-slate-50/55" : "border-slate-200/80 bg-slate-50/70",
+    sky: soft ? "border-sky-200/70 bg-sky-50/45" : "border-sky-200/80 bg-sky-50/60",
+  };
+  return variants[tone];
+}
+
 function EnergyThemeCard({ theme, index, soft }: { theme: AdvisoryTheme; index: number; soft?: boolean }) {
   return (
-    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${soft ? "border-rose-300/40 bg-rose-50/55" : "border-border/60 bg-card"}`}>
+    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(theme.tone, soft)}`}>
       <div className="flex items-start gap-3">
-        <NumberBubble value={index} soft={soft} />
+        <NumberBubble value={index} tone={theme.tone} />
         <div>
           <h3 className="text-base font-medium text-foreground">{theme.title}</h3>
           <p className="mt-2 text-sm leading-relaxed text-foreground/90">{theme.headline}</p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{theme.body}</p>
+          <div className="mt-4 rounded-2xl border border-background/70 bg-background/55 p-4 text-xs leading-relaxed text-foreground/80">
+            <p><span className="font-medium">Kenapa ini cocok: </span>{theme.whyItFits}</p>
+            <p className="mt-2"><span className="font-medium">Pakai sehatnya: </span>{theme.healthyUse}</p>
+          </div>
           <Evidence roles={theme.evidence} />
         </div>
       </div>
@@ -312,14 +355,14 @@ function EnergyThemeCard({ theme, index, soft }: { theme: AdvisoryTheme; index: 
 
 function VulnerabilityCard({ item, index }: { item: AdvisoryVulnerability; index: number }) {
   return (
-    <article className="rounded-[1.75rem] border border-border/70 bg-card p-5 shadow-sm print-avoid-break">
+    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(item.tone)}`}>
       <div className="flex items-start gap-3">
-        <NumberBubble value={index} muted />
+        <NumberBubble value={index} tone={item.tone} muted />
         <div>
           <h3 className="text-base font-medium text-foreground">{item.title}</h3>
           <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.headline}</p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-          <div className="mt-4 rounded-2xl border border-border/60 bg-muted/35 p-4 text-xs leading-relaxed text-foreground/85">
+          <div className="mt-4 rounded-2xl border border-background/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
             <span className="font-medium">Cara mengelola: </span>
             {item.support}
           </div>
@@ -332,10 +375,11 @@ function VulnerabilityCard({ item, index }: { item: AdvisoryVulnerability; index
 
 function AdaptiveCard({ item }: { item: AdvisoryAdaptive }) {
   return (
-    <article className="rounded-[1.75rem] border border-amber-300/60 bg-amber-50/55 p-5 shadow-sm print-avoid-break">
+    <article className="rounded-[1.75rem] border border-amber-300/60 bg-amber-50/60 p-5 shadow-sm print-avoid-break">
       <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">mode adaptif</div>
       <h3 className="mt-2 text-base font-medium text-foreground">{item.title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-foreground/90">{item.body}</p>
+      <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.headline}</p>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
       <p className="mt-3 text-sm leading-relaxed text-foreground/90">{item.emotionalNote}</p>
       <div className="mt-4 rounded-2xl border border-amber-300/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
         <span className="font-medium">Saran pemulihan: </span>
@@ -348,8 +392,8 @@ function AdaptiveCard({ item }: { item: AdvisoryAdaptive }) {
 
 function QuotePill({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-primary/15 bg-primary/8 px-4 py-3 text-sm leading-relaxed text-foreground/90">
-      {children}
+    <div className="rounded-2xl border border-primary/15 bg-primary/8 px-4 py-3 text-sm leading-relaxed text-foreground/90 shadow-sm">
+      “{children}”
     </div>
   );
 }
@@ -372,21 +416,39 @@ function Evidence({ roles }: { roles: MicroRoleScore[] }) {
   return (
     <div className="mt-4 flex flex-wrap gap-2">
       {roles.slice(0, 4).map((role) => (
-        <span key={role.id} className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-[11px] text-muted-foreground">
-          {role.name} · {role.natural}
+        <span key={role.id} className="rounded-full border border-background/70 bg-background/65 px-3 py-1 text-[11px] text-muted-foreground">
+          {role.name} · alami {role.natural} · terlatih {role.strength}
         </span>
       ))}
     </div>
   );
 }
 
-function NumberBubble({ value, soft, muted }: { value: number; soft?: boolean; muted?: boolean }) {
-  const tone = muted
-    ? "bg-muted text-muted-foreground"
-    : soft
-      ? "bg-rose-100 text-rose-700"
-      : "bg-primary/10 text-primary";
-  return <div className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-medium ${tone}`}>{value}</div>;
+function NumberBubble({ value, tone, muted }: { value: number; tone: AdvisoryTone; muted?: boolean }) {
+  const color: Record<AdvisoryTone, string> = {
+    teal: muted ? "bg-teal-100 text-teal-700" : "bg-teal-600 text-white",
+    amber: muted ? "bg-amber-100 text-amber-700" : "bg-amber-500 text-white",
+    rose: muted ? "bg-rose-100 text-rose-700" : "bg-rose-500 text-white",
+    slate: muted ? "bg-slate-100 text-slate-600" : "bg-slate-700 text-white",
+    sky: muted ? "bg-sky-100 text-sky-700" : "bg-sky-600 text-white",
+  };
+  return <div className={`grid size-8 shrink-0 place-items-center rounded-full text-xs font-medium ${color[tone]}`}>{value}</div>;
+}
+
+function MetricPill({ label, value, tone }: { label: string; value: number; tone: AdvisoryTone }) {
+  const styles: Record<AdvisoryTone, string> = {
+    teal: "border-teal-200 bg-teal-50 text-teal-800",
+    amber: "border-amber-200 bg-amber-50 text-amber-800",
+    rose: "border-rose-200 bg-rose-50 text-rose-800",
+    slate: "border-slate-200 bg-slate-50 text-slate-800",
+    sky: "border-sky-200 bg-sky-50 text-sky-800",
+  };
+  return (
+    <div className={`rounded-2xl border px-3 py-3 ${styles[tone]}`}>
+      <div className="text-lg font-medium leading-none">{value}</div>
+      <div className="mt-1 text-[10px] leading-tight opacity-80">{label}</div>
+    </div>
+  );
 }
 
 function RoleFamilySummary({ families }: { families: { family: string; natural: number; strength: number }[] }) {
@@ -394,7 +456,7 @@ function RoleFamilySummary({ families }: { families: { family: string; natural: 
     <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
       <div className="text-sm font-medium text-foreground">Peta Wilayah Peran</div>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-        Ini hanya peta pendukung. Pembacaan utama tetap ada di Cermin Jati Diri dan sumber energi di atas.
+        Ini peta pendukung. Pembacaan utama tetap ada di Cermin Jati Diri, sumber energi, dan mode adaptif di atas.
       </p>
       <div className="mt-4 space-y-3">
         {families.map((family) => (
@@ -410,6 +472,30 @@ function RoleFamilySummary({ families }: { families: { family: string; natural: 
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function RoleScoreList({ title, roles, mode }: { title: string; roles: MicroRoleScore[]; mode: "natural" | "strength" }) {
+  return (
+    <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
+      <div className="text-sm font-medium text-foreground">{title}</div>
+      <div className="mt-4 space-y-3">
+        {roles.map((role) => {
+          const value = role[mode];
+          return (
+            <div key={role.id}>
+              <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                <span className="font-medium text-foreground">{role.name}</span>
+                <span className="text-muted-foreground">{value}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

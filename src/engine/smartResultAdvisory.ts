@@ -7,13 +7,21 @@ import type {
 } from "@/engine/patternSignature";
 import type { MicroRoleId } from "@/data/microRoles";
 
+export type AdvisoryTone = "teal" | "amber" | "rose" | "slate" | "sky";
+
 export interface AdvisoryTheme {
   id: string;
   title: string;
+  shortTitle: string;
   headline: string;
   body: string;
+  whyItFits: string;
+  healthyUse: string;
   evidence: MicroRoleScore[];
+  naturalScore: number;
+  strengthScore: number;
   score: number;
+  tone: AdvisoryTone;
 }
 
 export interface AdvisoryVulnerability {
@@ -23,31 +31,50 @@ export interface AdvisoryVulnerability {
   body: string;
   support: string;
   evidence: MicroRoleScore[];
-  score: number;
+  naturalScore: number;
+  strengthScore: number;
+  riskScore: number;
+  tone: AdvisoryTone;
 }
 
 export interface AdvisoryAdaptive {
   id: string;
   title: string;
+  headline: string;
   body: string;
   emotionalNote: string;
   recovery: string;
   evidence: MicroRoleScore[];
-  score: number;
+  naturalScore: number;
+  strengthScore: number;
+  gap: number;
   source?: AdaptiveGapInsight;
+}
+
+export interface AlignmentReading {
+  title: string;
+  headline: string;
+  body: string;
+  alignedCount: number;
+  dormantCount: number;
+  adaptiveCount: number;
 }
 
 export interface SmartResultAdvisory {
   title: string;
   archetype: string;
+  mirrorTitle: string;
   mirror: string[];
-  coreSentence: string;
+  sharpSummary: string;
+  alignment: AlignmentReading;
   energyThemes: AdvisoryTheme[];
   vulnerabilities: AdvisoryVulnerability[];
   adaptiveThemes: AdvisoryAdaptive[];
   dormantThemes: AdvisoryTheme[];
   onSwitch: string[];
+  forOthers: string[];
   resistance: string[];
+  recoveryRituals: string[];
   selfCare: string[];
   evidenceLine: string;
   qualityNote: string;
@@ -56,198 +83,326 @@ export interface SmartResultAdvisory {
 interface ThemeRule {
   id: string;
   title: string;
+  shortTitle: string;
   roleIds: MicroRoleId[];
-  minScore?: number;
-  headline: (roles: MicroRoleScore[]) => string;
-  body: (roles: MicroRoleScore[]) => string;
-  dormantBody?: (roles: MicroRoleScore[]) => string;
+  tone: AdvisoryTone;
+  headline: string;
+  body: string;
+  whyItFits: string;
+  healthyUse: string;
+  dormantBody: string;
+  onSwitch: string[];
+  forOthers: string;
 }
 
 interface VulnerabilityRule {
   id: string;
   title: string;
   roleIds: MicroRoleId[];
-  headline: (roles: MicroRoleScore[]) => string;
-  body: (roles: MicroRoleScore[]) => string;
-  support: (roles: MicroRoleScore[]) => string;
+  tone: AdvisoryTone;
+  headline: string;
+  body: string;
+  support: string;
+  triggerWords: string[];
 }
 
-const ENERGY_RULES: ThemeRule[] = [
+const THEME_RULES: ThemeRule[] = [
   {
     id: "strategy_pattern",
-    title: "Membaca pola dan menyusun strategi",
+    title: "Membaca pola dan mencari strategi",
+    shortTitle: "Pola & Strategi",
     roleIds: ["strategy_designer", "pattern_reader", "information_collector", "deep_thinker", "risk_checker"],
-    headline: () => "Kamu lebih hidup ketika diberi masalah yang perlu dibaca polanya, bukan sekadar disuruh menjalankan instruksi.",
-    body: () =>
-      "Ada bagian dalam dirimu yang mencari alasan, arah, dan pola sebelum bergerak. Ketika orang bertanya ‘strategi terbaiknya apa?’ atau ‘jalan paling masuk akal yang mana?’, energi berpikirmu biasanya lebih cepat menyala.",
-    dormantBody: () =>
-      "Kamu punya sinyal alami untuk membaca pola dan strategi, tetapi belum tentu sudah cukup sering diberi ruang untuk memakainya. Jika diberi proyek kecil untuk menyusun arah, konsep, atau perbaikan sistem, area ini bisa cepat hidup.",
+    tone: "teal",
+    headline:
+      "Kamu lebih mudah menyala saat diberi masalah yang perlu dibaca polanya, bukan sekadar disuruh menjalankan instruksi.",
+    body:
+      "Kamu cenderung ingin memahami arah, alasan, risiko, dan kemungkinan jalan keluar sebelum bergerak. Saat orang lain melihat masalah sebagai tugas, kamu sering membacanya sebagai pola yang perlu disusun ulang.",
+    whyItFits:
+      "Pola ini biasanya terlihat dari dorongan mengumpulkan bahan, mencari bukti, memikirkan alternatif, lalu memilih jalan yang paling masuk akal.",
+    healthyUse:
+      "Pakai kekuatan ini untuk membuat strategi, prioritas, roadmap, konsep perbaikan, atau keputusan yang butuh pembacaan situasi.",
+    dormantBody:
+      "Sinyal strategimu ada, tetapi mungkin belum cukup sering diberi panggung. Cobalah ambil satu masalah kecil, susun peta pilihan, lalu ubah menjadi rekomendasi singkat.",
+    onSwitch: [
+      "Menurut kamu strategi terbaiknya apa?",
+      "Kalau dibuat lebih efektif, sistemnya seperti apa?",
+      "Menurutmu pola masalahnya di mana?",
+    ],
+    forOthers:
+      "Lebih mudah mengajak kamu bergerak jika dimulai dari tujuan, alasan, dan pilihan strategi — bukan instruksi pendek tanpa konteks.",
   },
   {
     id: "knowledge_translation",
-    title: "Mengolah pengetahuan menjadi penjelasan",
+    title: "Mengubah pengetahuan menjadi penjelasan",
+    shortTitle: "Belajar & Menjelaskan",
     roleIds: ["idea_translator", "information_collector", "fast_learner", "deep_thinker", "mentor_coach"],
-    headline: () => "Kamu bukan hanya suka tahu; kamu ingin sesuatu yang rumit bisa dipahami dengan lebih jernih.",
-    body: () =>
-      "Energi muncul ketika kamu bisa mengumpulkan bahan, memahami konteks, lalu mengubahnya menjadi bahasa yang lebih sederhana. Kamu bisa terasa sangat hidup saat menjelaskan, menulis, mengajar, membuat demo, atau menerjemahkan ide menjadi sesuatu yang bisa dipakai orang lain.",
-    dormantBody: () =>
-      "Ada potensi untuk menjadi penerjemah ide atau pengajar yang kuat. Kalau belum banyak terlihat, mungkin bukan karena tidak mampu, tetapi karena belum ada ruang yang tepat untuk mengubah pengetahuan menjadi karya yang dibaca, didengar, atau dipakai orang lain.",
+    tone: "sky",
+    headline: "Kamu bukan hanya ingin tahu. Kamu ingin hal yang rumit menjadi lebih jernih dan bisa dipahami.",
+    body:
+      "Energi kamu muncul ketika bisa mengumpulkan bahan, memahami konteks, lalu memberi bahasa yang lebih sederhana. Kamu bisa terlihat hidup saat menjelaskan, menulis, mengajar, membuat demo, atau menerjemahkan ide menjadi sesuatu yang praktis.",
+    whyItFits:
+      "Pola ini sering muncul pada orang yang menyimpan banyak referensi, cepat belajar, dan merasa puas saat orang lain akhirnya mengerti.",
+    healthyUse:
+      "Tempatkan diri pada peran edukasi, dokumentasi, presentasi, mentoring, konten, atau bridge antara informasi teknis dan pemahaman orang lain.",
+    dormantBody:
+      "Potensi menjelaskan mungkin ada, tetapi belum selalu menjadi karya. Mulailah dari catatan pendek, tulisan, video singkat, atau penjelasan 1 halaman.",
+    onSwitch: [
+      "Bisa bantu jelaskan ini supaya lebih mudah dipahami?",
+      "Kalau ini harus dijelaskan ke orang awam, kalimatnya bagaimana?",
+      "Bisa bantu susun bahan ini jadi lebih rapi?",
+    ],
+    forOthers:
+      "Minta kamu menjelaskan atau merapikan pemahaman sering lebih efektif daripada langsung menyuruh menyelesaikan detail teknis kecil.",
   },
   {
     id: "idea_creation",
     title: "Membuat ide dan kemungkinan baru",
+    shortTitle: "Ide & Kemungkinan",
     roleIds: ["idea_synthesizer", "creative_designer", "future_mapper", "strategy_designer", "idea_translator"],
-    headline: () => "Kamu lebih mudah bersemangat ketika ada ruang membayangkan kemungkinan baru.",
-    body: () =>
-      "Kamu cenderung tidak puas hanya menerima bentuk yang sudah ada. Ada dorongan untuk menggabungkan ide, membuat konsep, melihat masa depan, dan mencari cara agar sesuatu terasa lebih menarik atau lebih bermakna.",
-    dormantBody: () =>
-      "Imajinasi dan kemampuan membuat konsep mungkin ada, tetapi belum selalu menjadi aktivitas rutin. Mulailah dari eksperimen kecil: satu tulisan, satu konsep, satu prototype, atau satu ide yang selesai dibentuk.",
+    tone: "amber",
+    headline: "Kamu lebih bersemangat ketika ada ruang membayangkan kemungkinan baru, bukan hanya mengulang pola lama.",
+    body:
+      "Kamu cenderung melihat bahwa sesuatu bisa dibuat lebih menarik, lebih bermakna, atau lebih efektif. Rutinitas yang terlalu sempit dapat membuat energi kreatifmu terasa terkunci.",
+    whyItFits:
+      "Ini terbaca dari pola mencari hubungan antaride, membuat konsep, membayangkan masa depan, dan mengubah bahan biasa menjadi gagasan baru.",
+    healthyUse:
+      "Gunakan untuk brainstorming, desain konsep, inovasi, storytelling, produk, konten, atau perbaikan cara kerja.",
+    dormantBody:
+      "Ide kamu mungkin banyak, tetapi belum semuanya diberi wadah selesai. Pilih satu ide kecil, beri bentuk, lalu selesaikan sebelum membuka terlalu banyak kemungkinan baru.",
+    onSwitch: [
+      "Apa ide kamu supaya ini lebih hidup?",
+      "Kalau dibuat versi yang lebih menarik, bentuknya seperti apa?",
+      "Kemungkinan lain yang belum kita lihat apa?",
+    ],
+    forOthers:
+      "Kamu cenderung lebih hidup saat diberi ruang alternatif. Terlalu cepat menutup ide bisa membuatmu merasa tidak dilibatkan.",
   },
   {
     id: "problem_quality",
     title: "Mendiagnosis masalah dan menjaga kualitas",
+    shortTitle: "Masalah & Mutu",
     roleIds: ["problem_restorer", "quality_evaluator", "pattern_reader", "risk_checker", "commitment_keeper"],
-    headline: () => "Kamu lebih tenang ketika sesuatu bisa diuji, diperiksa, dan dikembalikan ke kondisi yang lebih benar.",
-    body: () =>
-      "Kamu punya energi untuk mencari akar masalah, memeriksa kualitas, dan memastikan keputusan tidak hanya terasa cepat tetapi juga cukup benar. Orang lain mungkin melihatmu kritis; sebenarnya kamu sedang menjaga agar sesuatu tidak asal jalan.",
-    dormantBody: () =>
-      "Kemampuan mendiagnosis dan menjaga kualitas bisa menjadi kekuatan besar jika diberi ruang yang jelas. Jangan hanya dipakai saat krisis; pakai juga untuk membuat sistem pencegahan.",
+    tone: "slate",
+    headline: "Kamu lebih tenang ketika sesuatu bisa diuji, diperiksa, dan dikembalikan ke kondisi yang lebih benar.",
+    body:
+      "Kamu mungkin tidak mudah puas dengan jawaban permukaan. Ada dorongan untuk mencari akar masalah, memastikan kualitas, dan mencegah keputusan yang asal cepat tetapi rapuh.",
+    whyItFits:
+      "Pola ini muncul ketika jawaban tinggi berkumpul pada bukti, pemeriksaan, risiko, akar masalah, dan tanggung jawab terhadap hasil.",
+    healthyUse:
+      "Gunakan sebagai fungsi audit, review, troubleshooting, testing, quality control, atau penjaga keputusan penting.",
+    dormantBody:
+      "Naluri memperbaiki dan mengecek kualitas bisa menjadi aset besar. Jangan hanya dipakai saat krisis; jadikan sistem pencegahan sederhana.",
+    onSwitch: [
+      "Menurutmu akar masalahnya di mana?",
+      "Bagian mana yang perlu dicek dulu supaya aman?",
+      "Apa risiko yang paling harus kita antisipasi?",
+    ],
+    forOthers:
+      "Jangan anggap pertanyaan kritismu sebagai penolakan. Sering kali kamu sedang menjaga agar keputusan tidak asal jalan.",
   },
   {
     id: "system_reliability",
-    title: "Menata sistem, janji, dan keteraturan",
+    title: "Menjaga alur, janji, dan keteraturan",
+    shortTitle: "Sistem & Tanggung Jawab",
     roleIds: ["system_organizer", "commitment_keeper", "consistency_guardian", "quality_evaluator", "operational_executor"],
-    headline: () => "Kamu lebih mudah bergerak ketika alur, standar, dan tanggung jawab terlihat jelas.",
-    body: () =>
-      "Kekuatan ini membuatmu ingin sesuatu tidak tercecer: janji dijaga, prosedur jelas, hasil bisa dipercaya. Jika lingkungan terlalu kacau atau ekspektasi berubah tanpa alasan, energi mentalmu bisa cepat terkuras.",
-    dormantBody: () =>
-      "Ada potensi membangun keteraturan, tetapi belum tentu sudah dipakai sebagai kekuatan utama. Cobalah membuat sistem kecil yang meringankan hidupmu, bukan sistem besar yang justru menambah beban.",
+    tone: "teal",
+    headline: "Kamu lebih ringan bergerak ketika alur, standar, dan tanggung jawab terlihat jelas.",
+    body:
+      "Kamu bisa merasa terganggu saat banyak hal berubah tanpa alasan, janji tidak jelas, atau tugas tercecer. Keteraturan bukan sekadar rapi; bagi pola ini, keteraturan memberi rasa aman.",
+    whyItFits:
+      "Ini terlihat dari perhatian pada jadwal, janji, aturan, konsistensi, kualitas, dan proses yang bisa diikuti.",
+    healthyUse:
+      "Pakai untuk membuat checklist, SOP ringan, jadwal, pembagian peran, dan sistem yang mengurangi chaos.",
+    dormantBody:
+      "Ada potensi menata hidup dan proses, tetapi hati-hati: sistem dibuat untuk meringankan, bukan menambah beban perfeksionis.",
+    onSwitch: [
+      "Biar tidak bolak-balik, alur paling aman bagaimana?",
+      "Pembagian peran yang paling jelas menurut kamu apa?",
+      "Apa standar minimum supaya ini rapi?",
+    ],
+    forOthers:
+      "Kamu akan lebih mudah membantu jika ekspektasi dan definisi selesai dibuat jelas di awal.",
   },
   {
     id: "human_growth",
     title: "Membantu orang bertumbuh",
+    shortTitle: "Tumbuh & Membimbing",
     roleIds: ["people_developer", "mentor_coach", "relationship_keeper", "emotion_reader", "harmony_keeper"],
-    headline: () => "Kamu bisa menyala ketika melihat seseorang menjadi lebih mampu, lebih tenang, atau lebih percaya diri.",
-    body: () =>
-      "Kekuatan ini bukan sekadar baik hati. Kamu cenderung menangkap potensi orang dan merasa bermakna ketika kontribusimu membuat orang lain bertumbuh. Namun kamu tetap perlu batas agar tidak semua beban orang lain kamu bawa pulang.",
-    dormantBody: () =>
-      "Ada potensi mendampingi orang, tetapi mungkin belum kamu bentuk sebagai peran yang jelas. Mulailah dari mendengar, memberi feedback kecil, atau membantu satu orang bertumbuh tanpa mengambil alih hidupnya.",
+    tone: "rose",
+    headline: "Kamu bisa menyala saat melihat seseorang menjadi lebih mampu, lebih tenang, atau lebih percaya diri.",
+    body:
+      "Kekuatan ini bukan sekadar baik hati. Kamu cenderung menangkap potensi orang dan merasa bermakna ketika kehadiranmu membuat orang lain bertumbuh.",
+    whyItFits:
+      "Ini terbaca dari pola membantu, membimbing, merawat relasi, membaca kebutuhan orang, dan merasa puas melihat perkembangan kecil.",
+    healthyUse:
+      "Gunakan untuk mentoring, coaching, parenting, teaching, pelayanan, atau membangun lingkungan yang membuat orang lebih aman berkembang.",
+    dormantBody:
+      "Potensi mendampingi orang ada, tetapi mungkin belum dibentuk sebagai peran yang jelas. Mulailah dari membantu satu orang tanpa mengambil alih semua bebannya.",
+    onSwitch: [
+      "Menurutmu cara membantu orang ini bertumbuh apa?",
+      "Apa dukungan yang paling dibutuhkan orang ini?",
+      "Bagaimana cara membuat dia lebih percaya diri?",
+    ],
+    forOthers:
+      "Kamu akan lebih hidup ketika kontribusimu terlihat membantu manusia, bukan hanya mengejar angka atau tugas kosong.",
   },
   {
     id: "warm_relationship",
-    title: "Membangun kehangatan dan rasa diterima",
+    title: "Membangun rasa aman dalam hubungan",
+    shortTitle: "Relasi & Rasa Aman",
     roleIds: ["relationship_keeper", "social_connector", "group_includer", "emotion_reader", "harmony_keeper"],
-    headline: () => "Kamu lebih mudah terbuka ketika hubungan terasa aman, hangat, dan tidak menghakimi.",
-    body: () =>
-      "Bagi pola ini, suasana hubungan sering menjadi pintu masuk sebelum pesan bisa diterima. Kamu dapat menjadi penghangat relasi, penjaga kedekatan, atau orang yang membuat orang lain merasa tidak sendirian.",
-    dormantBody: () =>
-      "Potensi relasional ada, tetapi mungkin belum selalu diekspresikan. Bangun lewat percakapan kecil yang konsisten, bukan harus selalu menjadi orang paling ramai.",
+    tone: "rose",
+    headline: "Kamu lebih mudah terbuka ketika hubungan terasa aman, hangat, dan tidak menghakimi.",
+    body:
+      "Bagi pola ini, relasi bukan dekorasi. Suasana hubungan sering menentukan apakah pesan dapat diterima dengan ringan atau terasa seperti tekanan.",
+    whyItFits:
+      "Ini muncul dari pola menjaga kedekatan, menyapa, melibatkan orang, membaca emosi, dan mencari titik temu.",
+    healthyUse:
+      "Pakai untuk membangun komunikasi keluarga, kerja tim, komunitas, dan ruang diskusi yang membuat orang merasa diterima.",
+    dormantBody:
+      "Potensi relasional bisa tumbuh lewat konsistensi kecil, bukan harus selalu menjadi orang paling ramai atau paling ekspresif.",
+    onSwitch: [
+      "Aku ingin dengar perasaan kamu dulu.",
+      "Kita cari cara yang enak untuk semua pihak ya.",
+      "Menurut kamu, siapa yang perlu dilibatkan?",
+    ],
+    forOthers:
+      "Kamu lebih mudah menerima masukan jika rasa aman dan niat baik dibangun dulu sebelum masuk ke koreksi.",
   },
   {
     id: "momentum_action",
     title: "Mengubah arah menjadi tindakan",
+    shortTitle: "Aksi & Momentum",
     roleIds: ["action_mover", "decision_director", "achievement_driver", "complexity_arranger", "strategy_designer"],
-    headline: () => "Kamu lebih hidup ketika ada tujuan yang jelas dan sesuatu perlu segera digerakkan.",
-    body: () =>
-      "Energi muncul ketika keputusan tidak berhenti sebagai wacana. Kamu bisa menjadi pendorong momentum, pembuka jalan, atau orang yang membuat situasi mulai bergerak. Tantangannya adalah memastikan orang lain tidak tertinggal oleh tempo gerakmu.",
-    dormantBody: () =>
-      "Ada potensi menggerakkan, tetapi mungkin belum selalu percaya diri mengambil posisi. Mulailah dari keputusan kecil yang jelas, bukan menunggu semua hal sempurna.",
+    tone: "amber",
+    headline: "Kamu lebih hidup ketika ada tujuan yang jelas dan sesuatu perlu mulai digerakkan.",
+    body:
+      "Kamu bisa menjadi pemicu momentum: mengubah wacana menjadi langkah. Yang perlu dijaga adalah tempo, karena tidak semua orang bergerak secepat energimu.",
+    whyItFits:
+      "Ini terbaca dari dorongan mengambil tindakan, memimpin keputusan, mengejar hasil, mengatur kompleksitas, dan menentukan langkah pertama.",
+    healthyUse:
+      "Gunakan untuk memulai proyek, menjaga momentum, membuat keputusan awal, dan mengeksekusi prioritas yang sudah cukup jelas.",
+    dormantBody:
+      "Potensi menggerakkan ada, tetapi mungkin butuh ruang aman untuk mengambil posisi. Mulailah dari keputusan kecil yang jelas dan bisa diuji.",
+    onSwitch: [
+      "Langkah pertama yang paling masuk akal apa?",
+      "Apa keputusan kecil yang bisa kita ambil sekarang?",
+      "Kalau harus mulai hari ini, mulai dari mana?",
+    ],
+    forOthers:
+      "Kamu cenderung lebih mudah bergerak ketika tujuan dan batas waktunya jelas, bukan ketika semua hal masih menggantung.",
   },
   {
     id: "meaning_values",
     title: "Bergerak karena makna dan nilai",
-    roleIds: ["meaning_keeper", "commitment_keeper", "people_developer", "consistency_guardian", "future_mapper"],
-    headline: () => "Kamu lebih kuat ketika tahu bahwa yang kamu lakukan punya makna dan manfaat.",
-    body: () =>
-      "Kamu bisa kehilangan energi jika suatu aktivitas terasa kosong, tidak sesuai nilai, atau hanya mengejar hasil tanpa alasan yang bermakna. Sebaliknya, ketika tujuan terasa benar, kamu bisa jauh lebih tahan berjuang.",
-    dormantBody: () =>
-      "Nilai dan makna bisa menjadi kompas besar. Tuliskan alasan kenapa sebuah peran penting bagimu, agar energi tidak hanya bergantung pada mood harian.",
+    shortTitle: "Makna & Nilai",
+    roleIds: ["meaning_keeper", "commitment_keeper", "people_developer", "future_mapper", "consistency_guardian"],
+    tone: "teal",
+    headline: "Kamu lebih kuat ketika tahu bahwa yang kamu lakukan punya makna dan manfaat.",
+    body:
+      "Jika aktivitas terasa kosong, sekadar rutinitas, atau tidak sesuai nilai, energimu bisa turun walaupun kamu tetap mampu menyelesaikannya. Sebaliknya, tujuan yang terasa benar bisa membuatmu tahan berjuang.",
+    whyItFits:
+      "Pola ini terlihat dari orientasi nilai, manfaat, komitmen, masa depan, dan keinginan memberi dampak yang lebih besar.",
+    healthyUse:
+      "Hubungkan tugas harian dengan alasan yang lebih bermakna. Jika makna hilang, energi biasanya ikut menurun.",
+    dormantBody:
+      "Makna bisa menjadi kompas. Tulis alasan kenapa peran ini penting bagimu agar energi tidak hanya bergantung pada mood harian.",
+    onSwitch: [
+      "Apa manfaat terbesar dari hal ini?",
+      "Kenapa ini penting untuk kita jalankan?",
+      "Nilai apa yang ingin kamu jaga di sini?",
+    ],
+    forOthers:
+      "Kamu lebih mudah menerima ajakan jika tahu nilai dan manfaatnya, bukan hanya karena ‘harus’. ",
   },
 ];
 
 const VULNERABILITY_RULES: VulnerabilityRule[] = [
   {
-    id: "social_breadth_drain",
-    title: "Basa-basi sosial yang terlalu panjang",
-    roleIds: ["social_connector", "group_includer", "relationship_keeper", "emotion_reader"],
-    headline: () => "Kamu mungkin bisa berinteraksi, tetapi belum tentu terisi oleh relasi yang terlalu melebar dan dangkal.",
-    body: () =>
-      "Jika area sosial tidak menjadi sumber energi alami, tuntutan untuk selalu menyapa, ramah, follow-up, atau menjaga suasana banyak orang bisa terasa cepat melelahkan. Kamu mungkin lebih kuat menjelaskan nilai daripada terus menjaga basa-basi.",
-    support: () =>
-      "Gunakan template komunikasi, batasi jumlah interaksi intensif, dan beri waktu pemulihan setelah aktivitas sosial panjang.",
+    id: "instruction_without_context",
+    title: "Instruksi pendek tanpa konteks",
+    roleIds: ["strategy_designer", "deep_thinker", "pattern_reader", "risk_checker"],
+    tone: "amber",
+    headline: "Kamu bisa berat bergerak jika hanya disuruh tanpa tahu alasan, arah, atau konteksnya.",
+    body:
+      "Ini bukan selalu malas. Pada pola ini, energi sering baru menyala setelah otak memahami ‘kenapa’, ‘untuk apa’, dan ‘jalur terbaiknya apa’. Instruksi yang terlalu mentah bisa membuatmu diam dulu, bukan karena menolak, tetapi karena sedang mencari pegangan berpikir.",
+    support: "Minta konteks minimum: tujuan, batas waktu, alasan, dan definisi selesai. Setelah itu, ambil satu langkah kecil agar tidak terjebak berpikir terlalu lama.",
+    triggerWords: ["cepat", "pokoknya", "langsung saja", "nggak usah banyak mikir"],
   },
   {
     id: "routine_admin_drain",
     title: "Rutinitas administratif yang berulang",
     roleIds: ["system_organizer", "operational_executor", "consistency_guardian", "quality_evaluator"],
-    headline: () => "Kamu bisa menjalankan tugas rutin, tetapi jangan sampai seluruh hidupmu hanya menjadi daftar pekerjaan kecil.",
-    body: () =>
-      "Jika keteraturan operasional bukan sumber energi utama, laporan, file, input data, jadwal, dan detail berulang bisa menghabiskan tenaga diam-diam. Kamu tetap bisa disiplin karena tanggung jawab, tetapi perlu sistem agar energi terbaikmu tidak habis di sini.",
-    support: () =>
-      "Pakai checklist, batching, reminder, template, delegasi, atau partner yang lebih natural di area detail dan rutinitas.",
+    tone: "slate",
+    headline: "Kamu bisa mengerjakan hal rutin, tetapi energi terbaikmu bisa habis jika terlalu lama hidup di detail kecil yang berulang.",
+    body:
+      "Tugas administrasi, input data, file, jadwal, dan follow-up kecil bisa terlihat sederhana, tetapi secara psikologis tetap menyedot energi jika bukan rumah alami. Kamu mungkin tetap melakukannya karena tanggung jawab, bukan karena itu membuatmu hidup.",
+    support: "Pakai template, batching, reminder, checklist, dan pembagian peran. Jangan biarkan energi inti habis hanya untuk menjaga detail yang bisa disistemkan.",
+    triggerWords: ["rapikan sekarang", "isi data", "ulang lagi", "detail kecil"],
+  },
+  {
+    id: "social_breadth_drain",
+    title: "Relasi melebar yang terlalu basa-basi",
+    roleIds: ["social_connector", "group_includer", "relationship_keeper", "emotion_reader"],
+    tone: "rose",
+    headline: "Kamu mungkin bisa berinteraksi, tetapi belum tentu terisi oleh komunikasi yang terlalu banyak basa-basi.",
+    body:
+      "Jika social breadth bukan energi utama, tuntutan untuk selalu ramah, menyapa, follow-up, atau menjaga suasana banyak orang bisa membuatmu cepat kosong. Kamu mungkin lebih kuat menjelaskan nilai daripada terus menjaga hubungan dangkal.",
+    support: "Pilih relasi penting, gunakan pesan singkat yang tulus, dan beri jeda setelah aktivitas sosial panjang. Kualitas relasi lebih sehat daripada jumlah interaksi.",
+    triggerWords: ["kenalan semua", "ramahin aja", "follow-up terus", "basa-basi dulu"],
   },
   {
     id: "emotion_absorption_drain",
-    title: "Menampung emosi terlalu banyak",
+    title: "Menampung emosi orang terlalu lama",
     roleIds: ["emotion_reader", "harmony_keeper", "people_developer", "relationship_keeper"],
-    headline: () => "Kamu tidak harus selalu menjadi tempat semua orang menaruh beban emosinya.",
-    body: () =>
-      "Kalau kepekaan emosional tidak menjadi sumber energi utama, tuntutan untuk selalu peka, menenangkan, atau menjaga perasaan semua orang dapat membuatmu lelah. Membantu orang tetap baik, tetapi memikul seluruh emosinya bukan kewajibanmu.",
-    support: () =>
-      "Beri batas bantuan, gunakan kalimat validasi sederhana, lalu sepakati langkah praktis agar kamu tidak terserap terlalu dalam.",
+    tone: "rose",
+    headline: "Kamu tidak harus selalu menjadi tempat semua orang menaruh beban emosinya.",
+    body:
+      "Mendengar dan peduli itu baik. Tetapi jika kamu terlalu lama memegang emosi orang lain, kamu bisa merasa lelah tanpa tahu sumbernya. Kadang yang melelahkan bukan tugasnya, melainkan beban rasa yang ikut kamu bawa.",
+    support: "Validasi perasaan, lalu buat batas. Kamu boleh berkata: ‘Aku dengerin, tapi aku perlu jeda dulu supaya bisa bantu dengan lebih jernih.’",
+    triggerWords: ["dengerin terus", "jangan bikin kecewa", "semua harus nyaman"],
   },
   {
     id: "fast_action_drain",
-    title: "Keputusan cepat tanpa cukup konteks",
+    title: "Keputusan cepat tanpa cukup bahan",
     roleIds: ["action_mover", "decision_director", "achievement_driver", "risk_checker"],
-    headline: () => "Kamu bisa tegang ketika dipaksa bergerak cepat sebelum arah dan risikonya cukup jelas.",
-    body: () =>
-      "Jika kamu butuh memahami pola dulu, instruksi yang terlalu mendadak bisa terasa menekan. Orang lain mungkin melihatmu lambat, padahal otakmu sedang mencari struktur agar tindakan tidak asal jalan.",
-    support: () =>
-      "Minta konteks minimum: tujuan, batas waktu, risiko terbesar, dan definisi selesai. Setelah itu, batasi waktu berpikir agar tidak berubah menjadi penundaan.",
+    tone: "amber",
+    headline: "Kamu bisa tegang jika dipaksa bergerak cepat sebelum bahan dan risikonya cukup jelas.",
+    body:
+      "Sebagian orang merasa aman setelah bertindak. Sebagian lain merasa aman setelah memahami. Kalau kamu tipe yang butuh pola dulu, keputusan terlalu cepat bisa terasa seperti tekanan mental.",
+    support: "Buat aturan: pahami 3 hal utama, lalu bergerak. Jangan menunggu sempurna, tetapi jangan juga memaksa diri bergerak tanpa pegangan.",
+    triggerWords: ["sekarang juga", "langsung putuskan", "nggak usah data"],
   },
   {
     id: "conflict_directness_drain",
-    title: "Konflik langsung dan tekanan suara tinggi",
+    title: "Nada tinggi dan konflik frontal",
     roleIds: ["decision_director", "harmony_keeper", "emotion_reader", "risk_checker"],
-    headline: () => "Cara bicara yang terlalu keras bisa membuat isi pesan kalah oleh rasa tertekan.",
-    body: () =>
-      "Jika kamu tidak natural di konflik frontal, nada tinggi, instruksi tajam, atau perdebatan menang-kalah bisa cepat menguras energi. Kamu mungkin tetap bisa menghadapi, tetapi butuh jeda agar tidak menjadi defensif.",
-    support: () =>
-      "Minta pesan disampaikan lebih spesifik, lebih tenang, dan fokus pada masalah, bukan menyudutkan pribadi.",
+    tone: "rose",
+    headline: "Cara bicara yang terlalu keras bisa membuat isi pesan kalah oleh rasa tertekan.",
+    body:
+      "Bagi sebagian orang, nada tegas terasa normal. Bagi yang lain, nada itu terasa seperti amarah. Jika kamu sensitif pada tekanan suara atau konflik langsung, kamu bisa defensif bukan karena tidak mau mendengar, tetapi karena tubuhmu membaca situasi sebagai ancaman.",
+    support: "Minta percakapan diturunkan volumenya: ‘Aku mau dengar, tapi tolong pakai nada yang lebih tenang supaya aku bisa paham.’",
+    triggerWords: ["harus", "pokoknya", "kamu selalu", "kamu tidak pernah"],
   },
   {
-    id: "unstructured_chaos_drain",
-    title: "Situasi yang kacau tanpa alur",
+    id: "chaos_drain",
+    title: "Situasi kacau tanpa prioritas",
     roleIds: ["complexity_arranger", "system_organizer", "strategy_designer", "risk_checker"],
-    headline: () => "Kamu bisa lelah saat semua hal bercampur tanpa prioritas, alur, atau pemilik tugas yang jelas.",
-    body: () =>
-      "Kalau energi alamimu butuh struktur atau strategi, situasi yang terlalu cair dapat membuatmu menghabiskan banyak tenaga hanya untuk memahami ‘sebenarnya ini arahnya ke mana’. Kelelahannya bukan karena tidak mau, tetapi karena terlalu banyak noise.",
-    support: () =>
-      "Pisahkan masalah, pilih prioritas, tentukan pemilik tugas, dan buat keputusan kecil yang bisa segera diuji.",
-  },
-  {
-    id: "physical_operational_drain",
-    title: "Pekerjaan teknis-fisik yang tidak memberi makna",
-    roleIds: ["operational_executor", "problem_restorer", "quality_evaluator", "creative_designer"],
-    headline: () => "Aktivitas praktis bisa terasa berat jika tidak terhubung dengan makna, sistem, atau hasil yang kamu pedulikan.",
-    body: () =>
-      "Ada pekerjaan yang sebenarnya sederhana, tetapi terasa berat karena tidak menyentuh sumber energi alamimu. Bukan berarti kamu tidak bisa; hanya saja area ini butuh alasan, sistem, atau pembagian peran agar tidak menjadi beban psikologis.",
-    support: () =>
-      "Ubah tugas menjadi sistem kecil, pasangkan dengan tujuan yang jelas, atau bagi peran dengan orang yang lebih ringan menjalankannya.",
+    tone: "slate",
+    headline: "Kamu mudah lelah saat semua hal bercampur tanpa prioritas, pemilik tugas, atau arah yang jelas.",
+    body:
+      "Kelelahan muncul karena terlalu banyak noise. Kamu menghabiskan energi hanya untuk memahami apa yang sebenarnya penting, siapa mengerjakan apa, dan kapan sesuatu dianggap selesai.",
+    support: "Pisahkan masalah, pilih satu prioritas, tentukan pemilik tugas, lalu sepakati langkah paling kecil yang bisa diuji.",
+    triggerWords: ["semuanya penting", "nanti lihat saja", "belum tahu siapa"],
   },
 ];
 
-function byId(roles: MicroRoleScore[], id: MicroRoleId) {
-  return roles.find((role) => role.id === id);
+function clamp(value: number, min = 0, max = 100) {
+  return Math.max(min, Math.min(max, value));
 }
 
-function roleScore(roles: MicroRoleScore[], ids: MicroRoleId[], mode: "natural" | "strength" = "natural") {
-  const selected = ids.map((id) => byId(roles, id)).filter((role): role is MicroRoleScore => Boolean(role));
-  if (selected.length === 0) return 0;
-  const weighted = selected.reduce((sum, role) => sum + role[mode], 0) / selected.length;
-  const topBonus = selected.some((role) => role[mode] >= 70) ? 6 : 0;
-  return Math.round(weighted + topBonus);
+function byId(roles: MicroRoleScore[], id: MicroRoleId) {
+  return roles.find((role) => role.id === id);
 }
 
 function selectedRoles(roles: MicroRoleScore[], ids: MicroRoleId[], mode: "natural" | "strength" = "natural") {
@@ -255,102 +410,151 @@ function selectedRoles(roles: MicroRoleScore[], ids: MicroRoleId[], mode: "natur
     .map((id) => byId(roles, id))
     .filter((role): role is MicroRoleScore => Boolean(role))
     .sort((a, b) => b[mode] - a[mode])
-    .slice(0, 4);
+    .slice(0, 5);
+}
+
+function averageScore(roles: MicroRoleScore[], ids: MicroRoleId[], mode: "natural" | "strength") {
+  const values = ids
+    .map((id) => byId(roles, id))
+    .filter((role): role is MicroRoleScore => Boolean(role))
+    .map((role) => role[mode]);
+  if (values.length === 0) return 0;
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
+function combinedScore(natural: number, strength: number) {
+  return Math.round(natural * 0.72 + strength * 0.28);
 }
 
 function buildEnergyThemes(report: PatternSignatureReport): AdvisoryTheme[] {
-  return ENERGY_RULES
+  return THEME_RULES
     .map((rule) => {
+      const naturalScore = averageScore(report.microRoles, rule.roleIds, "natural");
+      const strengthScore = averageScore(report.microRoles, rule.roleIds, "strength");
       const evidence = selectedRoles(report.microRoles, rule.roleIds, "natural");
-      const score = roleScore(report.microRoles, rule.roleIds, "natural");
+      const score = combinedScore(naturalScore, strengthScore);
       return {
         id: rule.id,
         title: rule.title,
-        headline: rule.headline(evidence),
-        body: rule.body(evidence),
+        shortTitle: rule.shortTitle,
+        headline: rule.headline,
+        body: rule.body,
+        whyItFits: rule.whyItFits,
+        healthyUse: rule.healthyUse,
         evidence,
+        naturalScore,
+        strengthScore,
         score,
+        tone: rule.tone,
       };
     })
-    .filter((theme) => theme.score >= 48 && theme.evidence.length > 0)
+    .filter((theme) => theme.score >= 46 && theme.evidence.length > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+    .slice(0, 4);
 }
 
-function buildDormantThemes(report: PatternSignatureReport, energyIds: Set<string>): AdvisoryTheme[] {
-  return ENERGY_RULES
+function buildDormantThemes(report: PatternSignatureReport, usedThemeIds: Set<string>): AdvisoryTheme[] {
+  return THEME_RULES
     .map((rule) => {
-      const evidence = selectedRoles(report.naturalDormantRoles.length > 0 ? report.naturalDormantRoles : report.microRoles, rule.roleIds, "natural");
-      const score = roleScore(report.microRoles, rule.roleIds, "natural") - roleScore(report.microRoles, rule.roleIds, "strength");
+      const naturalScore = averageScore(report.microRoles, rule.roleIds, "natural");
+      const strengthScore = averageScore(report.microRoles, rule.roleIds, "strength");
+      const evidence = selectedRoles(report.microRoles, rule.roleIds, "natural");
+      const gap = naturalScore - strengthScore;
       return {
         id: rule.id,
         title: rule.title,
-        headline: `Potensi ini ada, tetapi belum tentu sudah sering kamu pakai sebagai kekuatan nyata.`,
-        body: rule.dormantBody?.(evidence) ?? rule.body(evidence),
+        shortTitle: rule.shortTitle,
+        headline: "Sinyal alami ini ada, tetapi belum tentu sudah sering menjadi aktivitas nyata.",
+        body: rule.dormantBody,
+        whyItFits: rule.whyItFits,
+        healthyUse: rule.healthyUse,
         evidence,
-        score,
+        naturalScore,
+        strengthScore,
+        score: gap,
+        tone: rule.tone,
       };
     })
-    .filter((theme) => !energyIds.has(theme.id) && theme.score >= 8 && theme.evidence.length > 0)
+    .filter((theme) => !usedThemeIds.has(theme.id) && theme.naturalScore >= 50 && theme.score >= 9 && theme.evidence.length > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
+    .slice(0, 2);
 }
 
-function buildVulnerabilities(report: PatternSignatureReport): AdvisoryVulnerability[] {
+function buildVulnerabilities(report: PatternSignatureReport, energyThemeIds: Set<string>): AdvisoryVulnerability[] {
   return VULNERABILITY_RULES
     .map((rule) => {
+      const naturalScore = averageScore(report.microRoles, rule.roleIds, "natural");
+      const strengthScore = averageScore(report.microRoles, rule.roleIds, "strength");
       const evidence = selectedRoles(report.microRoles, rule.roleIds, "natural");
-      const averageNatural = roleScore(report.microRoles, rule.roleIds, "natural");
-      const averageStrength = roleScore(report.microRoles, rule.roleIds, "strength");
-      const lowNaturalSignal = Math.max(0, 62 - averageNatural);
-      const adaptivePressure = Math.max(0, averageStrength - averageNatural);
-      const score = Math.round(lowNaturalSignal + adaptivePressure * 0.75);
+      const lowNatural = Math.max(0, 58 - naturalScore);
+      const pressureGap = Math.max(0, strengthScore - naturalScore);
+      const energyConflictBonus = rule.roleIds.some((id) => Array.from(energyThemeIds).some((themeId) => THEME_RULES.find((theme) => theme.id === themeId)?.roleIds.includes(id))) ? 4 : 0;
+      const riskScore = Math.round(lowNatural + pressureGap * 0.9 + energyConflictBonus);
       return {
         id: rule.id,
         title: rule.title,
-        headline: rule.headline(evidence),
-        body: rule.body(evidence),
-        support: rule.support(evidence),
+        headline: rule.headline,
+        body: rule.body,
+        support: rule.support,
         evidence,
-        score,
+        naturalScore,
+        strengthScore,
+        riskScore,
+        tone: rule.tone,
       };
     })
-    .filter((item) => item.score >= 18 && item.evidence.length > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+    .filter((item) => item.riskScore >= 14 && item.evidence.length > 0)
+    .sort((a, b) => b.riskScore - a.riskScore)
+    .slice(0, 4);
+}
+
+function transformSpecificAdaptive(insight: AdaptiveGapInsight, evidence: MicroRoleScore[]): AdvisoryAdaptive {
+  const title = insight.title
+    .replace("Concept-Led Marketing", "Promosi lewat konsep, bukan basa-basi")
+    .replace("Administrative Responsibility Load", "Administrasi karena tanggung jawab")
+    .replace("Service Through Duty & Values", "Membantu karena nilai dan tanggung jawab");
+
+  return {
+    id: insight.id,
+    title,
+    headline: "Kamu tampak mampu di area ini, tetapi energi asalnya belum tentu dari sana.",
+    body: insight.interpretation,
+    emotionalNote:
+      "Kalau area ini membuatmu cepat jenuh atau lelah secara emosi, itu bukan berarti kamu lemah. Bisa jadi kamu sedang memakai kemampuan yang terbentuk karena tuntutan hidup, bukan karena itu rumah energi alamimu.",
+    recovery:
+      "Setelah menjalankan peran ini, beri ruang pulih yang nyata. Kembali sebentar ke aktivitas yang membuatmu hidup: berpikir, berkarya, membantu, menata, atau belajar — sesuai sumber energi utamamu.",
+    evidence,
+    naturalScore: insight.naturalRouteScore,
+    strengthScore: insight.adaptiveLoadScore,
+    gap: insight.adaptiveLoadScore - insight.naturalRouteScore,
+    source: insight,
+  };
 }
 
 function buildAdaptiveAdvisories(report: PatternSignatureReport): AdvisoryAdaptive[] {
   const specific = report.adaptiveGapInsights.slice(0, 2).map((insight) => {
     const evidence = report.adaptiveRoles.slice(0, 4);
-    return {
-      id: insight.id,
-      title: insight.title.replace("Concept-Led Marketing", "Promosi lewat konsep, bukan basa-basi").replace("Administrative Responsibility Load", "Administrasi karena tanggung jawab").replace("Service Through Duty & Values", "Membantu karena nilai dan tanggung jawab"),
-      body: insight.interpretation,
-      emotionalNote:
-        "Jika bagian ini membuatmu lelah, itu bukan berarti kamu lemah. Bisa jadi kamu sedang menjalankan kemampuan yang sudah terlatih karena hidup menuntutmu, tetapi bukan rumah energi alamimu.",
-      recovery:
-        "Berikan jeda pemulihan setelah menjalankan peran ini. Pakai sistem, template, partner, atau pembagian peran agar kamu tidak terus-menerus memakai mode adaptif.",
-      evidence,
-      score: insight.score,
-      source: insight,
-    };
+    return transformSpecificAdaptive(insight, evidence);
   });
 
-  const existing = new Set(specific.map((item) => item.id));
+  const used = new Set(specific.flatMap((item) => item.evidence.map((role) => role.id)));
   const generic = report.adaptiveRoles
-    .filter((role) => !existing.has(role.id))
+    .filter((role) => !used.has(role.id))
+    .filter((role) => role.strength - role.natural >= 12 || role.strength >= 58)
     .slice(0, Math.max(0, 3 - specific.length))
     .map((role) => ({
       id: role.id,
-      title: `${role.name} yang terbentuk karena tuntutan peran`,
-      body: `Kamu tampak cukup mampu menjalankan area ${role.name}. Namun jarak antara kekuatan aktivitas dan energi alaminya menunjukkan bahwa area ini kemungkinan lebih banyak terbentuk karena pengalaman, pekerjaan, tanggung jawab, atau kebutuhan lingkungan.`,
+      title: `${role.name} yang sudah terbentuk karena pengalaman`,
+      headline: "Kamu bisa menjalankan area ini, tetapi perlu jujur apakah ini mengisi atau menguras energi.",
+      body: `Area ${role.name} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada energi alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan.`,
       emotionalNote:
-        "Kamu boleh mengakui bahwa area ini melelahkan, meskipun orang lain melihat kamu bisa melakukannya.",
+        "Kamu boleh merasa capek setelah menjalankan peran ini. Mampu melakukan sesuatu tidak selalu berarti itu sumber energi utama.",
       recovery:
-        "Jangan jadikan area ini sebagai pusat hidup tanpa kompensasi. Beri ruang kembali ke sumber energi utama setelah periode tuntutan selesai.",
+        "Jangan jadikan area ini pusat tuntutan tanpa sistem pendukung. Pakai template, batas waktu, partner, atau jeda pemulihan.",
       evidence: [role],
-      score: role.strength,
+      naturalScore: role.natural,
+      strengthScore: role.strength,
+      gap: role.strength - role.natural,
     }));
 
   return [...specific, ...generic].slice(0, 3);
@@ -364,96 +568,133 @@ function names(roles: MicroRoleScore[], limit = 3) {
   return `${selected.slice(0, -1).join(", ")}, dan ${selected[selected.length - 1]}`;
 }
 
-function buildArchetype(themes: AdvisoryTheme[]) {
-  const ids = new Set(themes.slice(0, 3).map((theme) => theme.id));
-  if (ids.has("strategy_pattern") && ids.has("knowledge_translation")) return "Pembaca Pola yang Mengubah Ide Menjadi Arah";
+function buildArchetype(energyThemes: AdvisoryTheme[]) {
+  const ids = new Set(energyThemes.map((theme) => theme.id));
+  if (ids.has("strategy_pattern") && ids.has("knowledge_translation")) return "Pembaca Pola yang Mengubah Pengetahuan Menjadi Arah";
+  if (ids.has("strategy_pattern") && ids.has("idea_creation")) return "Perancang Strategi dan Kemungkinan Baru";
+  if (ids.has("problem_quality") && ids.has("system_reliability")) return "Penjaga Mutu, Risiko, dan Keteraturan";
   if (ids.has("human_growth") && ids.has("warm_relationship")) return "Penjaga Tumbuh dan Rasa Aman";
-  if (ids.has("system_reliability") && ids.has("problem_quality")) return "Penjaga Kualitas dan Keteraturan";
-  if (ids.has("idea_creation") && ids.has("future_vision")) return "Perancang Kemungkinan Baru";
-  if (ids.has("momentum_action")) return "Penggerak Arah Menjadi Tindakan";
-  return themes[0]?.title ?? "Pola Energi Personal";
+  if (ids.has("momentum_action") && ids.has("strategy_pattern")) return "Penggerak Arah Menjadi Tindakan";
+  if (ids.has("meaning_values")) return "Penggerak Makna dan Nilai";
+  return energyThemes[0]?.title ?? "Pola Energi Personal";
 }
 
-function buildMirror(report: PatternSignatureReport, energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[], adaptive: AdvisoryAdaptive[]) {
-  const top = report.topNaturalRoles;
-  const strongest = names(top, 3);
-  const firstTheme = energyThemes[0];
-  const secondTheme = energyThemes[1];
+function buildMirror(
+  report: PatternSignatureReport,
+  energyThemes: AdvisoryTheme[],
+  vulnerabilities: AdvisoryVulnerability[],
+  adaptive: AdvisoryAdaptive[],
+) {
+  const first = energyThemes[0];
+  const second = energyThemes[1];
+  const topRoles = names(report.topNaturalRoles, 3);
   const mainDrain = vulnerabilities[0];
   const mainAdaptive = adaptive[0];
 
   const lines = [
-    `Kamu tampak sebagai orang yang lebih mudah menyala ketika berada di wilayah ${strongest}.`,
-    firstTheme
-      ? firstTheme.headline
-      : "Energi kamu lebih mudah muncul ketika aktivitas terasa punya arah, alasan, dan ruang untuk memakai kekuatan yang natural.",
-    secondTheme
-      ? secondTheme.body
-      : "Ketika lingkungan memberi cara masuk yang tepat, kamu bisa bergerak lebih ringan dan tidak terlalu merasa dipaksa menjadi orang lain.",
+    `Kamu itu tipe orang yang lebih mudah hidup ketika kekuatan ${topRoles} diberi ruang yang tepat.`,
+    first
+      ? first.headline
+      : "Energi kamu biasanya muncul bukan hanya karena tugas selesai, tetapi karena ada cara kerja yang terasa sesuai dengan dirimu.",
   ];
 
+  if (second) {
+    lines.push(`Pola kedua yang ikut kuat: ${second.body}`);
+  }
+
   if (mainDrain) {
-    lines.push(`Yang perlu dijaga: ${mainDrain.headline}`);
+    lines.push(`Yang sering membuatmu terasa berat bukan selalu besar kecilnya tugas, tetapi ketika kamu terlalu lama berada di pola seperti: ${mainDrain.title.toLowerCase()}.`);
   }
 
   if (mainAdaptive) {
     lines.push(
-      `Ada juga area yang mungkin sudah kamu kuasai karena tuntutan hidup. Kamu bisa terlihat mampu di sana, tetapi bukan berarti area itu selalu mengisi energi batinmu.`,
+      "Ada kemampuan yang mungkin sudah kamu kembangkan jauh karena tuntutan hidup. Dari luar kamu terlihat bisa, tetapi di dalam kamu tetap perlu ruang pulih karena tidak semua kemampuan itu berasal dari rumah energi alamimu.",
     );
   }
 
-  return lines;
+  return lines.slice(0, 5);
 }
 
-function buildOnSwitch(themes: AdvisoryTheme[], topRoles: MicroRoleScore[]) {
-  const ids = new Set(themes.map((theme) => theme.id));
-  const lines: string[] = [];
+function buildSharpSummary(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[]) {
+  const energy = energyThemes[0]?.shortTitle.toLowerCase() ?? "area yang sesuai dengan energi alamimu";
+  const drain = vulnerabilities[0]?.title.toLowerCase() ?? "tuntutan yang tidak selaras dengan caramu bekerja";
+  return `Intinya: kamu lebih hidup ketika masuk lewat ${energy}. Kamu lebih mudah lelah ketika terlalu lama dipaksa berada di ${drain}.`;
+}
 
-  if (ids.has("strategy_pattern")) {
-    lines.push("“Menurut kamu strategi terbaiknya apa?”");
-    lines.push("“Kalau dibuat lebih efektif, sistemnya seperti apa?”");
+function buildAlignment(report: PatternSignatureReport, adaptiveThemes: AdvisoryAdaptive[], dormantThemes: AdvisoryTheme[]): AlignmentReading {
+  const alignedCount = report.microRoles.filter((role) => role.natural >= 60 && role.strength >= 55).length;
+  const dormantCount = dormantThemes.length || report.naturalDormantRoles.length;
+  const adaptiveCount = adaptiveThemes.length || report.adaptiveRoles.length;
+
+  if (adaptiveCount >= 2) {
+    return {
+      title: "Kamu sudah mengembangkan beberapa kemampuan di luar rumah energi alamimu",
+      headline: "Ini menunjukkan daya adaptasi yang kuat, tetapi juga menjelaskan kenapa kamu bisa merasa lelah meski terlihat produktif.",
+      body:
+        "Sebagian kekuatan yang tampak dari luar kemungkinan terbentuk karena pekerjaan, tanggung jawab, atau kebutuhan hidup. Ini patut dihargai, tetapi jangan lupa mengisi ulang energi dari area yang benar-benar natural.",
+      alignedCount,
+      dormantCount,
+      adaptiveCount,
+    };
   }
-  if (ids.has("knowledge_translation")) lines.push("“Bisa bantu jelaskan ini supaya lebih mudah dipahami?”");
-  if (ids.has("idea_creation")) lines.push("“Apa ide kamu supaya ini lebih menarik atau lebih hidup?”");
-  if (ids.has("problem_quality")) lines.push("“Menurutmu akar masalahnya di mana?”");
-  if (ids.has("system_reliability")) lines.push("“Biar rapi dan tidak bolak-balik, alur paling aman bagaimana?”");
-  if (ids.has("human_growth")) lines.push("“Menurutmu cara membantu orang ini bertumbuh apa?”");
-  if (ids.has("momentum_action")) lines.push("“Langkah pertama yang paling masuk akal apa?”");
 
-  if (lines.length === 0 && topRoles[0]) lines.push(`“Menurutmu cara terbaik memakai kekuatan ${topRoles[0].name} ini bagaimana?”`);
-  return [...new Set(lines)].slice(0, 5);
+  if (dormantCount >= 2) {
+    return {
+      title: "Ada potensi alami yang belum sepenuhnya kamu hidupkan",
+      headline: "Kamu mungkin punya energi natural yang belum banyak diberi panggung dalam aktivitas sehari-hari.",
+      body:
+        "Jika akhir-akhir ini kamu merasa biasa saja atau kurang menyala, bukan selalu karena tidak punya kemampuan. Bisa jadi ada area alami yang belum cukup sering kamu pakai.",
+      alignedCount,
+      dormantCount,
+      adaptiveCount,
+    };
+  }
+
+  return {
+    title: "Sebagian kekuatanmu sudah cukup selaras antara energi alami dan aktivitas",
+    headline: "Ada tanda bahwa beberapa area natural sudah mulai digunakan sebagai kekuatan nyata.",
+    body:
+      "Pertahankan area ini sebagai rumah energi. Saat hidup terasa berat, kembali sebentar ke pola yang membuatmu merasa menjadi diri sendiri.",
+    alignedCount,
+    dormantCount,
+    adaptiveCount,
+  };
+}
+
+function buildOnSwitch(energyThemes: AdvisoryTheme[]) {
+  const lines = energyThemes.flatMap((theme) => theme.onSwitch);
+  return [...new Set(lines)].slice(0, 6);
+}
+
+function buildForOthers(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[]) {
+  const lines = energyThemes.slice(0, 3).map((theme) => theme.forOthers);
+  if (vulnerabilities[0]) lines.push(`Hindari memulai dengan pola yang membuatnya berat: ${vulnerabilities[0].triggerWords.slice(0, 2).join(" / ")}. Masuklah dengan konteks dan kalimat yang lebih tenang.`);
+  return [...new Set(lines)].slice(0, 4);
 }
 
 function buildResistance(vulnerabilities: AdvisoryVulnerability[]) {
-  const lines = vulnerabilities.map((item) => item.headline);
-  if (lines.length === 0) {
-    lines.push("Instruksi yang datang tiba-tiba tanpa konteks bisa membuat energi turun sebelum kamu sempat bergerak.");
-  }
-  return lines.slice(0, 4);
+  if (vulnerabilities.length === 0) return ["Instruksi mendadak tanpa konteks bisa membuat energi turun sebelum kamu sempat bergerak."];
+  return vulnerabilities.slice(0, 4).map((item) => item.headline);
 }
 
-function buildSelfCare(vulnerabilities: AdvisoryVulnerability[], adaptive: AdvisoryAdaptive[]) {
-  const lines = [
-    "Saat lelah, jangan langsung menyimpulkan bahwa kamu malas atau kurang kuat. Tanyakan dulu: apakah aku terlalu lama hidup di area yang bukan sumber energi alamiku?",
+function buildRecoveryRituals(energyThemes: AdvisoryTheme[], adaptiveThemes: AdvisoryAdaptive[]) {
+  const rituals = [
+    "Ambil jeda singkat setelah peran yang menguras. Jangan langsung menilai diri malas; cek dulu apakah kamu terlalu lama memakai mode adaptif.",
   ];
 
-  if (adaptive.length > 0) {
-    lines.push(
-      "Kalau kamu sedang banyak memakai kemampuan adaptif, jadwalkan pemulihan yang nyata: tidur cukup, jeda dari tuntutan sosial, ruang berpikir, atau aktivitas kecil yang membuatmu kembali merasa menjadi diri sendiri.",
-    );
-  }
+  if (energyThemes[0]) rituals.push(`Kembalikan energi lewat area yang natural: ${energyThemes[0].shortTitle.toLowerCase()}. Jadikan ini sebagai aktivitas pemulihan kecil, bukan target berat.`);
+  if (energyThemes[1]) rituals.push(`Sisihkan waktu mingguan untuk ${energyThemes[1].shortTitle.toLowerCase()} agar hidup tidak hanya berisi tuntutan.`);
+  if (adaptiveThemes[0]) rituals.push(adaptiveThemes[0].recovery);
 
-  if (vulnerabilities[0]) lines.push(vulnerabilities[0].support);
+  rituals.push("Kamu tidak harus hebat di semua area. Kekuatan yang sehat dimulai dari mengenali mana sumber energi, mana area yang perlu sistem pendukung.");
 
-  lines.push("Kekuatan yang sehat bukan berarti kamu harus kuat di semua area. Justru kamu perlu tahu mana rumah energimu dan mana area yang perlu sistem pendukung.");
-
-  return lines.slice(0, 4);
+  return [...new Set(rituals)].slice(0, 4);
 }
 
 function buildQualityNote(quality: ReadingQuality) {
   if (quality.level === "Stabil") return "Pola jawaban cukup stabil untuk dibaca sebagai refleksi diri yang relatif konsisten.";
-  if (quality.level === "Cukup Stabil") return "Pola jawaban cukup bisa dibaca, tetapi beberapa area sebaiknya dianggap sebagai sinyal awal, bukan kesimpulan mutlak.";
-  return "Pola jawaban perlu dibaca hati-hati. Gunakan hasil ini sebagai bahan refleksi, bukan label final tentang diri.";
+  if (quality.level === "Cukup Stabil") return "Pola jawaban cukup bisa dibaca, tetapi beberapa area tetap sebaiknya dianggap sebagai sinyal refleksi, bukan label final.";
+  return "Pola jawaban perlu dibaca hati-hati. Gunakan hasil ini sebagai bahan obrolan dengan diri sendiri, bukan sebagai vonis kepribadian.";
 }
 
 export function buildSmartResultAdvisory(
@@ -462,30 +703,39 @@ export function buildSmartResultAdvisory(
   lens: PurposeLens,
 ): SmartResultAdvisory {
   const energyThemes = buildEnergyThemes(report);
-  const energyIds = new Set(energyThemes.map((theme) => theme.id));
-  const vulnerabilities = buildVulnerabilities(report);
+  const energyThemeIds = new Set(energyThemes.map((theme) => theme.id));
+  const vulnerabilities = buildVulnerabilities(report, energyThemeIds);
   const adaptiveThemes = buildAdaptiveAdvisories(report);
-  const dormantThemes = buildDormantThemes(report, energyIds);
+  const dormantThemes = buildDormantThemes(report, energyThemeIds);
   const archetype = buildArchetype(energyThemes);
   const mirror = buildMirror(report, energyThemes, vulnerabilities, adaptiveThemes);
+  const alignment = buildAlignment(report, adaptiveThemes, dormantThemes);
 
-  const purposeFrame = lens.key === "relationship_family"
-    ? "Hasil ini dibaca dari sudut diri kamu terlebih dahulu. Bagian pasangan nanti sebaiknya memakai dua profil agar tidak menebak sepihak."
+  const contextPrefix = lens.key === "relationship_family"
+    ? "Untuk konteks pasangan atau keluarga, hasil ini dibaca dari profil kamu dulu. Insight dua arah akan jauh lebih akurat jika pasangan juga mengisi asesmen."
     : lens.summaryFrame;
 
   return {
     title: lens.summaryTitle,
     archetype,
+    mirrorTitle: "Kamu itu orang yang...",
     mirror,
-    coreSentence: purposeFrame,
+    sharpSummary: buildSharpSummary(energyThemes, vulnerabilities),
+    alignment,
     energyThemes,
     vulnerabilities,
     adaptiveThemes,
     dormantThemes,
-    onSwitch: buildOnSwitch(energyThemes, report.topNaturalRoles),
+    onSwitch: buildOnSwitch(energyThemes),
+    forOthers: buildForOthers(energyThemes, vulnerabilities),
     resistance: buildResistance(vulnerabilities),
-    selfCare: buildSelfCare(vulnerabilities, adaptiveThemes),
-    evidenceLine: `Pembacaan ini terutama terlihat dari kombinasi ${names(report.topNaturalRoles, 4)}. Detail skor tetap tersedia di bagian peta pendukung di bawah.`,
+    recoveryRituals: buildRecoveryRituals(energyThemes, adaptiveThemes),
+    selfCare: [
+      contextPrefix,
+      alignment.body,
+      "Kalau hasil ini terasa menampar pelan, jadikan ia peta, bukan penjara. Kamu tetap bisa bertumbuh, tetapi lebih sehat jika bertumbuh dari energi yang benar-benar milikmu.",
+    ],
+    evidenceLine: `Pembacaan ini terutama terlihat dari kombinasi ${names(report.topNaturalRoles, 4)}. Angka detail tetap tersedia di bagian peta pendukung, tetapi makna utamanya dibaca dari kombinasi pola, bukan skor tunggal.`,
     qualityNote: buildQualityNote(quality),
   };
 }
