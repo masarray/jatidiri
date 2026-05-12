@@ -34,110 +34,136 @@ const VALUES = [1, 2, 3, 4, 5, 6, 7] as const;
 
 type Tone = {
   text: string;
+  textActive: string;
   idleBg: string;
-  idleBorder: string;
-  idleEdge: string;
+  hoverBg: string;
   activeBg: string;
+  idleBorder: string;
+  hoverBorder: string;
   activeBorder: string;
+  idleEdge: string;
+  hoverEdge: string;
   activeEdge: string;
-  accent: string;
-  accentSoft: string;
-  halo: string;
+  glow: string;
   rail: string;
+  sheen: string;
 };
 
-// Softer hierarchy: visible enough to answer by instinct, calm enough for 180+ questions.
+// V7: premium full-card choice buttons.
+// No radio circles, no number badges. The whole card is the answer target.
+// Each level has a soft surface color so the scale is readable without tiring the eyes.
 const TONES: Record<AnswerValue, Tone> = {
   1: {
-    text: "#263246",
-    idleBg: "linear-gradient(180deg,#fbfdff 0%,#f1f7ff 100%)",
-    idleBorder: "#cfe0f3",
-    idleEdge: "#bdd0e4",
-    activeBg: "linear-gradient(180deg,#f0f7ff 0%,#deecfb 100%)",
-    activeBorder: "#7fa4ca",
-    activeEdge: "#6385a8",
-    accent: "#5e7fa4",
-    accentSoft: "#e7f1fb",
-    halo: "rgba(94,127,164,.18)",
-    rail: "linear-gradient(180deg,#e8f2fc,#d7e6f5)",
+    text: "#263648",
+    textActive: "#17283c",
+    idleBg: "linear-gradient(180deg,#fbfdff 0%,#f3f8fe 100%)",
+    hoverBg: "linear-gradient(180deg,#f5fbff 0%,#e9f3fc 100%)",
+    activeBg: "linear-gradient(180deg,#eaf5ff 0%,#d8eafe 100%)",
+    idleBorder: "#d2deeb",
+    hoverBorder: "#aec6dd",
+    activeBorder: "#7ea6ca",
+    idleEdge: "#c3ceda",
+    hoverEdge: "#aab9ca",
+    activeEdge: "#7193b5",
+    glow: "rgba(90,126,162,.16)",
+    rail: "linear-gradient(180deg,#8db4d7,#6387aa)",
+    sheen: "rgba(116,162,205,.10)",
   },
   2: {
-    text: "#2c3544",
-    idleBg: "linear-gradient(180deg,#fdfefe 0%,#f3f6f9 100%)",
-    idleBorder: "#d5dde7",
-    idleEdge: "#c2ccd8",
-    activeBg: "linear-gradient(180deg,#f5f8fb 0%,#e9eff5 100%)",
-    activeBorder: "#93a1b1",
-    activeEdge: "#7d8a99",
-    accent: "#718092",
-    accentSoft: "#eef3f7",
-    halo: "rgba(113,128,146,.16)",
-    rail: "linear-gradient(180deg,#eef3f8,#e1e8ef)",
+    text: "#2d3947",
+    textActive: "#202e3c",
+    idleBg: "linear-gradient(180deg,#fcfdfe 0%,#f4f7fb 100%)",
+    hoverBg: "linear-gradient(180deg,#f8fbfe 0%,#edf3f8 100%)",
+    activeBg: "linear-gradient(180deg,#eef5fb 0%,#e2ebf4 100%)",
+    idleBorder: "#d7dee7",
+    hoverBorder: "#bdc8d5",
+    activeBorder: "#98aaba",
+    idleEdge: "#c8d0da",
+    hoverEdge: "#b4beca",
+    activeEdge: "#8797a7",
+    glow: "rgba(117,132,151,.14)",
+    rail: "linear-gradient(180deg,#a6b3c1,#758497)",
+    sheen: "rgba(117,132,151,.085)",
   },
   3: {
-    text: "#383448",
-    idleBg: "linear-gradient(180deg,#fffefe 0%,#f7f2f8 100%)",
-    idleBorder: "#ded3e1",
-    idleEdge: "#cec1d2",
-    activeBg: "linear-gradient(180deg,#fbf7fc 0%,#eee6f1 100%)",
-    activeBorder: "#a891b1",
-    activeEdge: "#8e7897",
-    accent: "#80678a",
-    accentSoft: "#f4edf6",
-    halo: "rgba(128,103,138,.16)",
-    rail: "linear-gradient(180deg,#f3edf6,#e8ddeb)",
+    text: "#3a3546",
+    textActive: "#2e2939",
+    idleBg: "linear-gradient(180deg,#fffefe 0%,#f8f4f9 100%)",
+    hoverBg: "linear-gradient(180deg,#fef9ff 0%,#f2ebf6 100%)",
+    activeBg: "linear-gradient(180deg,#fbf2fd 0%,#eee2f3 100%)",
+    idleBorder: "#dfd4e2",
+    hoverBorder: "#cdb9d4",
+    activeBorder: "#ac90b8",
+    idleEdge: "#d0c2d5",
+    hoverEdge: "#bea9c6",
+    activeEdge: "#92769d",
+    glow: "rgba(128,103,139,.15)",
+    rail: "linear-gradient(180deg,#b49ac0,#80678b)",
+    sheen: "rgba(128,103,139,.09)",
   },
   4: {
-    text: "#3a4150",
-    idleBg: "linear-gradient(180deg,#fffdf9 0%,#f8f1e7 100%)",
-    idleBorder: "#e3d5bf",
-    idleEdge: "#cebea1",
-    activeBg: "linear-gradient(180deg,#fff8ed 0%,#f2e3c9 100%)",
-    activeBorder: "#c69e5c",
-    activeEdge: "#a28247",
-    accent: "#ad8139",
-    accentSoft: "#fff3df",
-    halo: "rgba(173,129,57,.18)",
-    rail: "linear-gradient(180deg,#fff1dc,#ead9ba)",
+    text: "#3c4350",
+    textActive: "#303846",
+    idleBg: "linear-gradient(180deg,#fffdf9 0%,#f8f2e8 100%)",
+    hoverBg: "linear-gradient(180deg,#fffaf1 0%,#f3eadb 100%)",
+    activeBg: "linear-gradient(180deg,#fff5e6 0%,#efdfc2 100%)",
+    idleBorder: "#e3d6c3",
+    hoverBorder: "#d1bd9b",
+    activeBorder: "#c19b5a",
+    idleEdge: "#d0bfaa",
+    hoverEdge: "#bca786",
+    activeEdge: "#9e7a42",
+    glow: "rgba(165,124,60,.15)",
+    rail: "linear-gradient(180deg,#c9a568,#aa813d)",
+    sheen: "rgba(170,129,61,.09)",
   },
   5: {
-    text: "#5a3915",
-    idleBg: "linear-gradient(180deg,#fffefa 0%,#fff4dc 100%)",
-    idleBorder: "#edcb8d",
-    idleEdge: "#d9ad67",
-    activeBg: "linear-gradient(180deg,#fff2d6 0%,#ffdfa3 100%)",
-    activeBorder: "#de942d",
-    activeEdge: "#bc7416",
-    accent: "#c87914",
-    accentSoft: "#fff1d6",
-    halo: "rgba(200,121,20,.20)",
-    rail: "linear-gradient(180deg,#ffe9bd,#ffd991)",
+    text: "#563b19",
+    textActive: "#442d0c",
+    idleBg: "linear-gradient(180deg,#fffdf7 0%,#fff5df 100%)",
+    hoverBg: "linear-gradient(180deg,#fff8e9 0%,#ffedc8 100%)",
+    activeBg: "linear-gradient(180deg,#fff0d2 0%,#ffdfa0 100%)",
+    idleBorder: "#edcf96",
+    hoverBorder: "#e5b965",
+    activeBorder: "#da9831",
+    idleEdge: "#d9b373",
+    hoverEdge: "#cb9b4f",
+    activeEdge: "#b67518",
+    glow: "rgba(202,129,23,.17)",
+    rail: "linear-gradient(180deg,#e2a847,#c98117)",
+    sheen: "rgba(201,129,23,.10)",
   },
   6: {
-    text: "#643217",
-    idleBg: "linear-gradient(180deg,#fffdfb 0%,#ffeddf 100%)",
-    idleBorder: "#eeaf86",
-    idleEdge: "#d98a57",
-    activeBg: "linear-gradient(180deg,#ffe9d7 0%,#ffcba7 100%)",
-    activeBorder: "#de763e",
-    activeEdge: "#b95727",
-    accent: "#cf5d25",
-    accentSoft: "#ffe7d7",
-    halo: "rgba(207,93,37,.22)",
-    rail: "linear-gradient(180deg,#ffd9be,#ffbd90)",
+    text: "#653817",
+    textActive: "#512707",
+    idleBg: "linear-gradient(180deg,#fffdfa 0%,#fff0e2 100%)",
+    hoverBg: "linear-gradient(180deg,#fff3e7 0%,#ffdfc8 100%)",
+    activeBg: "linear-gradient(180deg,#ffe7d4 0%,#ffc9a6 100%)",
+    idleBorder: "#efb58d",
+    hoverBorder: "#e99661",
+    activeBorder: "#dd7a3e",
+    idleEdge: "#dc9460",
+    hoverEdge: "#ce7644",
+    activeEdge: "#b45726",
+    glow: "rgba(207,96,42,.18)",
+    rail: "linear-gradient(180deg,#e8834a,#cf612a)",
+    sheen: "rgba(207,97,42,.11)",
   },
   7: {
-    text: "#642720",
-    idleBg: "linear-gradient(180deg,#fffdfc 0%,#ffebe8 100%)",
-    idleBorder: "#edaaa1",
-    idleEdge: "#d77b72",
-    activeBg: "linear-gradient(180deg,#ffe9e5 0%,#ffc8c0 100%)",
-    activeBorder: "#df6256",
-    activeEdge: "#bd4439",
-    accent: "#c8453b",
-    accentSoft: "#ffe5e1",
-    halo: "rgba(200,69,59,.23)",
-    rail: "linear-gradient(180deg,#ffd9d3,#ffb9b0)",
+    text: "#642b25",
+    textActive: "#501a16",
+    idleBg: "linear-gradient(180deg,#fffdfb 0%,#ffeeeb 100%)",
+    hoverBg: "linear-gradient(180deg,#fff3f0 0%,#ffded8 100%)",
+    activeBg: "linear-gradient(180deg,#ffe5df 0%,#ffc6bc 100%)",
+    idleBorder: "#edafa6",
+    hoverBorder: "#e58c82",
+    activeBorder: "#d96457",
+    idleEdge: "#d97f75",
+    hoverEdge: "#cd6258",
+    activeEdge: "#b64339",
+    glow: "rgba(200,75,66,.19)",
+    rail: "linear-gradient(180deg,#e56e65,#c84b42)",
+    sheen: "rgba(200,75,66,.11)",
   },
 };
 
@@ -157,26 +183,36 @@ function getHelper(session: AssessmentSession) {
 
 function hapticTap() {
   try {
-    navigator.vibrate?.(7);
+    navigator.vibrate?.(8);
   } catch {
     // optional haptic feedback
   }
 }
 
-function buttonStyle(tone: Tone, active: boolean, pressing: boolean): CSSProperties {
-  const bottom = pressing ? 1 : active ? 2 : 3;
-  const depthShadow = active
-    ? `0 ${bottom}px 0 ${tone.activeEdge}, 0 ${bottom + 7}px 15px ${tone.halo}`
-    : `0 ${bottom}px 0 ${tone.idleEdge}, 0 ${bottom + 8}px 15px rgba(15,23,42,.045)`;
+function cardStyle(tone: Tone, active: boolean, pressing: boolean, hovering: boolean): CSSProperties {
+  const raised = hovering && !pressing ? 1 : 0;
+  const bottom = pressing ? 1 : active ? 2 : hovering ? 4 : 3;
+  const background = pressing || active ? tone.activeBg : hovering ? tone.hoverBg : tone.idleBg;
+  const border = pressing || active ? tone.activeBorder : hovering ? tone.hoverBorder : tone.idleBorder;
+  const edge = pressing || active ? tone.activeEdge : hovering ? tone.hoverEdge : tone.idleEdge;
+  const text = pressing || active ? tone.textActive : tone.text;
 
   return {
-    color: active ? tone.text : "#263241",
-    background: active ? tone.activeBg : tone.idleBg,
-    borderColor: active ? tone.activeBorder : tone.idleBorder,
-    boxShadow: `inset 0 1px 0 rgba(255,255,255,.94), ${depthShadow}`,
-    transform: pressing ? "translate3d(0,2px,0) scale(.993)" : "translate3d(0,0,0) scale(1)",
+    color: text,
+    background,
+    borderColor: border,
+    boxShadow: [
+      "inset 0 1px 0 rgba(255,255,255,.96)",
+      `0 ${bottom}px 0 ${edge}`,
+      `0 ${bottom + 8}px ${hovering || active ? 19 : 15}px ${hovering || active ? tone.glow : "rgba(15,23,42,.045)"}`,
+    ].join(", "),
+    transform: pressing
+      ? "translate3d(0,2px,0) scale(.996)"
+      : hovering
+        ? `translate3d(0,-${raised}px,0) scale(1.002)`
+        : "translate3d(0,0,0) scale(1)",
     transition:
-      "transform 52ms cubic-bezier(.2,.8,.2,1), border-color 76ms ease-out, background 76ms ease-out, box-shadow 76ms ease-out",
+      "transform 78ms cubic-bezier(.2,.9,.2,1), border-color 92ms ease-out, background 92ms ease-out, box-shadow 92ms ease-out, color 92ms ease-out",
     WebkitTapHighlightColor: "transparent",
     touchAction: "manipulation",
     willChange: "transform",
@@ -186,6 +222,7 @@ function buttonStyle(tone: Tone, active: boolean, pressing: boolean): CSSPropert
 export function AnswerScale({ value, onSelect, session = "natural", disabled = false }: Props) {
   const labels = useMemo(() => getLabels(session), [session]);
   const [pressingValue, setPressingValue] = useState<AnswerValue | null>(null);
+  const [hoverValue, setHoverValue] = useState<AnswerValue | null>(null);
   const [committingValue, setCommittingValue] = useState<AnswerValue | null>(null);
   const commitTimerRef = useRef<number | null>(null);
   const releaseTimerRef = useRef<number | null>(null);
@@ -197,7 +234,7 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
     };
   }, []);
 
-  function releaseVisual(delay = 92) {
+  function releaseVisual(delay = 70) {
     if (releaseTimerRef.current) window.clearTimeout(releaseTimerRef.current);
     releaseTimerRef.current = window.setTimeout(() => {
       setPressingValue(null);
@@ -215,7 +252,7 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
     if (commitTimerRef.current) window.clearTimeout(commitTimerRef.current);
     commitTimerRef.current = window.setTimeout(() => {
       onSelect(nextValue);
-      releaseVisual(70);
+      releaseVisual(58);
     }, 96);
   }
 
@@ -223,13 +260,13 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
     <div className="w-full select-none">
       <div className="mb-[7px] flex items-center justify-between gap-3 px-1 text-[10.5px] font-medium tracking-[0.01em] text-muted-foreground">
         <span>{getScaleTitle(session)}</span>
-        <span className="tabular-nums text-muted-foreground/35">1–7</span>
       </div>
 
       <div className="grid gap-[6px]">
         {VALUES.map((itemValue, index) => {
           const selected = value === itemValue;
           const pressing = pressingValue === itemValue || committingValue === itemValue;
+          const hovering = hoverValue === itemValue;
           const active = selected || pressing;
           const tone = TONES[itemValue];
 
@@ -238,10 +275,20 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
               key={itemValue}
               type="button"
               disabled={disabled || Boolean(committingValue)}
+              onPointerEnter={(event) => {
+                if (event.pointerType === "mouse" || event.pointerType === "pen") setHoverValue(itemValue);
+              }}
+              onPointerLeave={() => {
+                setHoverValue((current) => (current === itemValue ? null : current));
+                if (!committingValue) setPressingValue((current) => (current === itemValue ? null : current));
+              }}
               onPointerDown={(event) => {
                 if (event.pointerType === "mouse" && event.button !== 0) return;
                 event.preventDefault();
                 commit(itemValue);
+              }}
+              onPointerCancel={() => {
+                if (!committingValue) setPressingValue(null);
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -252,56 +299,39 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
               aria-label={`Pilih ${itemValue}: ${labels[index]}`}
               aria-pressed={selected}
               className={[
-                "relative flex min-h-[40px] w-full items-center gap-3 overflow-hidden rounded-[18px] border px-3.5 py-[7px] text-left outline-none",
+                "group relative flex min-h-[40px] w-full items-center overflow-hidden rounded-[17px] border px-4 py-[7.25px] text-left outline-none",
                 "focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
               ].join(" ")}
-              style={buttonStyle(tone, active, pressing)}
+              style={cardStyle(tone, active, pressing, hovering)}
             >
               <span
-                className="pointer-events-none absolute inset-y-0 left-0 w-[4px] rounded-r-full transition-[opacity,background] duration-75"
-                style={{ background: tone.rail, opacity: active ? 1 : 0.72 }}
+                className="pointer-events-none absolute inset-y-[7px] left-[7px] w-[3px] rounded-full transition-[opacity,transform] duration-100"
+                style={{
+                  background: tone.rail,
+                  opacity: active || hovering ? 0.88 : 0.28,
+                  transform: pressing ? "scaleY(.72)" : hovering ? "scaleY(.88)" : "scaleY(.58)",
+                }}
                 aria-hidden="true"
               />
 
               <span
-                className="relative grid size-[20px] shrink-0 place-items-center rounded-full border transition-[background,border-color,box-shadow,transform] duration-75"
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-100 group-hover:opacity-100"
                 style={{
-                  borderColor: active ? tone.accent : tone.idleBorder,
-                  background: active ? `linear-gradient(180deg,#ffffff 0%,${tone.accentSoft} 100%)` : "rgba(255,255,255,.86)",
-                  boxShadow: active
-                    ? `0 0 0 4px ${tone.halo}, inset 0 1px 0 rgba(255,255,255,.96)`
-                    : "inset 0 1px 0 rgba(255,255,255,.96)",
-                  transform: pressing ? "scale(.88)" : active ? "scale(1.05)" : "scale(1)",
+                  background: `linear-gradient(90deg, ${tone.sheen} 0%, rgba(255,255,255,0) 54%)`,
+                  opacity: active ? 1 : hovering ? 0.78 : 0,
                 }}
                 aria-hidden="true"
-              >
-                <span
-                  className="size-[8px] rounded-full transition-[opacity,transform,background] duration-75"
-                  style={{
-                    background: tone.accent,
-                    opacity: active ? 1 : 0,
-                    transform: active ? "scale(1)" : "scale(.45)",
-                  }}
-                />
-              </span>
-
-              <span className="relative min-w-0 flex-1 text-[14.6px] font-[510] leading-tight tracking-[-0.006em] sm:text-[15px]">
-                {labels[index]}
-              </span>
+              />
 
               <span
-                className="relative grid size-[19px] shrink-0 place-items-center rounded-full border text-[9.5px] font-semibold tabular-nums transition-[opacity,border-color,background,color,transform] duration-75"
-                style={{
-                  background: active ? "rgba(255,255,255,.66)" : "rgba(255,255,255,.22)",
-                  borderColor: active ? tone.activeBorder : "rgba(130,140,155,.18)",
-                  color: active ? tone.text : "rgba(91,101,116,.22)",
-                  opacity: active ? 0.82 : 0.36,
-                  transform: pressing ? "translateY(1px) scale(.96)" : "translateY(0) scale(1)",
-                }}
+                className="pointer-events-none absolute inset-x-4 top-px h-px rounded-full bg-white/80 transition-opacity duration-100"
+                style={{ opacity: active || hovering ? 0.9 : 0.6 }}
                 aria-hidden="true"
-              >
-                {itemValue}
+              />
+
+              <span className="relative min-w-0 flex-1 pl-2 text-[14.8px] font-[540] leading-tight tracking-[-0.006em] sm:text-[15px]">
+                {labels[index]}
               </span>
             </button>
           );
