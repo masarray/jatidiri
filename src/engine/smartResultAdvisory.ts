@@ -109,6 +109,59 @@ interface VulnerabilityRule {
   triggerWords: string[];
 }
 
+function cleanLanguage(value: string | null | undefined): string {
+  return String(value ?? "")
+    .replace(/\bAnda\b/g, "kamu")
+    .replace(/\banda\b/g, "kamu")
+    .replace(/rumah energi(?: alami)?(?:mu| kamu)?/gi, "zona kekuatan alami kamu")
+    .replace(/sumber energi alamimu/gi, "zona kekuatan alami kamu")
+    .replace(/\bundefined\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanList(values: Array<string | null | undefined>, fallback: string[] = []): string[] {
+  const source = values.length > 0 ? values : fallback;
+  return [...new Set(source.map(cleanLanguage).filter((item) => item.length > 0))];
+}
+
+function cleanTheme(theme: AdvisoryTheme): AdvisoryTheme {
+  return {
+    ...theme,
+    title: cleanLanguage(theme.title),
+    shortTitle: cleanLanguage(theme.shortTitle),
+    headline: cleanLanguage(theme.headline),
+    body: cleanLanguage(theme.body),
+    whyItFits: cleanLanguage(theme.whyItFits),
+    healthyUse: cleanLanguage(theme.healthyUse),
+    onSwitch: cleanList(theme.onSwitch),
+    forOthers: cleanLanguage(theme.forOthers),
+  };
+}
+
+function cleanVulnerability(item: AdvisoryVulnerability): AdvisoryVulnerability {
+  return {
+    ...item,
+    title: cleanLanguage(item.title),
+    headline: cleanLanguage(item.headline),
+    body: cleanLanguage(item.body),
+    support: cleanLanguage(item.support),
+    triggerWords: cleanList(item.triggerWords),
+  };
+}
+
+function cleanAdaptive(item: AdvisoryAdaptive): AdvisoryAdaptive {
+  return {
+    ...item,
+    title: cleanLanguage(item.title),
+    headline: cleanLanguage(item.headline),
+    body: cleanLanguage(item.body),
+    emotionalNote: cleanLanguage(item.emotionalNote),
+    recovery: cleanLanguage(item.recovery),
+  };
+}
+
+
 const THEME_RULES: ThemeRule[] = [
   {
     id: "strategy_pattern",
@@ -530,7 +583,7 @@ function transformSpecificAdaptive(insight: AdaptiveGapInsight, evidence: MicroR
     emotionalNote:
       "Kalau area ini membuatmu cepat jenuh atau lelah secara emosi, itu bukan berarti kamu lemah. Bisa jadi kamu sedang memakai kemampuan yang terbentuk karena tuntutan hidup, bukan karena itu zona kekuatan alami kamu.",
     recovery:
-      "Setelah menjalankan peran ini, beri ruang pulih yang nyata. Kembali sebentar ke aktivitas yang membuatmu hidup: berpikir, berkarya, membantu, menata, atau belajar — sesuai sumber tenaga utamamu.",
+      "Setelah menjalankan peran ini, beri ruang pulih yang nyata. Kembali sebentar ke aktivitas yang membuatmu hidup: berpikir, berkarya, membantu, menata, atau belajar — sesuai zona kekuatan alami kamu.",
     evidence,
     naturalScore: insight.naturalRouteScore,
     strengthScore: insight.adaptiveLoadScore,
@@ -556,7 +609,7 @@ function buildAdaptiveAdvisories(report: PatternSignatureReport): AdvisoryAdapti
       headline: "Kamu bisa menjalankan area ini, tetapi perlu jujur apakah ini mengisi atau menguras energi.",
       body: `Area ${role.name} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada zona kekuatan alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan.`,
       emotionalNote:
-        "Kamu boleh merasa capek setelah menjalankan peran ini. Mampu melakukan sesuatu tidak selalu berarti itu sumber tenaga utama.",
+        "Kamu boleh merasa capek setelah menjalankan peran ini. Mampu melakukan sesuatu tidak selalu berarti itu zona kekuatan alami.",
       recovery:
         "Jangan jadikan area ini pusat tuntutan tanpa sistem pendukung. Pakai template, batas waktu, partner, atau jeda pemulihan.",
       evidence: [role],
@@ -595,39 +648,48 @@ function buildMirror(
 ) {
   const first = energyThemes[0];
   const second = energyThemes[1];
-  const topRoles = names(report.topNaturalRoles, 3);
+  const third = energyThemes[2];
   const mainDrain = vulnerabilities[0];
   const mainAdaptive = adaptive[0];
   const alignedCount = report.microRoles.filter((role) => role.natural >= 60 && role.strength >= 55).length;
 
-  const lines = [
-    `Kamu itu tipe orang yang lebih mudah hidup ketika kekuatan ${topRoles} diberi ruang yang tepat.`,
-    first
-      ? first.headline
-      : "Energi kamu biasanya muncul bukan hanya karena tugas selesai, tetapi karena ada cara kerja yang terasa sesuai dengan dirimu.",
-  ];
+  const lines: string[] = [];
 
   if (alignedCount >= 6) {
     lines.push(
-      "Kamu tampak sudah cukup mengenal zona kekuatan alami kamu. Beberapa potensi bukan hanya muncul sebagai sinyal bakat, tetapi juga sudah kamu pakai dalam aktivitas nyata.",
+      "Kamu tampak sudah cukup mengenal zona kekuatan alami kamu. Banyak potensi alami tidak hanya muncul sebagai bakat, tetapi juga sudah kamu pakai dalam aktivitas nyata.",
+    );
+  } else {
+    lines.push(
+      "Hasil ini membaca pola energi kamu: area yang membuatmu lebih hidup, area yang masih bisa dikembangkan, dan area yang perlu batas agar tidak menguras tenaga.",
     );
   }
 
-  if (second) {
-    lines.push(`Pola kedua yang ikut kuat: ${second.body}`);
+  if (first && second) {
+    lines.push(
+      `Kamu cenderung lebih menyala ketika ${first.shortTitle.toLowerCase()} bertemu dengan ${second.shortTitle.toLowerCase()}. Bukan sekadar menjalankan tugas, kamu butuh cara kerja yang terasa punya arah dan makna.`,
+    );
+  } else if (first) {
+    lines.push(first.headline);
   }
 
-  if (mainDrain) {
-    lines.push(`Yang sering membuatmu terasa berat bukan selalu besar kecilnya tugas, tetapi ketika kamu terlalu lama berada di pola seperti: ${mainDrain.title.toLowerCase()}.`);
+  if (first) lines.push(first.body);
+
+  if (third) {
+    lines.push(`Pola lain yang ikut memberi warna: ${third.title.toLowerCase()}. Area ini bisa menjadi jalur tambahan untuk membuat hidup dan pekerjaan terasa lebih hidup.`);
   }
 
   if (mainAdaptive) {
     lines.push(
-      "Ada kemampuan yang mungkin sudah kamu kembangkan jauh karena tuntutan hidup. Dari luar kamu terlihat bisa, tetapi di dalam kamu tetap perlu ruang pulih karena tidak semua kemampuan itu berasal dari zona kekuatan alami kamu.",
+      `Ada area adaptif yang sudah kamu kuasai karena tuntutan hidup, terutama ${mainAdaptive.title.toLowerCase()}. Kamu bisa terlihat mampu di sana, tetapi tetap perlu ruang pulih karena area itu belum tentu menjadi zona kekuatan alami kamu.`,
     );
   }
 
-  return lines.slice(0, 5);
+  if (mainDrain) {
+    lines.push(`Yang perlu dijaga: kamu bisa cepat lelah jika terlalu lama berada di pola ${mainDrain.title.toLowerCase()}.`);
+  }
+
+  return cleanList(lines).slice(0, 5);
 }
 
 function buildSharpSummary(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[]) {
@@ -753,40 +815,56 @@ export function buildSmartResultAdvisory(
   quality: ReadingQuality,
   lens: PurposeLens,
 ): SmartResultAdvisory {
-  const energyThemes = buildEnergyThemes(report);
-  const energyThemeIds = new Set(energyThemes.map((theme) => theme.id));
-  const vulnerabilities = buildVulnerabilities(report, energyThemeIds);
-  const adaptiveThemes = buildAdaptiveAdvisories(report);
-  const dormantThemes = buildDormantThemes(report, energyThemeIds);
-  const archetype = buildArchetype(energyThemes);
+  const rawEnergyThemes = buildEnergyThemes(report);
+  const energyThemeIds = new Set(rawEnergyThemes.map((theme) => theme.id));
+  const rawVulnerabilities = buildVulnerabilities(report, energyThemeIds);
+  const rawAdaptiveThemes = buildAdaptiveAdvisories(report);
+  const rawDormantThemes = buildDormantThemes(report, energyThemeIds);
+
+  const energyThemes = rawEnergyThemes.map(cleanTheme);
+  const vulnerabilities = rawVulnerabilities.map(cleanVulnerability);
+  const adaptiveThemes = rawAdaptiveThemes.map(cleanAdaptive);
+  const dormantThemes = rawDormantThemes.map(cleanTheme);
+  const archetype = cleanLanguage(buildArchetype(energyThemes));
   const mirror = buildMirror(report, energyThemes, vulnerabilities, adaptiveThemes);
   const alignment = buildAlignment(report, adaptiveThemes, dormantThemes);
 
-  const contextPrefix = lens.key === "relationship_family"
-    ? "Untuk konteks pasangan atau keluarga, hasil ini dibaca dari profil kamu dulu. Insight dua arah akan jauh lebih akurat jika pasangan juga mengisi asesmen."
-    : lens.summaryFrame;
+  const contextPrefix = cleanLanguage(
+    lens.key === "relationship_family"
+      ? "Untuk konteks pasangan atau keluarga, hasil ini dibaca dari profil kamu dulu. Insight dua arah akan jauh lebih akurat jika pasangan juga mengisi asesmen."
+      : lens.summaryFrame,
+  );
 
   return {
-    title: lens.summaryTitle,
+    title: cleanLanguage(lens.summaryTitle),
     archetype,
     mirrorTitle: "Kamu itu orang yang...",
-    mirror,
-    sharpSummary: buildSharpSummary(energyThemes, vulnerabilities),
-    alignment,
+    mirror: cleanList(mirror),
+    sharpSummary: cleanLanguage(buildSharpSummary(energyThemes, vulnerabilities)),
+    alignment: {
+      ...alignment,
+      title: cleanLanguage(alignment.title),
+      headline: cleanLanguage(alignment.headline),
+      body: cleanLanguage(alignment.body),
+    },
     energyThemes,
     vulnerabilities,
     adaptiveThemes,
     dormantThemes,
-    onSwitch: buildOnSwitch(energyThemes),
-    forOthers: buildForOthers(energyThemes, vulnerabilities),
-    resistance: buildResistance(vulnerabilities),
-    recoveryRituals: buildRecoveryRituals(energyThemes, adaptiveThemes),
-    selfCare: [
+    onSwitch: cleanList(buildOnSwitch(energyThemes), [
+      "Menurut kamu, pola masalahnya di mana?",
+      "Kalau dibuat lebih efektif, sistemnya seperti apa?",
+      "Apa ide kamu supaya ini bisa berjalan lebih baik?",
+    ]),
+    forOthers: cleanList(buildForOthers(energyThemes, vulnerabilities)),
+    resistance: cleanList(buildResistance(vulnerabilities)),
+    recoveryRituals: cleanList(buildRecoveryRituals(energyThemes, adaptiveThemes)),
+    selfCare: cleanList([
       contextPrefix,
       alignment.body,
       "Kalau hasil ini terasa menampar pelan, jadikan ia peta, bukan penjara. Kamu tetap bisa bertumbuh, tetapi lebih sehat jika bertumbuh dari zona kekuatan alami kamu.",
-    ],
-    evidenceLine: `Pembacaan ini terutama terlihat dari kombinasi ${names(report.topNaturalRoles, 4)}. Angka detail tetap tersedia di bagian peta pendukung, tetapi makna utamanya dibaca dari kombinasi pola, bukan skor tunggal.`,
-    qualityNote: buildQualityNote(quality),
+    ]),
+    evidenceLine: cleanLanguage(`Pembacaan ini terutama terlihat dari kombinasi ${names(report.topNaturalRoles, 4)}. Angka detail tetap tersedia di bagian peta pendukung, tetapi makna utamanya dibaca dari kombinasi pola, bukan skor tunggal.`),
+    qualityNote: cleanLanguage(buildQualityNote(quality)),
   };
 }

@@ -56,16 +56,26 @@ function hexToRgb(hex: string): RGB {
   return [parseInt(value.slice(0, 2), 16), parseInt(value.slice(2, 4), 16), parseInt(value.slice(4, 6), 16)];
 }
 
-function cleanText(text: string): string {
+function cleanText(text: string | null | undefined): string {
   return String(text ?? "")
     .replace(/[“”]/g, '"')
     .replace(/[‘’]/g, "'")
     .replace(/[–—]/g, "-")
     .replace(/…/g, "...")
     .replace(/\u00a0/g, " ")
+    .replace(/\bAnda\b/g, "kamu")
+    .replace(/\banda\b/g, "kamu")
+    .replace(/rumah energi(?: alami)?(?:mu| kamu)?/gi, "zona kekuatan alami kamu")
+    .replace(/sumber energi alamimu/gi, "zona kekuatan alami kamu")
+    .replace(/\bundefined\b/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
+
+function uniqueClean(items: Array<string | null | undefined>): string[] {
+  return [...new Set(items.map(cleanText).filter((item) => item.length > 0))];
+}
+
 
 class PdfWriter {
   private doc: jsPDF;
@@ -282,6 +292,44 @@ class PdfWriter {
     this.y += 7;
   }
 
+  listCard(title: string, items: string[], opts?: { tone?: Tone; prefix?: "number" | "bullet" }) {
+    const cleaned = uniqueClean(items);
+    if (cleaned.length === 0) return;
+    const body = cleaned.map((item, index) => `${opts?.prefix === "bullet" ? "•" : `${index + 1}.`} ${item}`);
+    this.card(title, body, { tone: opts?.tone ?? "teal" });
+  }
+
+  roleFamilyComparison(label: string, natural: number, strength: number) {
+    const x = PAGE.mx;
+    const w = PAGE.w - PAGE.mx * 2;
+    this.ensure(22);
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(8.5);
+    this.color(COLOR.ink, "text");
+    this.doc.text(cleanText(label), x, this.y);
+    this.y += 4;
+
+    const barW = w - 28;
+    const rows: Array<[string, number, string]> = [
+      ["Alami", natural, COLOR.teal],
+      ["Terlatih", strength, COLOR.amber],
+    ];
+    rows.forEach(([name, value, color]) => {
+      this.doc.setFont("helvetica", "normal");
+      this.doc.setFontSize(7.5);
+      this.color(COLOR.muted, "text");
+      this.doc.text(name, x, this.y + 2.2);
+      this.color(COLOR.line, "fill");
+      this.doc.roundedRect(x + 18, this.y, barW, 2.8, 1.4, 1.4, "F");
+      this.color(color, "fill");
+      this.doc.roundedRect(x + 18, this.y, Math.max(2, (barW * Math.max(0, Math.min(100, value))) / 100), 2.8, 1.4, 1.4, "F");
+      this.color(COLOR.muted, "text");
+      this.doc.text(`${Math.round(value)}`, x + 18 + barW + 3, this.y + 2.2);
+      this.y += 5.2;
+    });
+    this.y += 2.5;
+  }
+
   cover(input: PdfReportInput) {
     this.color("#F6FBFA", "fill");
     this.doc.rect(0, 0, PAGE.w, PAGE.h, "F");
@@ -311,7 +359,7 @@ class PdfWriter {
 
     this.color(COLOR.card, "fill");
     this.color(COLOR.line, "draw");
-    this.doc.roundedRect(PAGE.mx, this.y, PAGE.w - PAGE.mx * 2, 54, 6, 6, "FD");
+    this.doc.roundedRect(PAGE.mx, this.y, PAGE.w - PAGE.mx * 2, 64, 6, 6, "FD");
     this.doc.setFont("helvetica", "bold");
     this.doc.setFontSize(18);
     this.color(COLOR.ink, "text");
@@ -321,7 +369,15 @@ class PdfWriter {
     this.color(COLOR.muted, "text");
     this.doc.text(`Tanggal asesmen: ${input.date}`, PAGE.mx + 9, this.y + 27);
     this.doc.text(`Konteks pembacaan: ${input.context}`, PAGE.mx + 9, this.y + 36);
-    this.pill(input.advisory.archetype, PAGE.mx + 9, this.y + 47, "teal");
+    this.doc.setFont("helvetica", "bold");
+    this.doc.setFontSize(9.5);
+    this.color(COLOR.teal, "text");
+    const archetypeLines = this.split(input.advisory.archetype, PAGE.w - PAGE.mx * 2 - 18, 9.5).slice(0, 2);
+    let ay = this.y + 48;
+    archetypeLines.forEach((line) => {
+      this.doc.text(line, PAGE.mx + 9, ay);
+      ay += 4.5;
+    });
 
     this.y = 240;
     this.doc.setFont("helvetica", "normal");
@@ -403,15 +459,14 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
   }
 
   pdf.addSection("komunikasi", "Kalimat yang Menyalakan Energi Kamu");
-  pdf.twoColumnCards(input.advisory.onSwitch.map((item) => ({ title: "Kamu biasanya lebih ON ketika orang bertanya", body: `"${item}"`, tone: "teal" })));
+  pdf.listCard("Kamu biasanya lebih ON ketika orang bertanya:", input.advisory.onSwitch.map((item) => `"${item}"`), { tone: "teal" });
+
   pdf.addSection("catatan relasi", "Untuk Pasangan / Rekan Kerja");
-  pdf.twoColumnCards([
-    ...input.advisory.forOthers.slice(0, 4).map((item) => ({ title: "Cara masuk yang lebih sehat", body: item, tone: "sky" as Tone })),
-    ...input.advisory.resistance.slice(0, 4).map((item) => ({ title: "Yang bisa membuat kamu berat", body: item, tone: "rose" as Tone })),
-  ]);
+  pdf.card("Cara masuk yang lebih sehat", uniqueClean(input.advisory.forOthers.slice(0, 4)), { tone: "sky" });
+  pdf.card("Yang bisa membuat kamu berat", uniqueClean(input.advisory.resistance.slice(0, 4)), { tone: "rose" });
 
   pdf.addSection("pemulihan", "Cara Merawat Diri");
-  input.advisory.recoveryRituals.forEach((item) => pdf.card("Langkah pemulihan", item, { tone: "teal" }));
+  pdf.listCard("Langkah pemulihan yang disarankan", input.advisory.recoveryRituals, { tone: "teal" });
   input.advisory.selfCare.forEach((item) => pdf.paragraph(item, { fontSize: 9.4 }));
 
   pdf.addSection("detail peta", "Skor Pendukung");
@@ -425,8 +480,7 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
 
   pdf.addSection("wilayah peran", "Peta Wilayah Peran");
   input.patternReport.roleFamilies.slice(0, 8).forEach((family) => {
-    pdf.scoreBar(`${family.family} - alami`, family.natural, COLOR.teal);
-    pdf.scoreBar(`${family.family} - terlatih`, family.strength, COLOR.amber);
+    pdf.roleFamilyComparison(family.family, family.natural, family.strength);
   });
 
   pdf.addSection("catatan", "Batas Pembacaan");
@@ -435,7 +489,7 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
     "Laporan ini adalah alat refleksi diri berbasis jawaban asesmen. Gunakan sebagai bahan memahami pola energi, komunikasi, dan pengembangan diri. Jangan gunakan sebagai diagnosis klinis atau satu-satunya dasar keputusan penting.",
     { tone: "slate" },
   );
-  pdf.card("Kualitas pembacaan", `${input.readingQuality.summary} ${input.readingQuality.notes.join(" ")}`, { tone: "slate" });
+  pdf.card("Kualitas pembacaan", `${input.readingQuality.summary} ${(input.readingQuality.notes ?? []).join(" ")}`, { tone: "slate" });
 
   // ensure footer on final page
   pdf.footer();
