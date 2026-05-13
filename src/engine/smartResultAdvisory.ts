@@ -7,6 +7,7 @@ import type {
 } from "@/engine/patternSignature";
 import type { MicroRoleId } from "@/data/microRoles";
 import { buildEvidenceHighlights, buildPatternInsights, type PatternInsight } from "@/engine/resultComposer";
+import { resolveSignalDefinition } from "@/data/patternSignals";
 
 export type AdvisoryTone = "teal" | "amber" | "rose" | "slate" | "sky";
 
@@ -70,6 +71,30 @@ export interface AlignmentReading {
   adaptiveCount: number;
 }
 
+export interface OperatingManual {
+  bestEnvironment: string[];
+  workStyle: string[];
+  watchOut: string[];
+  supportSystem: string[];
+}
+
+export interface WeeklyExperiment {
+  id: string;
+  title: string;
+  action: string;
+  why: string;
+  signal: string;
+}
+
+export interface EvidenceMapItem {
+  id: string;
+  title: string;
+  situation: string;
+  selectedText: string;
+  meaning: string;
+  tone: AdvisoryTone;
+}
+
 export interface SmartResultAdvisory {
   title: string;
   archetype: string;
@@ -87,6 +112,9 @@ export interface SmartResultAdvisory {
   recoveryRituals: string[];
   selfCare: string[];
   patternInsights: PatternInsight[];
+  operatingManual: OperatingManual;
+  weeklyExperiments: WeeklyExperiment[];
+  evidenceMap: EvidenceMapItem[];
   evidenceHighlights: string[];
   evidenceLine: string;
   qualityNote: string;
@@ -869,6 +897,168 @@ function buildRecoveryRituals(energyThemes: AdvisoryTheme[], adaptiveThemes: Adv
   return [...new Set(rituals)].slice(0, 4);
 }
 
+
+function sentence(value: string | undefined, fallback: string): string {
+  const cleaned = cleanLanguage(value);
+  return cleaned.length > 0 ? cleaned : fallback;
+}
+
+function buildOperatingManual(
+  energyThemes: AdvisoryTheme[],
+  vulnerabilities: AdvisoryVulnerability[],
+  adaptiveThemes: AdvisoryAdaptive[],
+  patternInsights: PatternInsight[],
+): OperatingManual {
+  const primary = energyThemes[0];
+  const secondary = energyThemes[1];
+  const mainRisk = vulnerabilities[0];
+  const insight = patternInsights[0];
+  const adaptive = adaptiveThemes[0];
+
+  return {
+    bestEnvironment: cleanList([
+      primary
+        ? `Kamu lebih mudah menyala ketika diberi ruang untuk ${primary.shortTitle.toLowerCase()} dengan tujuan yang jelas.`
+        : "Kamu lebih mudah menyala ketika tugas punya konteks, arah, dan ruang memilih cara kerja.",
+      secondary
+        ? `Area pendukung yang juga perlu diberi ruang: ${secondary.shortTitle.toLowerCase()}.`
+        : "Lingkungan yang memberi konteks sebelum instruksi biasanya lebih mudah membuatmu bergerak.",
+      primary?.forOthers,
+    ]).slice(0, 3),
+    workStyle: cleanList([
+      primary?.healthyUse,
+      insight?.support,
+      "Ubah dorongan alami menjadi langkah kecil yang selesai, bukan hanya ide atau niat yang terasa menarik.",
+    ]).slice(0, 3),
+    watchOut: cleanList([
+      mainRisk?.headline,
+      insight?.headline,
+      adaptive ? `Jaga agar ${adaptive.title.toLowerCase()} tidak menjadi mode utama terlalu lama.` : undefined,
+    ]).slice(0, 3),
+    supportSystem: cleanList([
+      "Gunakan batas waktu, daftar prioritas pendek, dan definisi selesai yang jelas agar energi tidak menyebar terlalu lebar.",
+      adaptive?.recovery,
+      mainRisk?.support,
+    ]).slice(0, 3),
+  };
+}
+
+function experimentFromInsight(insight: PatternInsight, index: number): WeeklyExperiment {
+  const base = {
+    id: `experiment_${insight.id}`,
+    signal: insight.shortTitle,
+  };
+
+  if (insight.id === "explorer_priority_leak") {
+    return {
+      ...base,
+      title: "Parkir ide sebelum mengejar hal baru",
+      action: "Selama 7 hari, setiap menemukan ide/tools baru, catat dulu dalam daftar parkir ide. Beri waktu eksplorasi maksimal 20 menit hanya setelah tugas utama bergerak.",
+      why: "Ini menjaga rasa ingin tahu tetap hidup tanpa membuat prioritas utama kalah.",
+    };
+  }
+  if (insight.id === "quality_perfection_delay") {
+    return {
+      ...base,
+      title: "Tentukan batas cukup-selesai",
+      action: "Sebelum mulai pekerjaan, tulis 3 syarat cukup-selesai. Setelah 3 syarat terpenuhi, kirim atau tutup versi itu sebelum menambah detail baru.",
+      why: "Ini membuat dorongan kualitas tetap berguna tanpa menunda penyelesaian.",
+    };
+  }
+  if (insight.id === "risk_worry_loop") {
+    return {
+      ...base,
+      title: "Ubah khawatir menjadi rencana cadangan",
+      action: "Saat pikiran memutar risiko, tulis satu risiko, satu tanda awal, dan satu langkah cadangan. Setelah itu berhenti mengecek ulang selama minimal 30 menit.",
+      why: "Radar risiko menjadi alat antisipasi, bukan putaran pikiran yang menguras energi.",
+    };
+  }
+  if (insight.id === "order_dependency") {
+    return {
+      ...base,
+      title: "Rapikan hanya titik yang mengganggu fokus",
+      action: "Sebelum bekerja, rapikan maksimal 2 menit hanya bagian yang paling mengganggu. Setelah itu langsung mulai pekerjaan utama.",
+      why: "Kerapian tetap membantu fokus tanpa mengambil alih prioritas.",
+    };
+  }
+  if (insight.id === "social_spark_burden") {
+    return {
+      ...base,
+      title: "Hadir tanpa wajib meramaikan",
+      action: "Dalam satu momen sosial, coba hadir tenang tanpa merasa harus membuka topik. Amati apakah suasana tetap bisa berjalan tanpa kamu selalu menjadi pemantik.",
+      why: "Ini melatih batas sehat bagi orang yang mudah merasa bertanggung jawab atas suasana.",
+    };
+  }
+  if (insight.id === "helper_boundary") {
+    return {
+      ...base,
+      title: "Bantu dengan batas yang jelas",
+      action: "Saat diminta bantuan, jawab dengan format: bagian ini bisa saya bantu, bagian ini belum bisa saya ambil. Lakukan minimal 2 kali minggu ini.",
+      why: "Kepedulian menjadi lebih sehat ketika tidak menghapus kebutuhan dan tugasmu sendiri.",
+    };
+  }
+
+  return {
+    ...base,
+    title: `Eksperimen kecil ${index + 1}: ${insight.shortTitle}`,
+    action: insight.support,
+    why: insight.summaryLine,
+  };
+}
+
+function buildWeeklyExperiments(patternInsights: PatternInsight[], energyThemes: AdvisoryTheme[]): WeeklyExperiment[] {
+  const experiments = patternInsights.slice(0, 3).map((insight, index) => experimentFromInsight(insight, index));
+  if (experiments.length >= 3) return experiments;
+
+  for (const theme of energyThemes) {
+    experiments.push({
+      id: `experiment_theme_${theme.id}`,
+      title: `Beri panggung kecil untuk ${theme.shortTitle}`,
+      action: `Pilih satu aktivitas kecil minggu ini yang memakai ${theme.shortTitle.toLowerCase()}. Buat hasil nyata yang bisa selesai dalam 30–60 menit.`,
+      why: theme.whyItFits,
+      signal: theme.shortTitle,
+    });
+    if (experiments.length >= 3) break;
+  }
+
+  return experiments.slice(0, 3);
+}
+
+function buildEvidenceMap(report: PatternSignatureReport, patternInsights: PatternInsight[]): EvidenceMapItem[] {
+  const prioritySignals = new Set(patternInsights.flatMap((insight) => insight.matchedSignals));
+  const selected: EvidenceMapItem[] = [];
+  const seen = new Set<string>();
+
+  for (const line of report.evidenceLines ?? []) {
+    const overlap = line.signals.filter((signal) => prioritySignals.has(signal));
+    if (overlap.length === 0 && selected.length >= 3) continue;
+    const key = `${line.questionId}_${line.selectedOptionId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const signalLabels = (overlap.length > 0 ? overlap : line.signals.slice(0, 2))
+      .map((signal) => resolveSignalDefinition(signal)?.label ?? signal.replace(/_/g, " "))
+      .slice(0, 2);
+
+    selected.push({
+      id: key,
+      title: `Pilihan ${line.selectedOptionId}`,
+      situation: cleanLanguage(line.situation),
+      selectedText: cleanLanguage(line.selectedText),
+      meaning: cleanLanguage(
+        signalLabels.length > 0
+          ? `Pilihan ini memberi sinyal pada pola: ${signalLabels.join(" dan ").toLowerCase()}.`
+          : "Pilihan ini ikut membentuk pembacaan pola utama kamu.",
+      ),
+      tone: patternInsights.find((insight) => overlap.some((signal) => insight.matchedSignals.includes(signal)))?.tone ?? "slate",
+    });
+
+    if (selected.length >= 5) break;
+  }
+
+  return selected;
+}
+
 function buildQualityNote(quality: ReadingQuality) {
   if (quality.level === "Stabil") return "Pola jawaban cukup stabil untuk dibaca sebagai refleksi diri yang relatif konsisten.";
   if (quality.level === "Cukup Stabil") return "Pola jawaban cukup bisa dibaca, tetapi beberapa area tetap sebaiknya dianggap sebagai sinyal refleksi, bukan label final.";
@@ -892,6 +1082,9 @@ export function buildSmartResultAdvisory(
   const vulnerabilities = rawVulnerabilities.map(cleanVulnerability);
   const adaptiveThemes = rawAdaptiveThemes.map(cleanAdaptive);
   const dormantThemes = rawDormantThemes.map(cleanTheme);
+  const operatingManual = buildOperatingManual(energyThemes, vulnerabilities, adaptiveThemes, patternInsights);
+  const weeklyExperiments = buildWeeklyExperiments(patternInsights, energyThemes);
+  const evidenceMap = buildEvidenceMap(report, patternInsights);
   const archetype = cleanLanguage(buildArchetype(energyThemes));
   const mirror = buildMirror(report, energyThemes, vulnerabilities, adaptiveThemes, patternInsights);
   const alignment = buildAlignment(report, adaptiveThemes, dormantThemes);
@@ -933,6 +1126,9 @@ export function buildSmartResultAdvisory(
       "Kalau hasil ini terasa menampar pelan, jadikan ia peta, bukan penjara. Kamu tetap bisa bertumbuh, tetapi lebih sehat jika bertumbuh dari zona kekuatan alami kamu.",
     ]),
     patternInsights,
+    operatingManual,
+    weeklyExperiments,
+    evidenceMap,
     evidenceHighlights,
     evidenceLine: cleanLanguage(
       evidenceHighlights.length > 0

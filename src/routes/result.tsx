@@ -182,9 +182,38 @@ function ResultPage() {
               {advisory.evidenceLine}
             </p>
           </article>
+
         </Section>
 
+        <Section title="Manual Singkat Memakai Pola Ini" kicker="operating manual">
+          <OperatingManualGrid manual={advisory.operatingManual} />
+        </Section>
 
+        {advisory.evidenceMap.length > 0 && (
+          <Section title="Bukti dari Pilihan Aksi" kicker="evidence-based reading">
+            <p className="section-lead">
+              Bagian ini menunjukkan beberapa pilihan yang menjadi dasar pembacaan. Tujuannya agar hasil terasa grounded, bukan seperti label yang muncul tiba-tiba.
+            </p>
+            <div className="mt-4 grid gap-3">
+              {advisory.evidenceMap.slice(0, 4).map((item) => (
+                <EvidenceMapCard key={item.id} item={item} />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {advisory.weeklyExperiments.length > 0 && (
+          <Section title="Eksperimen 7 Hari" kicker="next small step">
+            <p className="section-lead">
+              Ini bukan tugas besar. Pilih satu eksperimen kecil agar hasil asesmen berubah menjadi pengalaman nyata, bukan hanya bacaan.
+            </p>
+            <div className="mt-4 grid gap-3">
+              {advisory.weeklyExperiments.map((item, index) => (
+                <WeeklyExperimentCard key={item.id} item={item} index={index + 1} />
+              ))}
+            </div>
+          </Section>
+        )}
 
         {advisory.patternInsights.length > 0 && (
           <Section title="Sinyal Kombinasi yang Terbaca" kicker="smart pattern engine">
@@ -365,6 +394,71 @@ function toneClass(tone: AdvisoryTone, soft = false) {
   return variants[tone];
 }
 
+
+
+function OperatingManualGrid({ manual }: { manual: SmartResultAdvisory["operatingManual"] }) {
+  const panels = [
+    { title: "Lingkungan yang menyalakan", items: manual.bestEnvironment, tone: "teal" as AdvisoryTone },
+    { title: "Cara kerja paling sehat", items: manual.workStyle, tone: "sky" as AdvisoryTone },
+    { title: "Yang perlu dijaga", items: manual.watchOut, tone: "amber" as AdvisoryTone },
+    { title: "Sistem pendukung", items: manual.supportSystem, tone: "slate" as AdvisoryTone },
+  ];
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {panels.map((panel) => (
+        <article key={panel.title} className={`rounded-[1.65rem] border p-4 shadow-sm print-avoid-break ${toneClass(panel.tone, true)}`}>
+          <h3 className="text-sm font-medium text-foreground">{panel.title}</h3>
+          <ul className="mt-3 space-y-2 text-xs leading-relaxed text-foreground/80">
+            {panel.items.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary/45" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function EvidenceMapCard({ item }: { item: SmartResultAdvisory["evidenceMap"][number] }) {
+  return (
+    <article className={`rounded-[1.65rem] border p-4 shadow-sm print-avoid-break ${toneClass(item.tone, true)}`}>
+      <div className="flex items-start gap-3">
+        <div className="grid size-8 shrink-0 place-items-center rounded-2xl border border-background/70 bg-background/70 text-[11px] font-semibold text-primary">
+          {item.title.replace("Pilihan ", "")}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium leading-relaxed text-muted-foreground">{item.situation}</p>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">“{item.selectedText}”</p>
+          <p className="mt-3 rounded-2xl border border-background/70 bg-background/55 p-3 text-xs leading-relaxed text-muted-foreground">
+            {item.meaning}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function WeeklyExperimentCard({ item, index }: { item: SmartResultAdvisory["weeklyExperiments"][number]; index: number }) {
+  return (
+    <article className="rounded-[1.65rem] border border-primary/15 bg-card p-4 shadow-sm print-avoid-break">
+      <div className="flex items-start gap-3">
+        <NumberBubble value={index} tone="teal" muted />
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/70">{item.signal}</div>
+          <h3 className="mt-1 text-base font-medium text-foreground">{item.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.action}</p>
+          <p className="mt-3 rounded-2xl border border-primary/10 bg-primary/6 p-3 text-xs leading-relaxed text-muted-foreground">
+            {item.why}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 function PatternInsightCard({
   insight,
