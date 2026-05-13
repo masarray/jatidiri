@@ -7,16 +7,16 @@ import { getNextAssessmentTarget, progressFor } from "@/engine/scoring";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Peta Jati Diri — Mengenal Energi & Bakat Alami Anda" },
+      { title: "Peta Jati Diri — Quick Scan Energi & Bakat Alami Kamu" },
       {
         name: "description",
         content:
-          "Asesmen self-awareness untuk memahami bakat alami, kekuatan yang dijalani, dan area yang menguras energi Anda.",
+          "Asesmen self-awareness untuk memahami bakat alami, kemampuan yang terlihat, dan area yang menguras energi kamu.",
       },
       { property: "og:title", content: "Peta Jati Diri" },
       {
         property: "og:description",
-        content: "Pahami apa yang membuat Anda hidup, apa yang menguras energi Anda.",
+        content: "Pahami apa yang membuat kamu hidup, apa yang menguras energi kamu.",
       },
     ],
   }),
@@ -51,21 +51,21 @@ function WelcomePage() {
       <header className="flex-1">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
           <Compass className="size-3.5" />
-          Self-awareness assessment
+          Quick Scan self-awareness
         </div>
         <h1 className="mt-6 text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-[1.05]">
           Peta Jati Diri
         </h1>
         <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-          Pahami hal apa yang membuat Anda hidup, apa yang menguras energi, dan apakah hidup Anda
-          sudah berjalan dekat dengan bakat alami.
+          Pahami hal apa yang membuat kamu hidup, apa yang menguras energi, dan apakah aktivitas kamu
+          sudah berjalan dekat dengan kekuatan alami.
         </p>
 
         <ul className="mt-10 space-y-4">
           <Feature
             icon={<Sparkles className="size-4" />}
-            title="294 pertanyaan intuitif"
-            desc="Dua sesi: bakat alami dan kekuatan aktivitas yang sudah dijalani."
+            title="72 pertanyaan tajam"
+            desc="Quick Scan dua sesi: pola alami dan kemampuan yang sudah terlihat."
           />
           <Feature
             icon={<Heart className="size-4" />}
@@ -75,11 +75,11 @@ function WelcomePage() {
           <Feature
             icon={<Zap className="size-4" />}
             title="Panduan komunikasi"
-            desc="Membantu Anda dan orang terdekat memahami pola komunikasi yang lebih pas."
+            desc="Membantu kamu dan orang terdekat memahami pola komunikasi yang lebih pas."
           />
           <Feature
             icon={<ShieldCheck className="size-4" />}
-            title="Privat di perangkat Anda"
+            title="Privat di perangkat kamu"
             desc="Jawaban tersimpan lokal di browser dan tidak dikirim ke server."
           />
         </ul>
@@ -109,11 +109,11 @@ function WelcomePage() {
             to="/identity"
             className="block w-full text-center rounded-2xl bg-primary text-primary-foreground py-4 font-semibold shadow-lg shadow-primary/20 active:scale-[0.98] transition"
           >
-            Mulai Asesmen
+            Mulai Quick Scan
           </Link>
         )}
         <p className="text-center text-[11px] text-muted-foreground mt-3">
-          ± 45–60 menit · Tidak ada jawaban benar atau salah
+          ± 10–15 menit · Tidak ada jawaban benar atau salah
         </p>
       </div>
     </main>

@@ -10,20 +10,20 @@ interface Props {
   disabled?: boolean;
 }
 
-const AGREEMENT_LABELS = [
-  "Sangat tidak sesuai",
-  "Tidak sesuai",
-  "Netral",
-  "Sesuai",
-  "Sangat sesuai",
+const NATURAL_LABELS = [
+  "Tidak menggambarkan saya",
+  "Kurang menggambarkan saya",
+  "Muncul dalam kondisi tertentu",
+  "Cukup menggambarkan saya",
+  "Sangat menggambarkan saya",
 ];
 
 const STRENGTH_LABELS = [
-  "Sangat lemah",
-  "Lemah",
-  "Netral",
-  "Kuat",
-  "Sangat kuat",
+  "Belum mampu",
+  "Masih sulit",
+  "Cukup mampu",
+  "Mampu dengan baik",
+  "Kemampuan utama saya",
 ];
 
 const VALUES = ANSWER_VALUES;
@@ -132,17 +132,17 @@ const TONES: Record<AnswerValue, Tone> = {
 };
 
 function getLabels(session: AssessmentSession) {
-  return session === "strength" ? STRENGTH_LABELS : AGREEMENT_LABELS;
+  return session === "strength" ? STRENGTH_LABELS : NATURAL_LABELS;
 }
 
 function getScaleTitle(session: AssessmentSession) {
-  return session === "strength" ? "Skala kekuatan aktivitas" : "Skala kesesuaian diri";
+  return session === "strength" ? "Skala kemampuan nyata" : "Skala pola alami";
 }
 
 function getHelper(session: AssessmentSession) {
   return session === "strength"
-    ? "Nilai seberapa kuat kamu dalam aktivitas ini berdasarkan pengalaman nyata."
-    : "Pilih yang paling sesuai dengan diri kamu sehari-hari. Jangan terlalu lama berpikir.";
+    ? "Nilai kemampuan yang sudah terlihat dalam pengalaman nyata, bukan sekadar minat."
+    : "Pilih yang paling menggambarkan gerak alami kamu, bukan jawaban yang terdengar paling baik.";
 }
 
 function hapticTap() {
@@ -293,7 +293,7 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
                 aria-hidden="true"
               />
 
-              <span className="relative min-w-0 flex-1 pl-2.5 text-[14.7px] font-semibold leading-tight tracking-[-0.002em] sm:text-[15px]">
+              <span className="relative min-w-0 flex-1 pl-2.5 text-[14.2px] font-semibold leading-tight tracking-[-0.002em] sm:text-[15px]">
                 {labels[index]}
               </span>
             </button>

@@ -13,6 +13,7 @@ import type {
 import { CLUSTER_LIST } from "@/data/clusterMeta";
 import { naturalQuestions } from "@/data/questionsNatural";
 import { strengthQuestions } from "@/data/questionsStrength";
+import { withQuestionBankMetadata, withQuestionMetadata } from "@/data/questionMetadata";
 
 const SCORE_MIN = 1;
 const SCORE_MAX = 5;
@@ -35,9 +36,10 @@ const SOCIAL_DESIRABILITY_ITEM_IDS = new Set([
   "natural-170",
 ]);
 
-
 export function questionsFor(session: AssessmentSession): QuestionItem[] {
-  return session === "natural" ? naturalQuestions : strengthQuestions;
+  return session === "natural"
+    ? withQuestionBankMetadata(naturalQuestions)
+    : withQuestionBankMetadata(strengthQuestions);
 }
 
 function validQuestionIds(session: AssessmentSession): Set<string> {
@@ -72,11 +74,22 @@ function calibratedScoreFromMean(meanAnswer: number, sessionMeanAnswer: number):
   return Math.round(clamp(calibrated));
 }
 
+function contributesToCapabilityScore(question: QuestionItem): boolean {
+  return (
+    question.scoreLane !== "fatigue" &&
+    question.scoreLane !== "quality" &&
+    question.itemType !== "drain" &&
+    question.itemType !== "social_desirability"
+  );
+}
+
 function weightedSessionMean(questions: QuestionItem[], values: Record<string, number>): number {
   let sum = 0;
   let weightSum = 0;
 
   for (const q of questions) {
+    if (!contributesToCapabilityScore(q)) continue;
+
     const v = values[q.id];
     if (isAnswerValue(v)) {
       const weight = weightForQuestion(q);
@@ -91,7 +104,8 @@ function weightedSessionMean(questions: QuestionItem[], values: Record<string, n
 function metadataWeight(question: QuestionItem): number {
   let weight = typeof question.weight === "number" ? question.weight : 1;
 
-  if (SOCIAL_DESIRABILITY_ITEM_IDS.has(question.id) || question.itemType === "social_desirability") weight *= 0.35;
+  if (SOCIAL_DESIRABILITY_ITEM_IDS.has(question.id) || question.itemType === "social_desirability")
+    weight *= 0.35;
   if (question.itemType === "drain") weight *= 0.55;
   if (question.biasRisk === "high") weight *= 0.75;
   if (question.biasRisk === "medium") weight *= 0.9;
@@ -103,7 +117,7 @@ function weightForQuestion(question: QuestionItem | string): number {
   if (typeof question !== "string") return metadataWeight(question);
 
   const found = [...naturalQuestions, ...strengthQuestions].find((q) => q.id === question);
-  if (found) return metadataWeight(found);
+  if (found) return metadataWeight(withQuestionMetadata(found));
   if (SOCIAL_DESIRABILITY_ITEM_IDS.has(question)) return 0.35;
   return 1;
 }
@@ -120,10 +134,13 @@ function avgPerCluster(
   values: Record<string, number>,
 ): Record<Cluster, { adjusted: number; raw: number; items: number }> {
   const sessionMean = weightedSessionMean(questions, values);
-  const adjustedSums: Record<string, { sum: number; weight: number; rawSum: number; n: number }> = {};
+  const adjustedSums: Record<string, { sum: number; weight: number; rawSum: number; n: number }> =
+    {};
   CLUSTER_LIST.forEach((c) => (adjustedSums[c] = { sum: 0, weight: 0, rawSum: 0, n: 0 }));
 
   for (const q of questions) {
+    if (!contributesToCapabilityScore(q)) continue;
+
     const v = values[q.id];
     if (isAnswerValue(v)) {
       const weight = weightForQuestion(q);
@@ -148,8 +165,8 @@ function avgPerCluster(
 }
 
 export function computeClusterScores(answers: Answers): ClusterScore[] {
-  const nat = avgPerCluster(naturalQuestions, answers.natural);
-  const str = avgPerCluster(strengthQuestions, answers.strength);
+  const nat = avgPerCluster(questionsFor("natural"), answers.natural);
+  const str = avgPerCluster(questionsFor("strength"), answers.strength);
   return CLUSTER_LIST.map((c) => ({
     cluster: c,
     natural: nat[c].adjusted,
@@ -171,7 +188,10 @@ function classify(natural: number, strength: number): Zone {
 }
 
 export function buildClusterReports(answers: Answers): ClusterReport[] {
-  return computeClusterScores(answers).map((s) => ({ ...s, zone: classify(s.natural, s.strength) }));
+  return computeClusterScores(answers).map((s) => ({
+    ...s,
+    zone: classify(s.natural, s.strength),
+  }));
 }
 
 export function topClusters(reports: ClusterReport[], n = 3): Cluster[] {
@@ -210,7 +230,9 @@ export function isAssessmentComplete(answers: Answers): boolean {
   return progressFor("natural", answers).done && progressFor("strength", answers).done;
 }
 
-export function getNextAssessmentTarget(answers: Answers):
+export function getNextAssessmentTarget(
+  answers: Answers,
+):
   | { to: "/assessment/$session"; session: AssessmentSession; index: number }
   | { to: "/instruction/$session"; session: AssessmentSession }
   | { to: "/result" } {
@@ -218,7 +240,11 @@ export function getNextAssessmentTarget(answers: Answers):
   const strength = progressFor("strength", answers);
 
   if (!natural.done) {
-    return { to: "/assessment/$session", session: "natural", index: firstUnansweredIndex("natural", answers) };
+    return {
+      to: "/assessment/$session",
+      session: "natural",
+      index: firstUnansweredIndex("natural", answers),
+    };
   }
 
   if (strength.answered === 0) {
@@ -226,7 +252,11 @@ export function getNextAssessmentTarget(answers: Answers):
   }
 
   if (!strength.done) {
-    return { to: "/assessment/$session", session: "strength", index: firstUnansweredIndex("strength", answers) };
+    return {
+      to: "/assessment/$session",
+      session: "strength",
+      index: firstUnansweredIndex("strength", answers),
+    };
   }
 
   return { to: "/result" };
@@ -268,7 +298,9 @@ function dominantAnswerRatio(values: number[]): number {
 function socialDesirabilityScore(answers: Answers): number {
   const ids = new Set([
     ...SOCIAL_DESIRABILITY_ITEM_IDS,
-    ...naturalQuestions.filter((q) => q.itemType === "social_desirability" || q.scoreLane === "quality").map((q) => q.id),
+    ...questionsFor("natural")
+      .filter((q) => q.itemType === "social_desirability" || q.scoreLane === "quality")
+      .map((q) => q.id),
   ]);
   const values = [...ids].map((id) => answers.natural[id]).filter(isAnswerValue);
   if (values.length === 0) return 0;
@@ -312,37 +344,49 @@ export function computeReadingQuality(answers: Answers): ReadingQuality {
   if (variation < 0.95) {
     const penalty = clamp((0.95 - variation) * 30, 0, 26);
     score -= penalty;
-    notes.push("Variasi jawaban relatif sempit. Engine akan lebih mengandalkan ranking relatif agar hasil tidak terlalu dipengaruhi kecenderungan sesuai/kuat pada banyak item.");
+    notes.push(
+      "Variasi jawaban relatif sempit. Engine akan lebih mengandalkan ranking relatif agar hasil tidak terlalu dipengaruhi kecenderungan sesuai/kuat pada banyak item.",
+    );
   }
 
   if (dominant > 0.42) {
     const penalty = clamp((dominant - 0.42) * 80, 0, 18);
     score -= penalty;
-    notes.push("Ada kecenderungan memilih nilai yang sama cukup sering. Perbedaan antar-area mungkin terlihat lebih datar.");
+    notes.push(
+      "Ada kecenderungan memilih nilai yang sama cukup sering. Perbedaan antar-area mungkin terlihat lebih datar.",
+    );
   }
 
   if (neutral > 0.35) {
     const penalty = clamp((neutral - 0.35) * 60, 0, 14);
     score -= penalty;
-    notes.push("Jawaban netral cukup banyak. Beberapa area mungkin belum dapat dibedakan dengan tajam.");
+    notes.push(
+      "Jawaban netral cukup banyak. Beberapa area mungkin belum dapat dibedakan dengan tajam.",
+    );
   }
 
   if (extremeHigh > 0.55) {
     const penalty = clamp((extremeHigh - 0.55) * 55, 0, 16);
     score -= penalty;
-    notes.push("Banyak jawaban berada di sisi sesuai/kuat. Skor dibaca secara relatif terhadap pola jawaban pribadi, bukan sebagai angka absolut semata.");
+    notes.push(
+      "Banyak jawaban berada di sisi sesuai/kuat. Skor dibaca secara relatif terhadap pola jawaban pribadi, bukan sebagai angka absolut semata.",
+    );
   }
 
   if (extremeLow > 0.55) {
     const penalty = clamp((extremeLow - 0.55) * 40, 0, 10);
     score -= penalty;
-    notes.push("Banyak jawaban berada di sisi rendah. Periksa apakah kondisi lelah atau kurang percaya diri ikut memengaruhi respons.");
+    notes.push(
+      "Banyak jawaban berada di sisi rendah. Periksa apakah kondisi lelah atau kurang percaya diri ikut memengaruhi respons.",
+    );
   }
 
   if (socialScore > 74) {
     const penalty = clamp((socialScore - 74) * 0.6, 0, 16);
     score -= penalty;
-    notes.push("Beberapa item ideal-diri dijawab sangat tinggi. Hasil tetap dapat dibaca, namun perlu kehati-hatian pada tema moral/perilaku sempurna.");
+    notes.push(
+      "Beberapa item ideal-diri dijawab sangat tinggi. Hasil tetap dapat dibaca, namun perlu kehati-hatian pada tema moral/perilaku sempurna.",
+    );
   }
 
   const finalScore = Math.round(clamp(score));
@@ -358,7 +402,10 @@ export function computeReadingQuality(answers: Answers): ReadingQuality {
     score: finalScore,
     level,
     summary,
-    notes: notes.length > 0 ? notes.slice(0, 3) : ["Tidak ditemukan pola respons yang sangat mengganggu pembacaan dasar."],
+    notes:
+      notes.length > 0
+        ? notes.slice(0, 3)
+        : ["Tidak ditemukan pola respons yang sangat mengganggu pembacaan dasar."],
     metrics: {
       completionPercent,
       variation: Number(variation.toFixed(2)),

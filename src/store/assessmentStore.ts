@@ -65,7 +65,7 @@ export const useAssessmentStore = create<AssessmentState>()(
     }),
     {
       name: "peta-jati-diri-v1",
-      version: 3,
+      version: 4,
       partialize: (state) => ({
         identity: state.identity,
         answers: state.answers,

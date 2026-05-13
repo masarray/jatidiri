@@ -15,12 +15,12 @@ export const Route = createFileRoute("/assessment/$session")({
 
 const LABELS: Record<AssessmentSession, { title: string; help: string }> = {
   natural: {
-    title: "Sesi 1 — Bakat Alami",
-    help: "Pilih yang paling sesuai dengan diri kamu sehari-hari. Jangan terlalu lama berpikir.",
+    title: "Sesi 1 — Zona Kekuatan Alami",
+    help: "Pilih yang paling menggambarkan gerak alami kamu, bukan jawaban yang terlihat paling baik.",
   },
   strength: {
-    title: "Sesi 2 — Kekuatan Aktivitas",
-    help: "Nilai seberapa kuat kamu dalam aktivitas ini berdasarkan pengalaman nyata.",
+    title: "Sesi 2 — Kemampuan yang Sudah Terlihat",
+    help: "Nilai kemampuan yang sudah terlihat dalam pengalaman nyata, bukan sekadar minat.",
   },
 };
 

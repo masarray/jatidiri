@@ -37,12 +37,12 @@ export function getPurposeLens(identity: Identity | null): PurposeLens {
       guideTitle: "Cara Mengelola Diri",
       guideKicker: "Self-Management Notes",
       guideIntro:
-        "Bagian ini membantu Anda membaca cara menjaga energi, membuat keputusan, dan membangun rutinitas yang lebih sesuai dengan pola alami.",
+        "Bagian ini membantu kamu membaca cara menjaga energi, membuat keputusan, dan membangun rutinitas yang lebih sesuai dengan pola alami.",
       reflectionTitle: "Catatan Refleksi 7 Hari",
       reflectionItems: [
         "Aktivitas apa yang terasa paling memberi energi dalam satu minggu terakhir?",
         "Aktivitas apa yang bisa dilakukan, tetapi membutuhkan pemulihan lebih banyak?",
-        "Pola komunikasi seperti apa yang membuat Anda lebih tenang dan mudah bekerja sama?",
+        "Pola komunikasi seperti apa yang membuat kamu lebih tenang dan mudah bekerja sama?",
       ],
     },
     relationship_family: {
@@ -51,7 +51,7 @@ export function getPurposeLens(identity: Identity | null): PurposeLens {
       reportKicker: "Peta Relasi dan Keluarga",
       summaryTitle: "Ringkasan untuk Relasi & Keluarga",
       summaryFrame:
-        "Hasil ini dibaca sebagai panduan bagi pasangan atau keluarga untuk memahami cara Anda memproses energi, tekanan, komunikasi, dan kerja sama dalam kehidupan rumah tangga.",
+        "Hasil ini dibaca sebagai panduan bagi pasangan atau keluarga untuk memahami cara kamu memproses energi, tekanan, komunikasi, dan kerja sama dalam kehidupan rumah tangga.",
       guideTitle: "Panduan Pasangan & Keluarga",
       guideKicker: "Relationship & Family Notes",
       guideIntro:
@@ -76,8 +76,8 @@ export function getPurposeLens(identity: Identity | null): PurposeLens {
         "Bagian ini membantu menerjemahkan pola alami menjadi cara bekerja, cara menerima arahan, dan arah pengembangan yang lebih realistis.",
       reflectionTitle: "Refleksi Karier 7 Hari",
       reflectionItems: [
-        "Tugas apa yang membuat Anda paling fokus dan merasa bernilai?",
-        "Tugas apa yang menguras energi meskipun Anda mampu menyelesaikannya?",
+        "Tugas apa yang membuat kamu paling fokus dan merasa bernilai?",
+        "Tugas apa yang menguras energi meskipun kamu mampu menyelesaikannya?",
         "Dukungan kerja apa yang perlu dinegosiasikan: kejelasan prioritas, data, ruang ide, ritme kerja, atau kolaborasi?",
       ],
     },
@@ -94,9 +94,9 @@ export function getPurposeLens(identity: Identity | null): PurposeLens {
         "Bagian ini membantu rekan kerja atau leader memahami cara berkolaborasi, memberi arahan, dan membagi peran secara lebih sehat.",
       reflectionTitle: "Refleksi Tim 7 Hari",
       reflectionItems: [
-        "Dalam pekerjaan tim, kontribusi apa yang paling natural muncul dari diri Anda?",
+        "Dalam pekerjaan tim, kontribusi apa yang paling natural muncul dari diri kamu?",
         "Jenis meeting atau komunikasi apa yang membuat kerja sama terasa efektif?",
-        "Peran apa yang sebaiknya tidak terus-menerus dibebankan kepada Anda tanpa dukungan sistem?",
+        "Peran apa yang sebaiknya tidak terus-menerus dibebankan kepada kamu tanpa dukungan sistem?",
       ],
     },
   };
@@ -149,7 +149,7 @@ export function buildPurposeGuidance(lens: PurposeLens, top: Cluster[], bottom: 
         body: `Area ${vulnerableMeta.label} tampak perlu dikelola lebih hati-hati. Jika area ini terus menjadi tuntutan utama, semangat dan energi dapat cepat turun. Pasangan dapat membantu dengan ${vulnerableMeta.compensate.toLowerCase()}`,
       },
       {
-        title: "Strategi parenting bersama Anda",
+        title: "Strategi parenting bersama kamu",
         body: buildParentingHint(top, bottom),
       },
       {
@@ -163,7 +163,7 @@ export function buildPurposeGuidance(lens: PurposeLens, top: Cluster[], bottom: 
     return [
       {
         title: "Lingkungan kerja yang mendukung",
-        body: `Anda cenderung bekerja lebih baik ketika kekuatan ${primaryMeta.label} diberi ruang. Lingkungan yang memberi konteks, tujuan, dan cara komunikasi yang jelas akan membantu energi kerja lebih stabil.`,
+        body: `kamu cenderung bekerja lebih baik ketika kekuatan ${primaryMeta.label} diberi ruang. Lingkungan yang memberi konteks, tujuan, dan cara komunikasi yang jelas akan membantu energi kerja lebih stabil.`,
       },
       {
         title: "Cara atasan memberi arahan",
@@ -193,7 +193,7 @@ export function buildPurposeGuidance(lens: PurposeLens, top: Cluster[], bottom: 
     return [
       {
         title: "Kontribusi alami dalam tim",
-        body: `Dalam tim, kontribusi Anda paling mudah terlihat melalui ${primaryMeta.label}. Anda cenderung lebih efektif ketika peran memberi ruang untuk ${primaryMeta.observable.toLowerCase()}`,
+        body: `Dalam tim, kontribusi kamu paling mudah terlihat melalui ${primaryMeta.label}. kamu cenderung lebih efektif ketika peran memberi ruang untuk ${primaryMeta.observable.toLowerCase()}`,
       },
       {
         title: "Cara berkolaborasi",
@@ -221,7 +221,7 @@ export function buildPurposeGuidance(lens: PurposeLens, top: Cluster[], bottom: 
     },
     {
       title: "Cara mengambil keputusan",
-      body: `${primaryMeta.commGood} Ketika keputusan terasa berat, gunakan pola yang sesuai dengan energi alami Anda, bukan meniru cara orang lain secara penuh.`,
+      body: `${primaryMeta.commGood} Ketika keputusan terasa berat, gunakan pola yang sesuai dengan energi alami kamu, bukan meniru cara orang lain secara penuh.`,
     },
     {
       title: "Area yang perlu dibatasi",
@@ -229,11 +229,11 @@ export function buildPurposeGuidance(lens: PurposeLens, top: Cluster[], bottom: 
     },
     {
       title: "Cara menerima masukan",
-      body: `${primaryMeta.critique} Pola ini membantu Anda tetap terbuka tanpa merasa diserang secara pribadi.`,
+      body: `${primaryMeta.critique} Pola ini membantu kamu tetap terbuka tanpa merasa diserang secara pribadi.`,
     },
     {
       title: "Eksperimen pengembangan diri",
-      body: `Pilih satu aktivitas kecil yang menguatkan ${primaryMeta.label} selama tujuh hari. Amati apakah aktivitas itu membuat Anda lebih fokus, lebih ringan, atau lebih mudah kembali berenergi.`,
+      body: `Pilih satu aktivitas kecil yang menguatkan ${primaryMeta.label} selama tujuh hari. Amati apakah aktivitas itu membuat kamu lebih fokus, lebih ringan, atau lebih mudah kembali berenergi.`,
     },
   ];
 }
@@ -246,7 +246,7 @@ function buildParentingHint(top: Cluster[], bottom: Cluster[]): string {
 
   if (has("Thinking") || has("Analyzing")) {
     strategies.push(
-      "Libatkan Anda dalam menyusun alasan, aturan, dan evaluasi pola anak. Anda cenderung lebih kuat ketika parenting tidak hanya reaktif, tetapi memiliki konteks dan prinsip yang jelas.",
+      "Libatkan kamu dalam menyusun alasan, aturan, dan evaluasi pola anak. kamu cenderung lebih kuat ketika parenting tidak hanya reaktif, tetapi memiliki konteks dan prinsip yang jelas.",
     );
   }
 

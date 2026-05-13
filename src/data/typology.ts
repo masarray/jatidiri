@@ -23,7 +23,7 @@ export function pickTypology(topClusters: Cluster[]): Typology {
       name: "Quiet Stabilizer",
       tagline: "Kuat dalam menjaga keteraturan, konsistensi, dan dukungan praktis bagi lingkungan.",
       summary:
-        "Profil ini menunjukkan kecenderungan menjadi penopang yang membuat proses lebih rapi, tenang, dan dapat diandalkan.",
+        "Profil ini menunjukkan kecenderungan menjadi penopang yang membuat proses lebih rapi, tenang, dan dapat dikamulkan.",
     };
   if (set.has("Relating") && set.has("Supporting"))
     return {
@@ -70,6 +70,6 @@ export function pickTypology(topClusters: Cluster[]): Typology {
   return {
     name: `${top}${second ? `–${second}` : ""} Profile`,
     tagline: "Profil gabungan dari beberapa kecenderungan utama.",
-    summary: `Profil ini menunjukkan kombinasi menonjol pada area ${top}${second ? ` dan ${second}` : ""}, yang perlu dibaca bersama dengan konteks peran, pengalaman, dan lingkungan Anda saat ini.`,
+    summary: `Profil ini menunjukkan kombinasi menonjol pada area ${top}${second ? ` dan ${second}` : ""}, yang perlu dibaca bersama dengan konteks peran, pengalaman, dan lingkungan kamu saat ini.`,
   };
 }

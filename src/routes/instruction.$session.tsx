@@ -12,25 +12,25 @@ export const Route = createFileRoute("/instruction/$session")({
 const COPY: Record<AssessmentSession, { title: string; eyebrow: string; bullets: string[]; time: string; button: string }> = {
   natural: {
     eyebrow: "Sesi 1 dari 2",
-    title: "Bakat Alami",
-    time: "± 30–40 menit · 180 pertanyaan",
-    button: "Mulai Sesi 1",
+    title: "Zona Kekuatan Alami",
+    time: "± 6–8 menit · 48 pertanyaan",
+    button: "Mulai Quick Scan",
     bullets: [
-      "Pilih yang paling sesuai dengan diri kamu sehari-hari.",
-      "Jangan terlalu menganalisis atau menebak arah pertanyaan.",
-      "Tidak ada jawaban benar atau salah — jawab apa adanya.",
+      "Pilih yang paling menggambarkan gerak alami kamu, bukan jawaban yang terlihat paling baik.",
+      "Fokus pada pola yang biasanya muncul dalam diri kamu, bukan kondisi ideal.",
+      "Tidak ada jawaban benar atau salah — setiap pilihan hanya membantu membaca pola.",
       "Setelah memilih, sistem otomatis lanjut ke pertanyaan berikutnya.",
     ],
   },
   strength: {
     eyebrow: "Sesi 2 dari 2",
-    title: "Kekuatan Aktivitas",
-    time: "± 20 menit · 114 pertanyaan",
+    title: "Kemampuan yang Sudah Terlihat",
+    time: "± 3–5 menit · 24 pertanyaan",
     button: "Mulai Sesi 2",
     bullets: [
-      "Sekarang fokus pada aktivitas: seberapa kuat kamu melakukannya dalam pengalaman nyata.",
-      "Bukan tentang seberapa suka, tetapi seberapa terampil, terbiasa, atau percaya diri Anda melakukannya.",
-      "Skala 5 pilihan bergerak dari 'Sangat lemah' sampai 'Sangat kuat'.",
+      "Sekarang fokus pada kemampuan nyata yang sudah terlihat dalam pengalaman hidup atau kerja.",
+      "Bukan tentang seberapa suka, tetapi seberapa mampu, terbiasa, atau percaya diri kamu melakukannya.",
+      "Skala 5 pilihan bergerak dari 'Belum mampu' sampai 'Kemampuan utama saya'.",
       "Pilih jawaban paling jujur, bukan jawaban yang terdengar paling ideal.",
     ],
   },
@@ -91,14 +91,14 @@ function InstructionPage() {
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5 shrink-0 mt-0.5 text-[var(--ember)]" />
           <p className="leading-relaxed">
-            Ini bukan diagnosis klinis, bukan ujian, dan bukan alat seleksi kerja. Hasilnya adalah peta refleksi diri berdasarkan pola jawaban Anda.
+            Ini bukan diagnosis klinis, bukan ujian, dan bukan alat seleksi kerja. Hasilnya adalah peta refleksi diri berdasarkan pola jawaban kamu.
           </p>
         </div>
 
         <div className="mt-4 flex items-start gap-3 px-2 text-xs text-muted-foreground">
           <Heart className="size-3.5 shrink-0 mt-0.5 text-[var(--ember)]" />
           <p>
-            Jawaban tersimpan otomatis. Anda bisa jeda dan melanjutkan lagi dari perangkat yang sama.
+            Jawaban tersimpan otomatis. Kamu bisa jeda dan melanjutkan lagi dari perangkat yang sama.
           </p>
         </div>
       </div>

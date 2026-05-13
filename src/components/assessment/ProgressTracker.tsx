@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 interface Props {
   current: number;
   total: number;
@@ -93,13 +95,13 @@ export function ProgressTracker({ current, total, label, canGoBack = false, onBa
           />
         </div>
 
-        <a
-          href="/"
+        <Link
+          to="/"
           className="absolute right-0 top-5 z-10 grid h-6 w-[46px] place-items-center bg-[#21aee8] pl-2 pr-1 text-[8px] font-bold uppercase tracking-[0.02em] text-white shadow-[0_4px_10px_rgba(14,116,144,0.16)]"
           style={{ clipPath: "polygon(9px 0, 100% 0, 100% 100%, 9px 100%, 0 50%)" }}
         >
           Jeda
-        </a>
+        </Link>
       </div>
     </div>
   );

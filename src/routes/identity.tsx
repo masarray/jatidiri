@@ -8,7 +8,7 @@ export const Route = createFileRoute("/identity")({
   head: () => ({
     meta: [
       { title: "Mulai Asesmen — Peta Jati Diri" },
-      { name: "description", content: "Masukkan nama dan konteks pembacaan hasil asesmen Anda." },
+      { name: "description", content: "Masukkan nama dan konteks pembacaan hasil asesmen kamu." },
     ],
   }),
   component: IdentityPage,
@@ -66,7 +66,7 @@ function IdentityPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nama Anda"
+            placeholder="Nama kamu"
             className="w-full rounded-xl border border-input bg-card px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring"
             required
             autoFocus

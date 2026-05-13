@@ -47,7 +47,7 @@ export interface QuestionItem {
   weight?: number;
 }
 
-export const ASSESSMENT_SCALE_VERSION = "v2-5point";
+export const ASSESSMENT_SCALE_VERSION = "v3-quick-scan";
 export const ANSWER_VALUES = [1, 2, 3, 4, 5] as const;
 
 export type AnswerValue = (typeof ANSWER_VALUES)[number];

@@ -30,8 +30,8 @@ function TransitionPage() {
       </div>
       <h1 className="mt-6 text-2xl font-bold text-foreground">Sesi 1 selesai</h1>
       <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
-        Anda sudah menyelesaikan bagian bakat alami. Sekarang kita lanjut ke Sesi 2 untuk melihat
-        kekuatan aktivitas yang sudah Anda jalani dalam kehidupan nyata.
+        Kamu sudah menyelesaikan bagian Zona Kekuatan Alami. Sekarang kita lanjut ke Sesi 2 untuk melihat
+        kemampuan yang sudah terlihat dalam kehidupan nyata.
       </p>
       <Link
         to="/instruction/$session"
