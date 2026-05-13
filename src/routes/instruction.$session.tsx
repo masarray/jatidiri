@@ -25,12 +25,12 @@ const COPY: Record<AssessmentSession, { title: string; eyebrow: string; bullets:
   strength: {
     eyebrow: "Sesi 2 dari 2",
     title: "Bukti Kemampuan",
-    time: "± 2 menit · 4 context cards",
+    time: "± 3 menit · 5 context cards",
     button: "Mulai Sesi 2",
     bullets: [
       "Sekarang fokus pada bukti kemampuan yang sudah terlihat dalam pengalaman nyata.",
       "Pilih respons yang paling mendekati cara kamu bekerja, bukan gambaran ideal.",
-      "Bagian ini singkat, hanya untuk melihat apakah pola alami sudah muncul sebagai kemampuan nyata.",
+      "Bagian ini singkat, untuk melihat apakah pola alami sudah muncul sebagai kemampuan nyata atau sebagai kemampuan adaptif/terlatih.",
       "Setelah memilih card, sistem otomatis lanjut ke hasil.",
     ],
   },

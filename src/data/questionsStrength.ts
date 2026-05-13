@@ -34,7 +34,7 @@ export const strengthQuestions: ActionCardQuestionItem[] = [
     text: "Ada pekerjaan yang harus selesai sampai benar-benar beres. Dalam pengalaman nyata, biasanya kamu...",
     options: [
       { id: "A", text: "Kuat menjaga sampai selesai.", signals: [sig("commitment_keeper"), sig("operational_executor"), sig("strength_proof")] },
-      { id: "B", text: "Kuat memulai, tapi bisa menurun di bagian akhir.", signals: [sig("action_mover"), sig("unfinished_risk", "overuse", 0.8)] },
+      { id: "B", text: "Cepat hidup di awal, tapi butuh sistem agar tetap kuat sampai akhir.", signals: [sig("action_mover"), sig("unfinished_risk", "overuse", 0.8), sig("structure_need", "adaptive", 0.55)] },
       { id: "C", text: "Kuat kalau ada struktur dan tenggat jelas.", signals: [sig("system_organizer"), sig("consistency_guardian"), sig("adaptive", "adaptive", 0.4)] },
       { id: "D", text: "Lebih kuat memperbaiki daripada menyelesaikan dari nol.", signals: [sig("quality_evaluator"), sig("problem_restorer")] },
     ],
@@ -70,7 +70,25 @@ export const strengthQuestions: ActionCardQuestionItem[] = [
       { id: "A", text: "Kuat membuat struktur dan alurnya.", signals: [sig("system_organizer"), sig("strength_proof")] },
       { id: "B", text: "Bisa menjalankan kalau strukturnya sudah ada.", signals: [sig("operational_executor"), sig("consistency_guardian")] },
       { id: "C", text: "Lebih kuat menemukan masalah daripada merapikan sistem.", signals: [sig("problem_restorer"), sig("pattern_reader")] },
-      { id: "D", text: "Cepat bosan kalau terlalu administratif.", signals: [sig("fast_learner", "natural", 0.3), sig("routine_drain", "drain")] },
+      { id: "D", text: "Lebih hidup saat sistem itu langsung membantu pekerjaan nyata, bukan hanya administrasi.", signals: [sig("impact_seeker", "strength", 0.75), sig("purposeful_communicator", "strength", 0.55), sig("admin_drain", "drain")] },
     ],
   },
+  {
+    id: "strength-5",
+    session: "strength",
+    number: 5,
+    format: "action_cards",
+    patternArea: "Bukti Marketing dan Persuasi",
+    cluster: "Influencing",
+    situation: "Kamu harus mempromosikan ide, produk, atau solusi yang kamu yakini.",
+    prompt: "Dalam pengalaman nyata, biasanya kamu:",
+    text: "Kamu harus mempromosikan ide, produk, atau solusi yang kamu yakini. Dalam pengalaman nyata, biasanya kamu...",
+    options: [
+      { id: "A", text: "Cukup kuat menjelaskan nilainya, walau setelah itu terasa menguras energi.", signals: [sig("adaptive_influencer", "strength"), sig("value_framer", "strength"), sig("social_energy_drain", "drain")] },
+      { id: "B", text: "Menikmati bertemu orang dan membangun ketertarikan lewat obrolan.", signals: [sig("social_spark", "strength"), sig("persuader", "strength"), sig("strength_proof")] },
+      { id: "C", text: "Lebih suka membuat materi, demo, atau tulisan yang menjual tanpa terlalu banyak basa-basi.", signals: [sig("strategic_marketer", "strength"), sig("content_seller", "strength"), sig("small_talk_drain", "drain", 0.6)] },
+      { id: "D", text: "Lebih nyaman kalau orang tertarik karena sudah melihat bukti atau hasilnya.", signals: [sig("proof_builder", "strength"), sig("credibility_based_marketing", "strength"), sig("persuasion_skill", "strength", 0.5)] },
+    ],
+  },
+
 ];
