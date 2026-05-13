@@ -74,7 +74,7 @@ function calibratedScoreFromMean(meanAnswer: number, sessionMeanAnswer: number):
   return Math.round(clamp(calibrated));
 }
 
-function contributesToCapabilityScore(question: QuestionItem): boolean {
+function contributesToCapabilityScore(question: Pick<QuestionItem, "scoreLane" | "itemType">): boolean {
   return (
     question.scoreLane !== "fatigue" &&
     question.scoreLane !== "quality" &&
@@ -83,25 +83,30 @@ function contributesToCapabilityScore(question: QuestionItem): boolean {
   );
 }
 
-function weightedSessionMean(questions: QuestionItem[], values: Record<string, number>): number {
-  let sum = 0;
-  let weightSum = 0;
+type QuestionSide = "A" | "B";
 
-  for (const q of questions) {
-    if (!contributesToCapabilityScore(q)) continue;
-
-    const v = values[q.id];
-    if (isAnswerValue(v)) {
-      const weight = weightForQuestion(q);
-      sum += v * weight;
-      weightSum += weight;
-    }
-  }
-
-  return weightSum === 0 ? SCORE_NEUTRAL : sum / weightSum;
+interface CapabilityContribution {
+  id: string;
+  cluster: Cluster;
+  value: number;
+  weight: number;
 }
 
-function metadataWeight(question: QuestionItem): number {
+function isChoicePair(question: QuestionItem): boolean {
+  return question.format === "choice_pair" && Boolean(question.choiceA && question.choiceB);
+}
+
+function choicePairValue(value: number, side: QuestionSide): number {
+  // A/B trade-off is stored as one 1-5 answer:
+  // 1 = strong A, 3 = balanced, 5 = strong B.
+  return side === "A" ? 6 - value : value;
+}
+
+function applyQuestionPolarity(question: QuestionItem, value: number): number {
+  return question.polarity === "reverse" ? 6 - value : value;
+}
+
+function metadataWeight(question: Pick<QuestionItem, "id" | "weight" | "itemType" | "biasRisk">): number {
   let weight = typeof question.weight === "number" ? question.weight : 1;
 
   if (SOCIAL_DESIRABILITY_ITEM_IDS.has(question.id) || question.itemType === "social_desirability")
@@ -122,6 +127,60 @@ function weightForQuestion(question: QuestionItem | string): number {
   return 1;
 }
 
+function capabilityContributionsForQuestion(
+  question: QuestionItem,
+  rawValue: unknown,
+): CapabilityContribution[] {
+  if (!isAnswerValue(rawValue)) return [];
+
+  if (isChoicePair(question) && question.choiceA && question.choiceB) {
+    const baseWeight = weightForQuestion(question);
+    const sides = [
+      { side: "A" as const, choice: question.choiceA },
+      { side: "B" as const, choice: question.choiceB },
+    ];
+
+    return sides
+      .filter(({ choice }) =>
+        contributesToCapabilityScore({
+          scoreLane: choice.scoreLane ?? question.scoreLane,
+          itemType: choice.itemType ?? question.itemType,
+        }),
+      )
+      .map(({ side, choice }) => ({
+        id: `${question.id}::${side}`,
+        cluster: choice.cluster,
+        value: choicePairValue(rawValue, side),
+        weight: Math.max(0.15, Math.min(1.25, baseWeight * (choice.weight ?? 1))),
+      }));
+  }
+
+  if (!contributesToCapabilityScore(question)) return [];
+
+  return [
+    {
+      id: question.id,
+      cluster: question.cluster,
+      value: applyQuestionPolarity(question, rawValue),
+      weight: weightForQuestion(question),
+    },
+  ];
+}
+
+function weightedSessionMean(questions: QuestionItem[], values: Record<string, number>): number {
+  let sum = 0;
+  let weightSum = 0;
+
+  for (const q of questions) {
+    for (const contribution of capabilityContributionsForQuestion(q, values[q.id])) {
+      sum += contribution.value * contribution.weight;
+      weightSum += contribution.weight;
+    }
+  }
+
+  return weightSum === 0 ? SCORE_NEUTRAL : sum / weightSum;
+}
+
 function validAnsweredIds(session: AssessmentSession, answers: Answers): string[] {
   const ids = validQuestionIds(session);
   return Object.entries(answers[session])
@@ -139,15 +198,12 @@ function avgPerCluster(
   CLUSTER_LIST.forEach((c) => (adjustedSums[c] = { sum: 0, weight: 0, rawSum: 0, n: 0 }));
 
   for (const q of questions) {
-    if (!contributesToCapabilityScore(q)) continue;
-
-    const v = values[q.id];
-    if (isAnswerValue(v)) {
-      const weight = weightForQuestion(q);
-      adjustedSums[q.cluster].sum += v * weight;
-      adjustedSums[q.cluster].weight += weight;
-      adjustedSums[q.cluster].rawSum += v;
-      adjustedSums[q.cluster].n += 1;
+    const contributions = capabilityContributionsForQuestion(q, values[q.id]);
+    for (const contribution of contributions) {
+      adjustedSums[contribution.cluster].sum += contribution.value * contribution.weight;
+      adjustedSums[contribution.cluster].weight += contribution.weight;
+      adjustedSums[contribution.cluster].rawSum += contribution.value;
+      adjustedSums[contribution.cluster].n += 1;
     }
   }
 

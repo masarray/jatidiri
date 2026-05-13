@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { ANSWER_VALUES, type AnswerValue, type AssessmentSession } from "@/types/assessment";
+import { ANSWER_VALUES, type AnswerValue, type AssessmentSession, type QuestionFormat } from "@/types/assessment";
 
 interface Props {
   value?: AnswerValue;
@@ -7,15 +7,16 @@ interface Props {
   leftLabel?: string;
   rightLabel?: string;
   session?: AssessmentSession;
+  format?: QuestionFormat;
   disabled?: boolean;
 }
 
 const NATURAL_LABELS = [
-  "Tidak menggambarkan saya",
-  "Kurang menggambarkan saya",
-  "Muncul dalam kondisi tertentu",
-  "Cukup menggambarkan saya",
-  "Sangat menggambarkan saya",
+  "Bukan saya",
+  "Kurang saya",
+  "Kadang saya",
+  "Mirip saya",
+  "Saya banget",
 ];
 
 const STRENGTH_LABELS = [
@@ -25,6 +26,15 @@ const STRENGTH_LABELS = [
   "Mampu dengan baik",
   "Kemampuan utama saya",
 ];
+
+const CHOICE_PAIR_LABELS = [
+  "Jauh lebih mirip A",
+  "Lebih mirip A",
+  "Keduanya seimbang",
+  "Lebih mirip B",
+  "Jauh lebih mirip B",
+];
+
 
 const VALUES = ANSWER_VALUES;
 
@@ -131,18 +141,23 @@ const TONES: Record<AnswerValue, Tone> = {
   },
 };
 
-function getLabels(session: AssessmentSession) {
+function getLabels(session: AssessmentSession, format: QuestionFormat) {
+  if (format === "choice_pair") return CHOICE_PAIR_LABELS;
   return session === "strength" ? STRENGTH_LABELS : NATURAL_LABELS;
 }
 
-function getScaleTitle(session: AssessmentSession) {
+function getScaleTitle(session: AssessmentSession, format: QuestionFormat) {
+  if (format === "choice_pair") return "Pilih kecenderungan yang lebih alami";
   return session === "strength" ? "Skala kemampuan nyata" : "Skala pola alami";
 }
 
-function getHelper(session: AssessmentSession) {
+function getHelper(session: AssessmentSession, format: QuestionFormat) {
+  if (format === "choice_pair") {
+    return "A dan B sama-sama baik. Pilih yang lebih spontan muncul pada diri kamu.";
+  }
   return session === "strength"
     ? "Nilai kemampuan yang sudah terlihat dalam pengalaman nyata, bukan sekadar minat."
-    : "Pilih yang paling menggambarkan gerak alami kamu, bukan jawaban yang terdengar paling baik.";
+    : "Pilih yang paling terasa seperti diri kamu, bukan yang paling terlihat baik.";
 }
 
 function hapticTap() {
@@ -182,8 +197,8 @@ function cardStyle(tone: Tone, active: boolean, pressing: boolean, hovering: boo
   };
 }
 
-export function AnswerScale({ value, onSelect, session = "natural", disabled = false }: Props) {
-  const labels = useMemo(() => getLabels(session), [session]);
+export function AnswerScale({ value, onSelect, session = "natural", format = "scale", disabled = false }: Props) {
+  const labels = useMemo(() => getLabels(session, format), [session, format]);
   const [pressingValue, setPressingValue] = useState<AnswerValue | null>(null);
   const [hoverValue, setHoverValue] = useState<AnswerValue | null>(null);
   const [committingValue, setCommittingValue] = useState<AnswerValue | null>(null);
@@ -222,7 +237,7 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
   return (
     <div className="w-full select-none">
       <div className="mb-2 flex items-center justify-between gap-3 px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/82">
-        <span>{getScaleTitle(session)}</span>
+        <span>{getScaleTitle(session, format)}</span>
       </div>
 
       <div className="grid gap-2">
@@ -302,7 +317,7 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
       </div>
 
       <p className="mt-3 px-3 text-center text-[10.7px] leading-snug text-muted-foreground sm:mt-3.5">
-        {getHelper(session)}
+        {getHelper(session, format)}
       </p>
     </div>
   );

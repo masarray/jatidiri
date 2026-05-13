@@ -107,11 +107,19 @@ function AssessmentPage() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto pt-3.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <QuestionCard number={question.number} total={questions.length} text={question.text}>
+          <QuestionCard
+            number={question.number}
+            total={questions.length}
+            text={question.text}
+            format={question.format}
+            choiceA={question.choiceA}
+            choiceB={question.choiceB}
+          >
             <AnswerScale
               value={sessionAnswers[question.id]}
               onSelect={handleSelect}
               session={s}
+              format={question.format}
               disabled={locked}
             />
           </QuestionCard>

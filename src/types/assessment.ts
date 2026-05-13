@@ -25,12 +25,32 @@ export type QuestionPolarity = "positive" | "reverse";
 
 export type QuestionBiasRisk = "low" | "medium" | "high";
 
+export type QuestionFormat = "scale" | "choice_pair";
+
+export interface QuestionChoice {
+  text: string;
+  cluster: Cluster;
+  microRoles?: string[];
+  itemType?: QuestionItemType;
+  scoreLane?: QuestionScoreLane;
+  polarity?: QuestionPolarity;
+  biasRisk?: QuestionBiasRisk;
+  weight?: number;
+}
+
 export interface QuestionItem {
   id: string;
   session: AssessmentSession;
   number: number;
   text: string;
   cluster: Cluster;
+  /**
+   * scale = ordinary 1-5 fit/capability item.
+   * choice_pair = A/B trade-off item. Answer 1-2 strengthens A, 4-5 strengthens B, 3 keeps both moderate.
+   */
+  format?: QuestionFormat;
+  choiceA?: QuestionChoice;
+  choiceB?: QuestionChoice;
   /**
    * Optional metadata for the Smart Advisory engine.
    * This makes every question self-describing, instead of relying only on external maps.
@@ -47,7 +67,7 @@ export interface QuestionItem {
   weight?: number;
 }
 
-export const ASSESSMENT_SCALE_VERSION = "v3-quick-scan";
+export const ASSESSMENT_SCALE_VERSION = "v4-quick-scan-tradeoff";
 export const ANSWER_VALUES = [1, 2, 3, 4, 5] as const;
 
 export type AnswerValue = (typeof ANSWER_VALUES)[number];

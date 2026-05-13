@@ -273,6 +273,29 @@ function validMicroRoleIds(question: QuestionItem): MicroRoleId[] {
   );
 }
 
+type RoleQuestionSide = "A" | "B";
+
+function roleQuestionBaseId(id: string): string {
+  return id.split("::")[0];
+}
+
+function roleQuestionSide(id: string): RoleQuestionSide | null {
+  if (id.endsWith("::A")) return "A";
+  if (id.endsWith("::B")) return "B";
+  return null;
+}
+
+function isChoicePair(question: QuestionItem): boolean {
+  return question.format === "choice_pair" && Boolean(question.choiceA && question.choiceB);
+}
+
+function validChoiceMicroRoleIds(question: QuestionItem, side: RoleQuestionSide): MicroRoleId[] {
+  const choice = side === "A" ? question.choiceA : question.choiceB;
+  return (choice?.microRoles ?? []).filter((roleId): roleId is MicroRoleId =>
+    MICRO_ROLE_IDS.has(roleId as MicroRoleId),
+  );
+}
+
 function buildQuestionMetadataItemMap(): MicroRoleItemMap[] {
   const byRole = new Map<MicroRoleId, MicroRoleItemMap>();
 
@@ -284,15 +307,27 @@ function buildQuestionMetadataItemMap(): MicroRoleItemMap[] {
     });
   }
 
+  const addRoleItem = (question: QuestionItem, roleId: MicroRoleId, scoredId: string) => {
+    const entry =
+      byRole.get(roleId) ??
+      ({ id: roleId, naturalItemIds: [], strengthItemIds: [] } satisfies MicroRoleItemMap);
+    const target = question.session === "natural" ? entry.naturalItemIds : entry.strengthItemIds;
+    if (!target.includes(scoredId)) target.push(scoredId);
+    byRole.set(roleId, entry);
+  };
+
   const add = (question: QuestionItem) => {
-    for (const roleId of validMicroRoleIds(question)) {
-      const entry =
-        byRole.get(roleId) ??
-        ({ id: roleId, naturalItemIds: [], strengthItemIds: [] } satisfies MicroRoleItemMap);
-      const target = question.session === "natural" ? entry.naturalItemIds : entry.strengthItemIds;
-      if (!target.includes(question.id)) target.push(question.id);
-      byRole.set(roleId, entry);
+    if (isChoicePair(question)) {
+      for (const roleId of validChoiceMicroRoleIds(question, "A")) {
+        addRoleItem(question, roleId, `${question.id}::A`);
+      }
+      for (const roleId of validChoiceMicroRoleIds(question, "B")) {
+        addRoleItem(question, roleId, `${question.id}::B`);
+      }
+      return;
     }
+
+    for (const roleId of validMicroRoleIds(question)) addRoleItem(question, roleId, question.id);
   };
 
   ENRICHED_NATURAL_QUESTIONS.forEach(add);
@@ -302,22 +337,73 @@ function buildQuestionMetadataItemMap(): MicroRoleItemMap[] {
 }
 
 function questionWeight(questionId: string): number {
-  const question = QUESTION_LOOKUP.get(questionId);
+  const baseId = roleQuestionBaseId(questionId);
+  const question = QUESTION_LOOKUP.get(baseId);
   if (!question) return 1;
 
   let weight = typeof question.weight === "number" ? question.weight : 1;
-  if (question.itemType === "social_desirability") weight *= 0.35;
-  if (question.itemType === "drain" || question.scoreLane === "fatigue") weight *= 0.55;
-  if (question.biasRisk === "high") weight *= 0.75;
-  if (question.biasRisk === "medium") weight *= 0.9;
+  const side = roleQuestionSide(questionId);
+  const choice = side === "A" ? question.choiceA : side === "B" ? question.choiceB : undefined;
+  if (typeof choice?.weight === "number") weight *= choice.weight;
+
+  const itemType = choice?.itemType ?? question.itemType;
+  const scoreLane = choice?.scoreLane ?? question.scoreLane;
+  const biasRisk = choice?.biasRisk ?? question.biasRisk;
+
+  if (itemType === "social_desirability") weight *= 0.35;
+  if (itemType === "drain" || scoreLane === "fatigue") weight *= 0.55;
+  if (biasRisk === "high") weight *= 0.75;
+  if (biasRisk === "medium") weight *= 0.9;
 
   return Math.max(0.15, Math.min(1.25, weight));
 }
 
+function choicePairValue(value: number, side: RoleQuestionSide): number {
+  return side === "A" ? 6 - value : value;
+}
+
 function applyQuestionPolarity(questionId: string, value: number): number {
-  const question = QUESTION_LOOKUP.get(questionId);
+  const baseId = roleQuestionBaseId(questionId);
+  const side = roleQuestionSide(questionId);
+  const question = QUESTION_LOOKUP.get(baseId);
+  if (side) return choicePairValue(value, side);
   if (question?.polarity === "reverse") return 6 - value;
   return value;
+}
+
+function contributesToCapabilityBaseline(id: string): boolean {
+  const question = QUESTION_LOOKUP.get(roleQuestionBaseId(id));
+  if (!question) return true;
+  const side = roleQuestionSide(id);
+  const choice = side === "A" ? question.choiceA : side === "B" ? question.choiceB : undefined;
+  const scoreLane = choice?.scoreLane ?? question.scoreLane;
+  const itemType = choice?.itemType ?? question.itemType;
+  return (
+    scoreLane !== "fatigue" &&
+    scoreLane !== "quality" &&
+    itemType !== "drain" &&
+    itemType !== "social_desirability"
+  );
+}
+
+function sessionScoredValues(values: Record<string, number>): number[] {
+  const out: number[] = [];
+  for (const [id, value] of Object.entries(values)) {
+    if (!isAnswerValue(value)) continue;
+    const question = QUESTION_LOOKUP.get(id);
+    if (question && isChoicePair(question)) {
+      out.push(choicePairValue(value, "A"), choicePairValue(value, "B"));
+      continue;
+    }
+    if (contributesToCapabilityBaseline(id)) out.push(applyQuestionPolarity(id, value));
+  }
+  return out;
+}
+
+function sessionMean(values: Record<string, number>): number {
+  const valid = sessionScoredValues(values);
+  if (valid.length === 0) return SCORE_NEUTRAL;
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
 }
 
 function normalizeTo100(value: number): number {
@@ -326,25 +412,6 @@ function normalizeTo100(value: number): number {
 
 function clampScore(value: number, min = 0, max = 100): number {
   return Math.max(min, Math.min(max, value));
-}
-
-function contributesToCapabilityBaseline(id: string): boolean {
-  const question = QUESTION_LOOKUP.get(id);
-  if (!question) return true;
-  return (
-    question.scoreLane !== "fatigue" &&
-    question.scoreLane !== "quality" &&
-    question.itemType !== "drain" &&
-    question.itemType !== "social_desirability"
-  );
-}
-
-function sessionMean(values: Record<string, number>): number {
-  const valid = Object.entries(values)
-    .filter(([id, value]) => contributesToCapabilityBaseline(id) && isAnswerValue(value))
-    .map(([, value]) => value);
-  if (valid.length === 0) return SCORE_NEUTRAL;
-  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
 }
 
 /**
@@ -398,7 +465,7 @@ function scoreFromIds(
   baselineAnswer = sessionMean(values),
 ): { score: number; raw: number; items: number } {
   const valid = ids
-    .map((id) => ({ id, value: values[id] }))
+    .map((id) => ({ id, value: values[roleQuestionBaseId(id)] }))
     .filter((item): item is { id: string; value: number } => isAnswerValue(item.value));
 
   if (valid.length === 0) return { score: 0, raw: 0, items: 0 };
