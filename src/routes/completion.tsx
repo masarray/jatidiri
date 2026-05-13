@@ -51,8 +51,8 @@ function CompletionPage() {
       </div>
       <h1 className="mt-6 text-3xl font-bold text-foreground">Terima Kasih</h1>
       <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-sm">
-        Kamu sudah menyelesaikan seluruh rangkaian Quick Scan dengan baik. Sistem sedang membaca pola
-        jawaban kamu dan menyusun Cermin Jati Diri awal.
+        kamu sudah menyelesaikan seluruh rangkaian Quick Scan dengan baik. Sistem sedang membaca pola
+        pilihan kamu dan menyusun peta energi diri.
       </p>
       <Link
         to="/result"

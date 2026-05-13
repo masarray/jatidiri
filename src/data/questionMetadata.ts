@@ -248,7 +248,7 @@ export function withQuestionMetadata(question: QuestionItem): QuestionItem {
     ...override,
     cluster: override.cluster ?? defaults.cluster ?? question.cluster,
     microRoles: override.microRoles ?? question.microRoles ?? defaults.microRoles,
-  };
+  } as QuestionItem;
 }
 
 export function withQuestionBankMetadata(questions: QuestionItem[]): QuestionItem[] {

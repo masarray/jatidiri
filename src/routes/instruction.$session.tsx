@@ -13,25 +13,25 @@ const COPY: Record<AssessmentSession, { title: string; eyebrow: string; bullets:
   natural: {
     eyebrow: "Sesi 1 dari 2",
     title: "Zona Kekuatan Alami",
-    time: "± 6–8 menit · 48 pertanyaan",
-    button: "Mulai Quick Scan",
+    time: "± 10–15 menit · 44 context cards",
+    button: "Mulai Sesi 1",
     bullets: [
-      "Pilih yang paling menggambarkan gerak alami kamu, bukan jawaban yang terlihat paling baik.",
-      "Fokus pada pola yang biasanya muncul dalam diri kamu, bukan kondisi ideal.",
-      "Tidak ada jawaban benar atau salah — setiap pilihan hanya membantu membaca pola.",
-      "Setelah memilih, sistem otomatis lanjut ke pertanyaan berikutnya.",
+      "Bayangkan situasinya, lalu pilih respons yang paling mungkin kamu lakukan secara alami.",
+      "Jangan pilih jawaban yang terlihat paling ideal; pilih yang paling sering terjadi pada dirimu.",
+      "Tidak ada pilihan yang lebih baik atau lebih buruk — setiap opsi membaca pola yang berbeda.",
+      "Setelah memilih card, sistem otomatis lanjut ke pertanyaan berikutnya.",
     ],
   },
   strength: {
     eyebrow: "Sesi 2 dari 2",
-    title: "Kemampuan yang Sudah Terlihat",
-    time: "± 3–5 menit · 24 pertanyaan",
+    title: "Bukti Kemampuan",
+    time: "± 2 menit · 4 context cards",
     button: "Mulai Sesi 2",
     bullets: [
-      "Sekarang fokus pada kemampuan nyata yang sudah terlihat dalam pengalaman hidup atau kerja.",
-      "Bukan tentang seberapa suka, tetapi seberapa mampu, terbiasa, atau percaya diri kamu melakukannya.",
-      "Skala 5 pilihan bergerak dari 'Belum mampu' sampai 'Kemampuan utama saya'.",
-      "Pilih jawaban paling jujur, bukan jawaban yang terdengar paling ideal.",
+      "Sekarang fokus pada bukti kemampuan yang sudah terlihat dalam pengalaman nyata.",
+      "Pilih respons yang paling mendekati cara kamu bekerja, bukan gambaran ideal.",
+      "Bagian ini singkat, hanya untuk melihat apakah pola alami sudah muncul sebagai kemampuan nyata.",
+      "Setelah memilih card, sistem otomatis lanjut ke hasil.",
     ],
   },
 };
@@ -91,14 +91,14 @@ function InstructionPage() {
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5 shrink-0 mt-0.5 text-[var(--ember)]" />
           <p className="leading-relaxed">
-            Ini bukan diagnosis klinis, bukan ujian, dan bukan alat seleksi kerja. Hasilnya adalah peta refleksi diri berdasarkan pola jawaban kamu.
+            Ini bukan diagnosis klinis, bukan ujian, dan bukan alat seleksi kerja. Hasilnya adalah peta refleksi diri berdasarkan pola pilihan kamu.
           </p>
         </div>
 
         <div className="mt-4 flex items-start gap-3 px-2 text-xs text-muted-foreground">
           <Heart className="size-3.5 shrink-0 mt-0.5 text-[var(--ember)]" />
           <p>
-            Jawaban tersimpan otomatis. Kamu bisa jeda dan melanjutkan lagi dari perangkat yang sama.
+            Jawaban tersimpan otomatis. kamu bisa jeda dan melanjutkan lagi dari perangkat yang sama.
           </p>
         </div>
       </div>

@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { ASSESSMENT_SCALE_VERSION, type Answers, type AnswerValue, type Identity, type AssessmentSession } from "@/types/assessment";
+import {
+  ASSESSMENT_SCALE_VERSION,
+  type AnswerRecord,
+  type Answers,
+  type AnswerValue,
+  type Identity,
+  type AssessmentSession,
+} from "@/types/assessment";
 
 interface AssessmentState {
   identity: Identity | null;
@@ -8,7 +15,7 @@ interface AssessmentState {
   assessmentScaleVersion: typeof ASSESSMENT_SCALE_VERSION;
   currentIndex: { natural: number; strength: number };
   setIdentity: (identity: Identity) => void;
-  setAnswer: (session: AssessmentSession, questionId: string, value: AnswerValue) => void;
+  setAnswer: (session: AssessmentSession, questionId: string, value: AnswerRecord | AnswerValue) => void;
   setCurrentIndex: (session: AssessmentSession, index: number) => void;
   reset: () => void;
 }
@@ -16,13 +23,29 @@ interface AssessmentState {
 const emptyAnswers = (): Answers => ({ natural: {}, strength: {} });
 const defaultCurrentIndex = () => ({ natural: 0, strength: 0 });
 
+function isOptionId(value: unknown): value is "A" | "B" | "C" | "D" {
+  return value === "A" || value === "B" || value === "C" || value === "D";
+}
+
+function normalizeAnswerRecord(raw: unknown): AnswerRecord | null {
+  if (typeof raw === "number" && raw >= 1 && raw <= 5) return { format: "scale", value: raw as AnswerValue };
+  if (!raw || typeof raw !== "object") return null;
+  const value = raw as Partial<AnswerRecord> & { value?: unknown; optionId?: unknown; format?: unknown };
+  if ((value.format === "scale" || value.format === "choice_pair") && typeof value.value === "number" && value.value >= 1 && value.value <= 5) {
+    return { format: value.format, value: value.value as AnswerValue };
+  }
+  if (value.format === "action_cards" && isOptionId(value.optionId)) return { format: "action_cards", optionId: value.optionId };
+  return null;
+}
+
 function sanitizeAnswers(value: unknown): Answers {
   const input = value as Partial<Answers> | undefined;
   const sanitizeSession = (answers: unknown) => {
-    const out: Record<string, AnswerValue> = {};
+    const out: Record<string, AnswerRecord> = {};
     if (!answers || typeof answers !== "object") return out;
     for (const [id, raw] of Object.entries(answers as Record<string, unknown>)) {
-      if (typeof raw === "number" && raw >= 1 && raw <= 5) out[id] = raw as AnswerValue;
+      const normalized = normalizeAnswerRecord(raw);
+      if (normalized) out[id] = normalized;
     }
     return out;
   };
@@ -50,12 +73,16 @@ export const useAssessmentStore = create<AssessmentState>()(
       currentIndex: defaultCurrentIndex(),
       setIdentity: (identity) => set({ identity }),
       setAnswer: (session, questionId, value) =>
-        set((state) => ({
-          answers: {
-            ...state.answers,
-            [session]: { ...state.answers[session], [questionId]: value },
-          },
-        })),
+        set((state) => {
+          const record: AnswerRecord =
+            typeof value === "number" ? { format: "scale", value: value as AnswerValue } : value;
+          return {
+            answers: {
+              ...state.answers,
+              [session]: { ...state.answers[session], [questionId]: record },
+            },
+          };
+        }),
       setCurrentIndex: (session, index) =>
         set((state) => ({
           currentIndex: { ...state.currentIndex, [session]: Math.max(0, index) },
@@ -74,12 +101,12 @@ export const useAssessmentStore = create<AssessmentState>()(
       }),
       migrate: (persisted, version) => {
         const state = persisted as Partial<AssessmentState> | undefined;
-        const isOldScale = version < 3 || state?.assessmentScaleVersion !== ASSESSMENT_SCALE_VERSION;
+        const shouldReset = version < 5 || state?.assessmentScaleVersion !== ASSESSMENT_SCALE_VERSION;
         return {
           identity: state?.identity ?? null,
-          answers: isOldScale ? emptyAnswers() : sanitizeAnswers(state?.answers),
+          answers: shouldReset ? emptyAnswers() : sanitizeAnswers(state?.answers),
           assessmentScaleVersion: ASSESSMENT_SCALE_VERSION,
-          currentIndex: isOldScale ? defaultCurrentIndex() : sanitizeIndex(state?.currentIndex),
+          currentIndex: shouldReset ? defaultCurrentIndex() : sanitizeIndex(state?.currentIndex),
         } as AssessmentState;
       },
     },

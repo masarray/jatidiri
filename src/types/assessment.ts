@@ -17,60 +17,76 @@ export type QuestionItemType =
   | "tradeoff"
   | "drain"
   | "social_desirability"
-  | "activity";
+  | "activity"
+  | "overuse"
+  | "derailer"
+  | "strength_proof";
 
-export type QuestionScoreLane = "natural" | "strength" | "fatigue" | "adaptive" | "quality";
+export type QuestionScoreLane =
+  | "natural"
+  | "strength"
+  | "fatigue"
+  | "adaptive"
+  | "quality"
+  | "overuse"
+  | "drain";
 
 export type QuestionPolarity = "positive" | "reverse";
-
 export type QuestionBiasRisk = "low" | "medium" | "high";
+export type QuestionFormat = "scale" | "choice_pair" | "action_cards";
 
-export type QuestionFormat = "scale" | "choice_pair";
+export type SignalLane = "natural" | "strength" | "overuse" | "drain" | "adaptive" | "quality";
 
-export interface QuestionChoice {
-  text: string;
-  cluster: Cluster;
-  microRoles?: string[];
-  itemType?: QuestionItemType;
-  scoreLane?: QuestionScoreLane;
-  polarity?: QuestionPolarity;
-  biasRisk?: QuestionBiasRisk;
+export interface SignalContribution {
+  id: string;
+  lane: SignalLane;
   weight?: number;
 }
 
-export interface QuestionItem {
+export interface ActionCardOption {
+  id: "A" | "B" | "C" | "D";
+  text: string;
+  signals: SignalContribution[];
+}
+
+export interface BaseQuestionItem {
   id: string;
   session: AssessmentSession;
   number: number;
-  text: string;
   cluster: Cluster;
-  /**
-   * scale = ordinary 1-5 fit/capability item.
-   * choice_pair = A/B trade-off item. Answer 1-2 strengthens A, 4-5 strengthens B, 3 keeps both moderate.
-   */
-  format?: QuestionFormat;
-  choiceA?: QuestionChoice;
-  choiceB?: QuestionChoice;
-  /**
-   * Optional metadata for the Smart Advisory engine.
-   * This makes every question self-describing, instead of relying only on external maps.
-   */
   microRoles?: string[];
   itemType?: QuestionItemType;
   scoreLane?: QuestionScoreLane;
   polarity?: QuestionPolarity;
   biasRisk?: QuestionBiasRisk;
-  /**
-   * Relative scoring weight. Use lower values for social desirability, drain-only,
-   * or early/soft indicators so the engine does not over-read one sentence.
-   */
   weight?: number;
 }
 
-export const ASSESSMENT_SCALE_VERSION = "v4-quick-scan-tradeoff";
-export const ANSWER_VALUES = [1, 2, 3, 4, 5] as const;
+export interface ScaleQuestionItem extends BaseQuestionItem {
+  format?: "scale" | "choice_pair";
+  text: string;
+}
 
+export interface ActionCardQuestionItem extends BaseQuestionItem {
+  format: "action_cards";
+  patternArea: string;
+  situation: string;
+  prompt: string;
+  options: ActionCardOption[];
+  /** Legacy text fallback for result/PDF/debug search. */
+  text: string;
+}
+
+export type QuestionItem = ScaleQuestionItem | ActionCardQuestionItem;
+
+export const ASSESSMENT_SCALE_VERSION = "v5-action-cards";
+export const ANSWER_VALUES = [1, 2, 3, 4, 5] as const;
 export type AnswerValue = (typeof ANSWER_VALUES)[number];
+
+export type AnswerRecord =
+  | { format: "scale"; value: AnswerValue }
+  | { format: "choice_pair"; value: AnswerValue }
+  | { format: "action_cards"; optionId: ActionCardOption["id"] };
 
 export interface Identity {
   name: string;
@@ -79,16 +95,16 @@ export interface Identity {
 }
 
 export interface Answers {
-  natural: Record<string, AnswerValue>;
-  strength: Record<string, AnswerValue>;
+  natural: Record<string, AnswerRecord>;
+  strength: Record<string, AnswerRecord>;
 }
 
 export interface ClusterScore {
   cluster: Cluster;
-  natural: number; // 0-100, already adjusted for response-quality guardrails
-  strength: number; // 0-100, already adjusted for response-quality guardrails
-  naturalRaw: number; // 0-100, direct average before adjustment
-  strengthRaw: number; // 0-100, direct average before adjustment
+  natural: number;
+  strength: number;
+  naturalRaw: number;
+  strengthRaw: number;
   naturalItems: number;
   strengthItems: number;
 }
@@ -106,7 +122,7 @@ export interface ClusterReport extends ClusterScore {
 export type ReadingQualityLevel = "Stabil" | "Cukup Stabil" | "Perlu Dibaca Hati-hati";
 
 export interface ReadingQuality {
-  score: number; // 0-100
+  score: number;
   level: ReadingQualityLevel;
   summary: string;
   notes: string[];
