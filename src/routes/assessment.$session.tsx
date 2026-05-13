@@ -44,7 +44,7 @@ function ActionCards({ question, value, disabled, onSelect }: ActionCardsProps) 
             type="button"
             disabled={disabled}
             onClick={() => onSelect(option.id)}
-            className={`group relative flex min-h-[4.35rem] w-full items-center gap-3 overflow-hidden rounded-[1.05rem] border px-3.5 py-3 text-left transition-[transform,box-shadow,background,border-color,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#77be91]/25 disabled:pointer-events-none disabled:opacity-80 sm:min-h-[4.15rem] ${
+            className={`group relative flex min-h-[4.35rem] w-full items-center gap-3 overflow-hidden rounded-[1.05rem] border px-3.5 py-3 text-left antialiased transition-[transform,box-shadow,background,border-color,color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#77be91]/25 disabled:pointer-events-none disabled:opacity-80 sm:min-h-[4.15rem] ${
               active
                 ? "translate-y-[1px] border-[#8acaa1] bg-[linear-gradient(145deg,#f7fff8_0%,#edf8f0_100%)] text-[#24313a] shadow-[inset_4px_4px_10px_rgba(139,161,137,0.20),inset_-4px_-4px_10px_rgba(255,255,255,0.98),0_6px_14px_rgba(95,185,133,0.12)]"
                 : "border-[#dfe9dc] bg-[linear-gradient(145deg,#ffffff_0%,#fbfff8_100%)] text-[#24313a] shadow-[6px_6px_14px_rgba(98,116,94,0.13),-6px_-6px_14px_rgba(255,255,255,0.96)] hover:-translate-y-[1px] hover:border-[#bfdabd] hover:bg-white hover:shadow-[7px_7px_16px_rgba(98,116,94,0.15),-7px_-7px_16px_rgba(255,255,255,0.98)] active:translate-y-[1px] active:scale-[0.996] active:bg-[#f1f8ef] active:text-[#33424a] active:shadow-[inset_4px_4px_10px_rgba(139,161,137,0.23),inset_-4px_-4px_10px_rgba(255,255,255,0.98)]"
@@ -78,13 +78,13 @@ function ActionCards({ question, value, disabled, onSelect }: ActionCardsProps) 
                 <path d="M1 5.2 4.2 8.3 11 1" />
               </svg>
             </span>
-            <span className="min-w-0 flex-1 text-[0.93rem] font-medium leading-[1.48] tracking-[-0.003em] sm:text-[0.96rem]">
+            <span className="min-w-0 flex-1 text-[0.91rem] font-[470] leading-[1.6] tracking-[-0.001em] text-[#3a4852] sm:text-[0.95rem]">
               {option.text}
             </span>
           </button>
         );
       })}
-      <p className="px-1 pt-0.5 text-[10.5px] leading-relaxed text-muted-foreground/88">
+      <p className="px-1 pt-0.5 text-[10.5px] font-normal leading-relaxed tracking-[0.002em] text-[#7a8790]/88">
         Pilih yang paling mungkin terjadi. Tidak ada jawaban paling baik.
       </p>
     </div>
