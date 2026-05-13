@@ -1,6 +1,5 @@
-import { createFileRoute, useNavigate, useParams, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import { useAssessmentStore } from "@/store/assessmentStore";
 import { naturalQuestions } from "@/data/questionsNatural";
 import { strengthQuestions } from "@/data/questionsStrength";
@@ -17,11 +16,11 @@ export const Route = createFileRoute("/assessment/$session")({
 const LABELS: Record<AssessmentSession, { title: string; help: string }> = {
   natural: {
     title: "Sesi 1 — Bakat Alami",
-    help: "Jawab spontan sesuai pola yang paling terasa.",
+    help: "Pilih yang paling sesuai dengan diri kamu sehari-hari. Jangan terlalu lama berpikir.",
   },
   strength: {
     title: "Sesi 2 — Kekuatan Aktivitas",
-    help: "Jawab berdasarkan pengalaman nyata.",
+    help: "Nilai seberapa kuat kamu dalam aktivitas ini berdasarkan pengalaman nyata.",
   },
 };
 
@@ -79,7 +78,7 @@ function AssessmentPage() {
       const target = event.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
       if (tag === "input" || tag === "textarea" || target?.isContentEditable) return;
-      if (/^[1-7]$/.test(event.key)) {
+      if (/^[1-5]$/.test(event.key)) {
         event.preventDefault();
         handleSelect(Number(event.key) as AnswerValue);
       }
@@ -95,26 +94,19 @@ function AssessmentPage() {
   if (!question) return null;
 
   return (
-    <main className="h-[100svh] overflow-hidden bg-background text-foreground">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col px-3 pb-[max(.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-5 sm:py-4">
+    <main className="h-[100svh] overflow-hidden bg-[linear-gradient(180deg,#fbf8ef_0%,#f7f4ec_48%,#f4f1e9_100%)] text-foreground">
+      <div className="mx-auto flex h-full w-full max-w-md flex-col px-3.5 pb-[max(.7rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:py-4">
         <div className="shrink-0">
-          <div className="mb-2 flex items-center justify-between px-1">
-            <button
-              type="button"
-              onClick={goBack}
-              disabled={idx === 0 || locked}
-              className="inline-flex items-center gap-1 rounded-full px-1.5 py-1 text-[11px] text-muted-foreground transition active:scale-[0.98] disabled:opacity-30"
-            >
-              <ChevronLeft className="size-3.5" /> Sebelumnya
-            </button>
-            <Link to="/" className="rounded-full px-2 py-1 text-[11px] text-muted-foreground transition active:scale-[0.98]">
-              Jeda
-            </Link>
-          </div>
-          <ProgressTracker current={idx + 1} total={questions.length} label={LABELS[s].title} />
+          <ProgressTracker
+            current={idx + 1}
+            total={questions.length}
+            label={LABELS[s].title}
+            canGoBack={idx > 0 && !locked}
+            onBack={goBack}
+          />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-hidden pt-3">
+        <div className="min-h-0 flex-1 overflow-y-auto pt-3.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <QuestionCard number={question.number} total={questions.length} text={question.text}>
             <AnswerScale
               value={sessionAnswers[question.id]}
@@ -123,10 +115,6 @@ function AssessmentPage() {
               disabled={locked}
             />
           </QuestionCard>
-
-          <p className="mt-1.5 hidden text-center text-[10.5px] leading-tight text-muted-foreground sm:block">
-            {LABELS[s].help} Desktop: tekan angka 1–7.
-          </p>
         </div>
       </div>
     </main>

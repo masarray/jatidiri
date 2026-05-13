@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Answers, AnswerValue, Identity, AssessmentSession } from "@/types/assessment";
+import { ASSESSMENT_SCALE_VERSION, type Answers, type AnswerValue, type Identity, type AssessmentSession } from "@/types/assessment";
 
 interface AssessmentState {
   identity: Identity | null;
   answers: Answers;
+  assessmentScaleVersion: typeof ASSESSMENT_SCALE_VERSION;
   currentIndex: { natural: number; strength: number };
   setIdentity: (identity: Identity) => void;
   setAnswer: (session: AssessmentSession, questionId: string, value: AnswerValue) => void;
@@ -17,10 +18,19 @@ const defaultCurrentIndex = () => ({ natural: 0, strength: 0 });
 
 function sanitizeAnswers(value: unknown): Answers {
   const input = value as Partial<Answers> | undefined;
+  const sanitizeSession = (answers: unknown) => {
+    const out: Record<string, AnswerValue> = {};
+    if (!answers || typeof answers !== "object") return out;
+    for (const [id, raw] of Object.entries(answers as Record<string, unknown>)) {
+      if (typeof raw === "number" && raw >= 1 && raw <= 5) out[id] = raw as AnswerValue;
+    }
+    return out;
+  };
+
   return {
-    natural: input?.natural && typeof input.natural === "object" ? input.natural : {},
-    strength: input?.strength && typeof input.strength === "object" ? input.strength : {},
-  } as Answers;
+    natural: sanitizeSession(input?.natural),
+    strength: sanitizeSession(input?.strength),
+  };
 }
 
 function sanitizeIndex(value: unknown) {
@@ -36,6 +46,7 @@ export const useAssessmentStore = create<AssessmentState>()(
     (set) => ({
       identity: null,
       answers: emptyAnswers(),
+      assessmentScaleVersion: ASSESSMENT_SCALE_VERSION,
       currentIndex: defaultCurrentIndex(),
       setIdentity: (identity) => set({ identity }),
       setAnswer: (session, questionId, value) =>
@@ -50,22 +61,25 @@ export const useAssessmentStore = create<AssessmentState>()(
           currentIndex: { ...state.currentIndex, [session]: Math.max(0, index) },
         })),
       reset: () =>
-        set({ identity: null, answers: emptyAnswers(), currentIndex: defaultCurrentIndex() }),
+        set({ identity: null, answers: emptyAnswers(), assessmentScaleVersion: ASSESSMENT_SCALE_VERSION, currentIndex: defaultCurrentIndex() }),
     }),
     {
       name: "peta-jati-diri-v1",
-      version: 2,
+      version: 3,
       partialize: (state) => ({
         identity: state.identity,
         answers: state.answers,
+        assessmentScaleVersion: state.assessmentScaleVersion,
         currentIndex: state.currentIndex,
       }),
-      migrate: (persisted) => {
+      migrate: (persisted, version) => {
         const state = persisted as Partial<AssessmentState> | undefined;
+        const isOldScale = version < 3 || state?.assessmentScaleVersion !== ASSESSMENT_SCALE_VERSION;
         return {
           identity: state?.identity ?? null,
-          answers: sanitizeAnswers(state?.answers),
-          currentIndex: sanitizeIndex(state?.currentIndex),
+          answers: isOldScale ? emptyAnswers() : sanitizeAnswers(state?.answers),
+          assessmentScaleVersion: ASSESSMENT_SCALE_VERSION,
+          currentIndex: isOldScale ? defaultCurrentIndex() : sanitizeIndex(state?.currentIndex),
         } as AssessmentState;
       },
     },

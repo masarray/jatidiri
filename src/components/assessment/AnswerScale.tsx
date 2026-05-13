@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import type { AnswerValue, AssessmentSession } from "@/types/assessment";
+import { ANSWER_VALUES, type AnswerValue, type AssessmentSession } from "@/types/assessment";
 
 interface Props {
   value?: AnswerValue;
@@ -11,26 +11,22 @@ interface Props {
 }
 
 const AGREEMENT_LABELS = [
-  "Sangat tidak setuju",
-  "Tidak setuju",
-  "Agak tidak setuju",
+  "Sangat tidak sesuai",
+  "Tidak sesuai",
   "Netral",
-  "Agak setuju",
-  "Setuju",
-  "Sangat setuju",
+  "Sesuai",
+  "Sangat sesuai",
 ];
 
 const STRENGTH_LABELS = [
   "Sangat lemah",
   "Lemah",
-  "Agak lemah",
   "Netral",
-  "Agak kuat",
   "Kuat",
   "Sangat kuat",
 ];
 
-const VALUES = [1, 2, 3, 4, 5, 6, 7] as const;
+const VALUES = ANSWER_VALUES;
 
 type Tone = {
   text: string;
@@ -49,7 +45,7 @@ type Tone = {
   sheen: string;
 };
 
-// V7: premium full-card choice buttons.
+// V7: premium full-card choice buttons, refactored to a 5-point mobile scale.
 // No radio circles, no number badges. The whole card is the answer target.
 // Each level has a soft surface color so the scale is readable without tiring the eyes.
 const TONES: Record<AnswerValue, Tone> = {
@@ -118,38 +114,6 @@ const TONES: Record<AnswerValue, Tone> = {
     sheen: "rgba(170,129,61,.09)",
   },
   5: {
-    text: "#563b19",
-    textActive: "#442d0c",
-    idleBg: "linear-gradient(180deg,#fffdf7 0%,#fff5df 100%)",
-    hoverBg: "linear-gradient(180deg,#fff8e9 0%,#ffedc8 100%)",
-    activeBg: "linear-gradient(180deg,#fff0d2 0%,#ffdfa0 100%)",
-    idleBorder: "#edcf96",
-    hoverBorder: "#e5b965",
-    activeBorder: "#da9831",
-    idleEdge: "#d9b373",
-    hoverEdge: "#cb9b4f",
-    activeEdge: "#b67518",
-    glow: "rgba(202,129,23,.17)",
-    rail: "linear-gradient(180deg,#e2a847,#c98117)",
-    sheen: "rgba(201,129,23,.10)",
-  },
-  6: {
-    text: "#653817",
-    textActive: "#512707",
-    idleBg: "linear-gradient(180deg,#fffdfa 0%,#fff0e2 100%)",
-    hoverBg: "linear-gradient(180deg,#fff3e7 0%,#ffdfc8 100%)",
-    activeBg: "linear-gradient(180deg,#ffe7d4 0%,#ffc9a6 100%)",
-    idleBorder: "#efb58d",
-    hoverBorder: "#e99661",
-    activeBorder: "#dd7a3e",
-    idleEdge: "#dc9460",
-    hoverEdge: "#ce7644",
-    activeEdge: "#b45726",
-    glow: "rgba(207,96,42,.18)",
-    rail: "linear-gradient(180deg,#e8834a,#cf612a)",
-    sheen: "rgba(207,97,42,.11)",
-  },
-  7: {
     text: "#642b25",
     textActive: "#501a16",
     idleBg: "linear-gradient(180deg,#fffdfb 0%,#ffeeeb 100%)",
@@ -172,13 +136,13 @@ function getLabels(session: AssessmentSession) {
 }
 
 function getScaleTitle(session: AssessmentSession) {
-  return session === "strength" ? "Skala kekuatan aktivitas" : "Skala persetujuan spontan";
+  return session === "strength" ? "Skala kekuatan aktivitas" : "Skala kesesuaian diri";
 }
 
 function getHelper(session: AssessmentSession) {
   return session === "strength"
-    ? "Pilih sesuai kekuatan aktivitas yang benar-benar kamu rasakan."
-    : "Jawab spontan. Pilih yang paling menggambarkan diri kamu saat ini.";
+    ? "Nilai seberapa kuat kamu dalam aktivitas ini berdasarkan pengalaman nyata."
+    : "Pilih yang paling sesuai dengan diri kamu sehari-hari. Jangan terlalu lama berpikir.";
 }
 
 function hapticTap() {
@@ -190,11 +154,8 @@ function hapticTap() {
 }
 
 function cardStyle(tone: Tone, active: boolean, pressing: boolean, hovering: boolean): CSSProperties {
-  const raised = hovering && !pressing ? 1 : 0;
-  const bottom = pressing ? 1 : active ? 2 : hovering ? 4 : 3;
-  const background = pressing || active ? tone.activeBg : hovering ? tone.hoverBg : tone.idleBg;
-  const border = pressing || active ? tone.activeBorder : hovering ? tone.hoverBorder : tone.idleBorder;
-  const edge = pressing || active ? tone.activeEdge : hovering ? tone.hoverEdge : tone.idleEdge;
+  const background = active ? tone.activeBg : hovering ? tone.hoverBg : tone.idleBg;
+  const border = active ? tone.activeBorder : hovering ? tone.hoverBorder : tone.idleBorder;
   const text = pressing || active ? tone.textActive : tone.text;
 
   return {
@@ -202,17 +163,19 @@ function cardStyle(tone: Tone, active: boolean, pressing: boolean, hovering: boo
     background,
     borderColor: border,
     boxShadow: [
-      "inset 0 1px 0 rgba(255,255,255,.96)",
-      `0 ${bottom}px 0 ${edge}`,
-      `0 ${bottom + 8}px ${hovering || active ? 19 : 15}px ${hovering || active ? tone.glow : "rgba(15,23,42,.045)"}`,
+      "inset 0 1px 0 rgba(255,255,255,.92)",
+      active ? `0 0 0 1px ${tone.activeBorder}` : "0 0 0 1px rgba(255,255,255,.62)",
+      `0 ${active || hovering ? 10 : 7}px ${active || hovering ? 24 : 16}px ${
+        active || hovering ? tone.glow : "rgba(39,45,58,.045)"
+      }`,
     ].join(", "),
     transform: pressing
-      ? "translate3d(0,2px,0) scale(.996)"
+      ? "translate3d(0,1px,0) scale(.992)"
       : hovering
-        ? `translate3d(0,-${raised}px,0) scale(1.002)`
+        ? "translate3d(0,-1px,0) scale(1.002)"
         : "translate3d(0,0,0) scale(1)",
     transition:
-      "transform 78ms cubic-bezier(.2,.9,.2,1), border-color 92ms ease-out, background 92ms ease-out, box-shadow 92ms ease-out, color 92ms ease-out",
+      "transform 110ms cubic-bezier(.2,.9,.2,1), border-color 120ms ease-out, background 120ms ease-out, box-shadow 140ms ease-out, color 120ms ease-out",
     WebkitTapHighlightColor: "transparent",
     touchAction: "manipulation",
     willChange: "transform",
@@ -258,11 +221,11 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
 
   return (
     <div className="w-full select-none">
-      <div className="mb-[7px] flex items-center justify-between gap-3 px-1 text-[10.5px] font-medium tracking-[0.01em] text-muted-foreground">
+      <div className="mb-2 flex items-center justify-between gap-3 px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/82">
         <span>{getScaleTitle(session)}</span>
       </div>
 
-      <div className="grid gap-[6px]">
+      <div className="grid gap-2">
         {VALUES.map((itemValue, index) => {
           const selected = value === itemValue;
           const pressing = pressingValue === itemValue || committingValue === itemValue;
@@ -299,18 +262,18 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
               aria-label={`Pilih ${itemValue}: ${labels[index]}`}
               aria-pressed={selected}
               className={[
-                "group relative flex min-h-[40px] w-full items-center overflow-hidden rounded-[17px] border px-4 py-[7.25px] text-left outline-none",
+                "group relative flex min-h-[45px] w-full items-center overflow-hidden rounded-[16px] border px-4 py-2.5 text-left outline-none",
                 "focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
               ].join(" ")}
               style={cardStyle(tone, active, pressing, hovering)}
             >
               <span
-                className="pointer-events-none absolute inset-y-[7px] left-[7px] w-[3px] rounded-full transition-[opacity,transform] duration-100"
+                className="pointer-events-none absolute inset-y-[10px] left-[9px] w-[3px] rounded-full transition-[opacity,transform] duration-100"
                 style={{
                   background: tone.rail,
-                  opacity: active || hovering ? 0.88 : 0.28,
-                  transform: pressing ? "scaleY(.72)" : hovering ? "scaleY(.88)" : "scaleY(.58)",
+                  opacity: active || hovering ? 0.9 : 0.34,
+                  transform: pressing ? "scaleY(.76)" : hovering || active ? "scaleY(1)" : "scaleY(.62)",
                 }}
                 aria-hidden="true"
               />
@@ -330,7 +293,7 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
                 aria-hidden="true"
               />
 
-              <span className="relative min-w-0 flex-1 pl-2 text-[14.8px] font-[540] leading-tight tracking-[-0.006em] sm:text-[15px]">
+              <span className="relative min-w-0 flex-1 pl-2.5 text-[14.7px] font-semibold leading-tight tracking-[-0.002em] sm:text-[15px]">
                 {labels[index]}
               </span>
             </button>
@@ -338,7 +301,7 @@ export function AnswerScale({ value, onSelect, session = "natural", disabled = f
         })}
       </div>
 
-      <p className="mt-2 px-3 text-center text-[10.8px] leading-snug text-muted-foreground sm:mt-2.5">
+      <p className="mt-3 px-3 text-center text-[10.7px] leading-snug text-muted-foreground sm:mt-3.5">
         {getHelper(session)}
       </p>
     </div>

@@ -1,28 +1,40 @@
-import type { Answers, ClusterReport, Zone } from "@/types/assessment";
+import type { Answers, ClusterReport, QuestionItem, Zone } from "@/types/assessment";
+import { naturalQuestions } from "@/data/questionsNatural";
+import { strengthQuestions } from "@/data/questionsStrength";
+import { isAnswerValue, normalizeAnswer } from "@/engine/scoring";
 import {
   MICRO_ROLE_DEFINITIONS,
   MICRO_ROLE_ITEM_MAP,
   ROLE_FAMILIES,
   type MicroRoleDefinition,
   type MicroRoleId,
+  type MicroRoleItemMap,
   type RoleFamily,
 } from "@/data/microRoles";
 
-const SCORE_MIN = 1;
-const SCORE_MAX = 7;
+const SCORE_NEUTRAL = 3;
 const NAT_HI = 62;
 const STR_HI = 62;
 
-export type RoleConfidence = "tinggi" | "sedang" | "indikasi awal";
+export type MicroRoleConfidenceLabel = "tinggi" | "sedang" | "indikasi awal";
 
 export interface MicroRoleScore extends MicroRoleDefinition {
+  /** Calibrated score 0-100. Uses the user's own response baseline to reduce agreement-bias. */
   natural: number;
+  /** Calibrated score 0-100. Uses the user's own response baseline to reduce all-high strength answers. */
   strength: number;
+  /** Direct raw score 0-100 before calibration. Useful for debug/validation. */
+  naturalRaw: number;
+  /** Direct raw score 0-100 before calibration. Useful for debug/validation. */
+  strengthRaw: number;
   naturalItems: number;
   strengthItems: number;
-  gap: number;
-  confidence: RoleConfidence;
-  confidenceLabel: string;
+  /**
+   * Reading confidence for this micro-role.
+   * This is not a truth score. It only says how much evidence supports the reading.
+   */
+  confidence: number;
+  confidenceLabel: MicroRoleConfidenceLabel;
   zone: Zone;
 }
 
@@ -68,7 +80,6 @@ export interface PatternSignatureReport {
   topTrainedRoles: MicroRoleScore[];
   adaptiveRoles: MicroRoleScore[];
   adaptiveGapInsights: AdaptiveGapInsight[];
-  naturalDormantRoles: MicroRoleScore[];
   drainingRoles: MicroRoleScore[];
   roleFamilies: RoleFamilyScore[];
 }
@@ -89,11 +100,11 @@ const SIGNATURE_RULES: SignatureRule[] = [
     subtitle: "Mengumpulkan bahan, membaca makna, lalu mengubahnya menjadi penjelasan yang bisa digunakan.",
     roleIds: ["information_collector", "fast_learner", "deep_thinker", "idea_translator", "strategy_designer"],
     visiblePattern:
-      "Dari luar Anda dapat terlihat sebagai orang yang banyak tahu, mudah menjelaskan, dan mampu membantu orang lain melihat arah dari informasi yang sebelumnya terasa berserakan.",
+      "Dari luar kamu dapat terlihat sebagai orang yang banyak tahu, mudah menjelaskan, dan mampu membantu orang lain melihat arah dari informasi yang sebelumnya terasa berserakan.",
     hiddenEnergy:
       "Energi terdalamnya bukan hanya berbicara atau tampil, tetapi memahami bahan yang kompleks, menemukan benang merah, lalu memberi bahasa yang lebih jelas.",
     riskIfMisplaced:
-      "Jika terlalu lama ditempatkan hanya pada pekerjaan eksekusi berulang tanpa ruang belajar dan menyusun makna, Anda mungkin tetap bisa menjalankannya, tetapi semangat dan energi Anda dapat cepat turun.",
+      "Jika terlalu lama ditempatkan hanya pada pekerjaan eksekusi berulang tanpa ruang belajar dan menyusun makna, kamu mungkin tetap bisa menjalankannya, tetapi semangat dan energi kamu dapat cepat turun.",
     healthyUse:
       "Gunakan kekuatan ini dalam peran yang melibatkan belajar, menulis, mengajar, menyusun konsep, mempresentasikan ide, atau menjembatani informasi rumit menjadi keputusan.",
   },
@@ -102,11 +113,11 @@ const SIGNATURE_RULES: SignatureRule[] = [
     subtitle: "Membaca data, menemukan akar masalah, lalu menyusun jalan keluar yang lebih masuk akal.",
     roleIds: ["pattern_reader", "problem_restorer", "strategy_designer", "quality_evaluator", "risk_checker"],
     visiblePattern:
-      "Dari luar Anda tampak sebagai orang yang tidak puas pada jawaban permukaan. Anda cenderung bertanya, memeriksa, dan mencari pola sebelum menerima kesimpulan.",
+      "Dari luar kamu tampak sebagai orang yang tidak puas pada jawaban permukaan. kamu cenderung bertanya, memeriksa, dan mencari pola sebelum menerima kesimpulan.",
     hiddenEnergy:
       "Energi terdalam muncul ketika ada masalah nyata yang dapat diurai, dibuktikan, dan diperbaiki sampai lebih jelas atau lebih aman.",
     riskIfMisplaced:
-      "Jika lingkungan memaksa keputusan cepat tanpa data atau mengabaikan risiko, Anda bisa menjadi tegang, kritis, atau terasa sulit diyakinkan.",
+      "Jika lingkungan memaksa keputusan cepat tanpa data atau mengabaikan risiko, kamu bisa menjadi tegang, kritis, atau terasa sulit diyakinkan.",
     healthyUse:
       "Tempatkan kekuatan ini sebagai fungsi diagnosis, audit, evaluasi, perbaikan sistem, atau strategi berbasis bukti; sertakan batas waktu agar analisis tidak berubah menjadi penundaan.",
   },
@@ -115,9 +126,9 @@ const SIGNATURE_RULES: SignatureRule[] = [
     subtitle: "Mengolah ide menjadi bentuk, pesan, atau arah yang lebih menarik dan dapat menggerakkan orang.",
     roleIds: ["idea_synthesizer", "creative_designer", "idea_translator", "social_connector", "achievement_driver"],
     visiblePattern:
-      "Dari luar Anda dapat terlihat sebagai pembawa ide, pembuat konsep, atau orang yang mampu membuat sesuatu terasa lebih menarik untuk diperhatikan.",
+      "Dari luar kamu dapat terlihat sebagai pembawa ide, pembuat konsep, atau orang yang mampu membuat sesuatu terasa lebih menarik untuk diperhatikan.",
     hiddenEnergy:
-      "Energi terdalamnya muncul saat Anda boleh menjelajah kemungkinan, merangkai banyak bahan, dan membuat orang lain melihat nilai baru dari sebuah gagasan.",
+      "Energi terdalamnya muncul saat kamu boleh menjelajah kemungkinan, merangkai banyak bahan, dan membuat orang lain melihat nilai baru dari sebuah gagasan.",
     riskIfMisplaced:
       "Jika terlalu cepat dibatasi oleh prosedur kaku atau pekerjaan repetitif, kreativitas bisa berubah menjadi gelisah, bosan, atau kehilangan dorongan.",
     healthyUse:
@@ -128,11 +139,11 @@ const SIGNATURE_RULES: SignatureRule[] = [
     subtitle: "Menata proses, menjaga komitmen, dan memastikan hasil dapat dipercaya.",
     roleIds: ["commitment_keeper", "system_organizer", "quality_evaluator", "consistency_guardian", "operational_executor"],
     visiblePattern:
-      "Dari luar Anda terlihat sebagai orang yang memperhatikan keteraturan, kualitas, tanggung jawab, dan standar kerja yang jelas.",
+      "Dari luar kamu terlihat sebagai orang yang memperhatikan keteraturan, kualitas, tanggung jawab, dan stkamur kerja yang jelas.",
     hiddenEnergy:
       "Energi terdalam muncul ketika sistem rapi, tugas jelas, dan hasil dapat dipertanggungjawabkan tanpa banyak ketidakpastian.",
     riskIfMisplaced:
-      "Jika terlalu sering berhadapan dengan perubahan mendadak, aturan yang tidak konsisten, atau pekerjaan tanpa standar, semangat dan energi Anda dapat cepat turun.",
+      "Jika terlalu sering berhadapan dengan perubahan mendadak, aturan yang tidak konsisten, atau pekerjaan tanpa stkamur, semangat dan energi kamu dapat cepat turun.",
     healthyUse:
       "Gunakan kekuatan ini untuk membuat prosedur, menjaga mutu, mengelola jadwal, dan merapikan proses; tetap beri ruang fleksibilitas agar sistem tidak terasa kaku.",
   },
@@ -141,24 +152,24 @@ const SIGNATURE_RULES: SignatureRule[] = [
     subtitle: "Membaca orang, menjaga relasi, dan membantu orang lain bertumbuh dengan lebih aman.",
     roleIds: ["people_developer", "mentor_coach", "emotion_reader", "relationship_keeper", "harmony_keeper"],
     visiblePattern:
-      "Dari luar Anda terlihat peka, mudah menangkap kebutuhan orang, dan cenderung ingin membantu orang lain menjadi lebih baik.",
+      "Dari luar kamu terlihat peka, mudah menangkap kebutuhan orang, dan cenderung ingin membantu orang lain menjadi lebih baik.",
     hiddenEnergy:
-      "Energi terdalam muncul ketika relasi terasa tulus dan kontribusi Anda membantu seseorang bertumbuh, merasa dipahami, atau menemukan arah.",
+      "Energi terdalam muncul ketika relasi terasa tulus dan kontribusi kamu membantu seseorang bertumbuh, merasa dipahami, atau menemukan arah.",
     riskIfMisplaced:
       "Jika terlalu banyak menyerap emosi atau memikul perkembangan orang lain sendirian, kekuatan ini dapat berubah menjadi kelelahan emosional.",
     healthyUse:
-      "Gunakan untuk mendampingi, mengajar, membina, memberi feedback, atau membangun kultur yang aman; jaga batas agar tidak semua beban orang lain menjadi beban Anda.",
+      "Gunakan untuk mendampingi, mengajar, membina, memberi feedback, atau membangun kultur yang aman; jaga batas agar tidak semua beban orang lain menjadi beban kamu.",
   },
   {
     title: "Momentum & Decision Driver",
     subtitle: "Memberi arah, mengambil posisi, dan mendorong sesuatu bergerak dari wacana menjadi tindakan.",
     roleIds: ["decision_director", "action_mover", "achievement_driver", "strategy_designer", "complexity_arranger"],
     visiblePattern:
-      "Dari luar Anda terlihat sebagai orang yang bisa memberi arah, mengambil keputusan, atau mendorong orang keluar dari kebuntuan.",
+      "Dari luar kamu terlihat sebagai orang yang bisa memberi arah, mengambil keputusan, atau mendorong orang keluar dari kebuntuan.",
     hiddenEnergy:
       "Energi terdalam muncul ketika ada tujuan jelas, momentum nyata, dan ruang untuk mengubah arah menjadi langkah.",
     riskIfMisplaced:
-      "Jika tidak diberi ruang memengaruhi arah, Anda bisa merasa tertahan; namun jika terlalu cepat bergerak, orang lain bisa merasa tertinggal.",
+      "Jika tidak diberi ruang memengaruhi arah, kamu bisa merasa tertahan; namun jika terlalu cepat bergerak, orang lain bisa merasa tertinggal.",
     healthyUse:
       "Gunakan untuk memimpin keputusan, membuka jalan, mengatur prioritas, dan menjaga momentum; tetap kombinasikan dengan mendengar dan mengecek kesiapan pihak lain.",
   },
@@ -167,11 +178,11 @@ const SIGNATURE_RULES: SignatureRule[] = [
     subtitle: "Membangun kedekatan, rasa aman, dan ruang kelompok yang membuat orang merasa diterima.",
     roleIds: ["relationship_keeper", "social_connector", "group_includer", "emotion_reader", "harmony_keeper"],
     visiblePattern:
-      "Dari luar Anda tampak menjaga kedekatan, memperhatikan suasana, dan ingin orang-orang penting tetap merasa dilibatkan.",
+      "Dari luar kamu tampak menjaga kedekatan, memperhatikan suasana, dan ingin orang-orang penting tetap merasa dilibatkan.",
     hiddenEnergy:
       "Energi terdalam muncul ketika relasi terasa aman, hangat, dan tidak sekadar transaksional.",
     riskIfMisplaced:
-      "Jika relasi terasa dingin, sepihak, atau konflik dibiarkan menggantung, semangat dan energi emosional Anda dapat cepat turun.",
+      "Jika relasi terasa dingin, sepihak, atau konflik dibiarkan menggantung, semangat dan energi emosional kamu dapat cepat turun.",
     healthyUse:
       "Gunakan kekuatan ini untuk membangun komunikasi keluarga, merawat kedekatan, dan menjaga iklim kelompok; tetap bicarakan batas dan pembagian peran secara jelas.",
   },
@@ -180,29 +191,163 @@ const SIGNATURE_RULES: SignatureRule[] = [
     subtitle: "Membaca kemungkinan, menyusun visi, dan mengubah gambaran besar menjadi arah yang lebih konkret.",
     roleIds: ["future_mapper", "idea_synthesizer", "strategy_designer", "creative_designer", "meaning_keeper"],
     visiblePattern:
-      "Dari luar Anda tampak sering membawa sudut pandang jangka panjang, kemungkinan baru, atau gambaran yang belum dilihat orang lain.",
+      "Dari luar kamu tampak sering membawa sudut pkamung jangka panjang, kemungkinan baru, atau gambaran yang belum dilihat orang lain.",
     hiddenEnergy:
-      "Energi terdalam muncul ketika Anda boleh membayangkan masa depan dan menyusun makna atau arah dari kemungkinan tersebut.",
+      "Energi terdalam muncul ketika kamu boleh membayangkan masa depan dan menyusun makna atau arah dari kemungkinan tersebut.",
     riskIfMisplaced:
-      "Jika terlalu lama dikurung pada detail harian tanpa visi, Anda bisa merasa kehilangan arah atau makna.",
+      "Jika terlalu lama dikurung pada detail harian tanpa visi, kamu bisa merasa kehilangan arah atau makna.",
     healthyUse:
       "Gunakan untuk menyusun visi, roadmap, eksperimen pengembangan, dan arah keluarga/karier; turunkan visi menjadi langkah kecil agar tidak berhenti sebagai ide besar.",
   },
 ];
 
-function isAnswerValue(value: unknown): value is 1 | 2 | 3 | 4 | 5 | 6 | 7 {
-  return typeof value === "number" && value >= SCORE_MIN && value <= SCORE_MAX;
+const QUESTION_LOOKUP = new Map<string, QuestionItem>(
+  [...naturalQuestions, ...strengthQuestions].map((question) => [question.id, question]),
+);
+
+const MICRO_ROLE_IDS = new Set<MicroRoleId>(Object.keys(MICRO_ROLE_DEFINITIONS) as MicroRoleId[]);
+
+function validMicroRoleIds(question: QuestionItem): MicroRoleId[] {
+  return (question.microRoles ?? []).filter((roleId): roleId is MicroRoleId =>
+    MICRO_ROLE_IDS.has(roleId as MicroRoleId),
+  );
+}
+
+function buildQuestionMetadataItemMap(): MicroRoleItemMap[] {
+  const byRole = new Map<MicroRoleId, MicroRoleItemMap>();
+
+  for (const map of MICRO_ROLE_ITEM_MAP) {
+    byRole.set(map.id, {
+      id: map.id,
+      naturalItemIds: [...map.naturalItemIds],
+      strengthItemIds: [...map.strengthItemIds],
+    });
+  }
+
+  const add = (question: QuestionItem) => {
+    for (const roleId of validMicroRoleIds(question)) {
+      const entry =
+        byRole.get(roleId) ??
+        ({ id: roleId, naturalItemIds: [], strengthItemIds: [] } satisfies MicroRoleItemMap);
+      const target = question.session === "natural" ? entry.naturalItemIds : entry.strengthItemIds;
+      if (!target.includes(question.id)) target.push(question.id);
+      byRole.set(roleId, entry);
+    }
+  };
+
+  naturalQuestions.forEach(add);
+  strengthQuestions.forEach(add);
+
+  return [...byRole.values()];
+}
+
+function questionWeight(questionId: string): number {
+  const question = QUESTION_LOOKUP.get(questionId);
+  if (!question) return 1;
+
+  let weight = typeof question.weight === "number" ? question.weight : 1;
+  if (question.itemType === "social_desirability") weight *= 0.35;
+  if (question.itemType === "drain" || question.scoreLane === "fatigue") weight *= 0.55;
+  if (question.biasRisk === "high") weight *= 0.75;
+  if (question.biasRisk === "medium") weight *= 0.9;
+
+  return Math.max(0.15, Math.min(1.25, weight));
+}
+
+function applyQuestionPolarity(questionId: string, value: number): number {
+  const question = QUESTION_LOOKUP.get(questionId);
+  if (question?.polarity === "reverse") return 6 - value;
+  return value;
 }
 
 function normalizeTo100(value: number): number {
-  return Math.round(((value - SCORE_MIN) / (SCORE_MAX - SCORE_MIN)) * 100);
+  return Math.round(normalizeAnswer(value));
 }
 
-function scoreFromIds(values: Record<string, number>, ids: string[]): { score: number; items: number } {
-  const valid = ids.map((id) => values[id]).filter(isAnswerValue);
-  if (valid.length === 0) return { score: 0, items: 0 };
-  const mean = valid.reduce((sum, value) => sum + value, 0) / valid.length;
-  return { score: normalizeTo100(mean), items: valid.length };
+function clampScore(value: number, min = 0, max = 100): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function sessionMean(values: Record<string, number>): number {
+  const valid = Object.values(values).filter(isAnswerValue);
+  if (valid.length === 0) return SCORE_NEUTRAL;
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+}
+
+/**
+ * Calibrates role scores against the user's own response baseline.
+ *
+ * This is the key anti-agreement-bias step:
+ * - If a user answers high on almost everything, average roles no longer all become "dominant".
+ * - Roles that are truly high relative to that user's pattern still rise.
+ * - Raw scores remain available as naturalRaw/strengthRaw for debug and validation.
+ */
+function calibratedScoreFromMean(meanAnswer: number, baselineAnswer: number): number {
+  const raw = normalizeTo100(meanAnswer);
+  const baseline = normalizeTo100(baselineAnswer);
+  const calibrated = 50 + (raw - baseline) * 1.35 + (raw - 50) * 0.25;
+  return Math.round(clampScore(calibrated));
+}
+
+function confidenceLabel(score: number): MicroRoleConfidenceLabel {
+  if (score >= 72) return "tinggi";
+  if (score >= 55) return "sedang";
+  return "indikasi awal";
+}
+
+function microRoleConfidence(params: {
+  naturalItems: number;
+  strengthItems: number;
+  natural: number;
+  strength: number;
+  naturalRaw: number;
+  strengthRaw: number;
+}): number {
+  const naturalCoverage = Math.min(1, params.naturalItems / 4);
+  const strengthCoverage = Math.min(1, params.strengthItems / 3);
+  const coverage = (naturalCoverage * 0.68 + strengthCoverage * 0.32) * 100;
+  const prominence = Math.max(params.natural, params.strength);
+  const rawProminence = Math.max(params.naturalRaw, params.strengthRaw);
+  const naturalStrengthGap = Math.min(22, Math.abs(params.strength - params.natural) * 0.28);
+
+  // Balanced confidence: enough items matter more than high score.
+  // This prevents a role with only 1-2 items from sounding too certain.
+  return Math.round(
+    clampScore(24 + coverage * 0.44 + prominence * 0.18 + rawProminence * 0.08 + naturalStrengthGap),
+  );
+}
+
+function scoreFromIds(
+  values: Record<string, number>,
+  ids: string[],
+  baselineAnswer = sessionMean(values),
+): { score: number; raw: number; items: number } {
+  const valid = ids
+    .map((id) => ({ id, value: values[id] }))
+    .filter((item): item is { id: string; value: number } => isAnswerValue(item.value));
+
+  if (valid.length === 0) return { score: 0, raw: 0, items: 0 };
+
+  let weightedSum = 0;
+  let weightSum = 0;
+  let rawSum = 0;
+
+  for (const item of valid) {
+    const value = applyQuestionPolarity(item.id, item.value);
+    const weight = questionWeight(item.id);
+    weightedSum += value * weight;
+    weightSum += weight;
+    rawSum += value;
+  }
+
+  const weightedMean = weightSum === 0 ? SCORE_NEUTRAL : weightedSum / weightSum;
+  const rawMean = rawSum / valid.length;
+
+  return {
+    score: calibratedScoreFromMean(weightedMean, baselineAnswer),
+    raw: normalizeTo100(rawMean),
+    items: valid.length,
+  };
 }
 
 function classify(natural: number, strength: number): Zone {
@@ -212,19 +357,6 @@ function classify(natural: number, strength: number): Zone {
   if (natHi && !strHi) return "Natural but Dormant";
   if (!natHi && strHi) return "Adaptive / Survival";
   return "Weak / Draining";
-}
-
-function confidenceFromItems(naturalItems: number, strengthItems: number): RoleConfidence {
-  const total = naturalItems + strengthItems;
-  if (naturalItems >= 4 && total >= 6) return "tinggi";
-  if (naturalItems >= 3 && total >= 4) return "sedang";
-  return "indikasi awal";
-}
-
-function confidenceLabel(confidence: RoleConfidence): string {
-  if (confidence === "tinggi") return "sinyal kuat";
-  if (confidence === "sedang") return "cukup terbaca";
-  return "indikasi awal";
 }
 
 function roleById(id: MicroRoleId, roles: MicroRoleScore[]): MicroRoleScore | undefined {
@@ -249,7 +381,7 @@ function buildFallbackSignature(topRoles: MicroRoleScore[]): CoreSignature {
   return {
     title: `${primary.name} ${secondary.id !== primary.id ? `dengan ${secondary.name}` : ""}`.trim(),
     subtitle: `Kombinasi utama yang terbaca dari ${primary.name}, ${secondary.name}, dan ${tertiary.name}.`,
-    summary: `Pola inti Anda tampak berada pada kombinasi ${primary.name}, ${secondary.name}, dan ${tertiary.name}. Artinya, hasil ini tidak hanya dibaca sebagai satu kekuatan tunggal, tetapi sebagai cara kerja yang muncul dari beberapa kecenderungan yang saling menguatkan.`,
+    summary: `Pola inti kamu tampak berada pada kombinasi ${primary.name}, ${secondary.name}, dan ${tertiary.name}. Artinya, hasil ini tidak hanya dibaca sebagai satu kekuatan tunggal, tetapi sebagai cara kerja yang muncul dari beberapa kecenderungan yang saling menguatkan.`,
     visiblePattern: primary.visible,
     hiddenEnergy: `Energi terdalam terutama muncul ketika ${primary.energy.toLowerCase()}`,
     riskIfMisplaced: primary.risk,
@@ -278,7 +410,7 @@ function pickCoreSignature(roles: MicroRoleScore[]): CoreSignature {
   return {
     title: bestRule.rule.title,
     subtitle: bestRule.rule.subtitle,
-    summary: `Pola inti yang terbaca adalah ${bestRule.rule.title.toLowerCase()}. Ini tidak berarti Anda hanya memiliki satu sisi, tetapi kombinasi beberapa kekuatan mikro yang saling menguatkan: ${evidence.map((role) => role.name).join(", ")}.`,
+    summary: `Pola inti yang terbaca adalah ${bestRule.rule.title.toLowerCase()}. Ini tidak berarti kamu hanya memiliki satu sisi, tetapi kombinasi beberapa kekuatan mikro yang saling menguatkan: ${evidence.map((role) => role.name).join(", ")}.`,
     visiblePattern: bestRule.rule.visiblePattern,
     hiddenEnergy: bestRule.rule.hiddenEnergy,
     riskIfMisplaced: bestRule.rule.riskIfMisplaced,
@@ -288,18 +420,30 @@ function pickCoreSignature(roles: MicroRoleScore[]): CoreSignature {
 }
 
 export function buildMicroRoleScores(answers: Answers): MicroRoleScore[] {
-  return MICRO_ROLE_ITEM_MAP.map((map) => {
+  const naturalBaseline = sessionMean(answers.natural);
+  const strengthBaseline = sessionMean(answers.strength);
+
+  return buildQuestionMetadataItemMap().map((map) => {
     const definition = MICRO_ROLE_DEFINITIONS[map.id];
-    const natural = scoreFromIds(answers.natural, map.naturalItemIds);
-    const strength = scoreFromIds(answers.strength, map.strengthItemIds);
-    const confidence = confidenceFromItems(natural.items, strength.items);
+    const natural = scoreFromIds(answers.natural, map.naturalItemIds, naturalBaseline);
+    const strength = scoreFromIds(answers.strength, map.strengthItemIds, strengthBaseline);
+    const confidence = microRoleConfidence({
+      naturalItems: natural.items,
+      strengthItems: strength.items,
+      natural: natural.score,
+      strength: strength.score,
+      naturalRaw: natural.raw,
+      strengthRaw: strength.raw,
+    });
+
     return {
       ...definition,
       natural: natural.score,
       strength: strength.score,
+      naturalRaw: natural.raw,
+      strengthRaw: strength.raw,
       naturalItems: natural.items,
       strengthItems: strength.items,
-      gap: strength.score - natural.score,
       confidence,
       confidenceLabel: confidenceLabel(confidence),
       zone: classify(natural.score, strength.score),
@@ -314,11 +458,11 @@ function mean(values: number[]): number {
 }
 
 function directStrengthScore(answers: Answers, ids: string[]): number {
-  return scoreFromIds(answers.strength, ids).score;
+  return scoreFromIds(answers.strength, ids, sessionMean(answers.strength)).score;
 }
 
 function directNaturalScore(answers: Answers, ids: string[]): number {
-  return scoreFromIds(answers.natural, ids).score;
+  return scoreFromIds(answers.natural, ids, sessionMean(answers.natural)).score;
 }
 
 function roleScore(roles: MicroRoleScore[], id: MicroRoleId): MicroRoleScore | undefined {
@@ -364,7 +508,7 @@ function buildMarketingGapInsight(answers: Answers, roles: MicroRoleScore[]): Ad
       routeLabel: "Jalur utama: konsep, strategi, penjelasan nilai",
       notRouteLabel: "Bukan jalur utama: basa-basi sosial, cold selling, kompetisi jualan",
       interpretation:
-        "Anda dapat terlihat kuat dalam marketing, promosi, positioning, atau menjelaskan nilai sebuah produk. Namun kekuatan ini lebih mungkin berasal dari kemampuan menyusun ide, strategi, konsep, edukasi, storytelling, dan value proposition; bukan dari kebutuhan sosial untuk terus tampil ramah, basa-basi, atau dikenal banyak orang.",
+        "kamu dapat terlihat kuat dalam marketing, promosi, positioning, atau menjelaskan nilai sebuah produk. Namun kekuatan ini lebih mungkin berasal dari kemampuan menyusun ide, strategi, konsep, edukasi, storytelling, dan value proposition; bukan dari kebutuhan sosial untuk terus tampil ramah, basa-basi, atau dikenal banyak orang.",
       bestUse:
         "Paling sehat digunakan untuk marketing berbasis edukasi, concept selling, product storytelling, proposal, demo, konten penjelasan, atau positioning nilai.",
       energyCost:
@@ -384,7 +528,7 @@ function buildMarketingGapInsight(answers: Answers, roles: MicroRoleScore[]): Ad
     routeLabel: "Jalur utama: kepercayaan, relasi, pelayanan",
     notRouteLabel: "Bukan jalur utama: promosi agresif tanpa kedekatan",
     interpretation:
-      "Anda dapat meyakinkan orang ketika ada rasa percaya, manfaat nyata, dan konteks relasi yang cukup aman. Gaya meyakinkan ini bukan tipe promosi agresif; ia lebih kuat ketika Anda benar-benar percaya bahwa sesuatu itu benar, bermanfaat, dan dapat membantu orang lain.",
+      "kamu dapat meyakinkan orang ketika ada rasa percaya, manfaat nyata, dan konteks relasi yang cukup aman. Gaya meyakinkan ini bukan tipe promosi agresif; ia lebih kuat ketika kamu benar-benar percaya bahwa sesuatu itu benar, bermanfaat, dan dapat membantu orang lain.",
     bestUse:
       "Paling sehat digunakan untuk penjualan konsultatif, pelayanan bernilai, rekomendasi personal, atau edukasi kepada orang yang sudah mulai percaya.",
     energyCost:
@@ -423,16 +567,16 @@ function buildAdministrativeGapInsight(answers: Answers, roles: MicroRoleScore[]
     score: administrativeStrength,
     naturalRouteScore: responsibilityPush,
     adaptiveLoadScore: naturalAdminRoute,
-    routeLabel: "Jalur yang mendorong: tanggung jawab, standar, kebutuhan peran",
+    routeLabel: "Jalur yang mendorong: tanggung jawab, stkamur, kebutuhan peran",
     notRouteLabel: "Bukan sumber energi dan semangat utama: rutinitas administratif berulang",
     interpretation:
-      "Anda bisa mengurus file, laporan, data, jadwal, atau proses administratif ketika keadaan menuntut. Namun bila struktur operasional bukan Natural Talent yang kuat, kemampuan ini lebih tepat dibaca sebagai Adaptive / Survival Strength: muncul karena tanggung jawab, jabatan, tuntutan keluarga, atau kebutuhan lingkungan; bukan karena area itu menjadi sumber energi dan semangat utama.",
+      "kamu bisa mengurus file, laporan, data, jadwal, atau proses administratif ketika keadaan menuntut. Namun bila struktur operasional bukan Natural Talent yang kuat, kemampuan ini lebih tepat dibaca sebagai Adaptive / Survival Strength: muncul karena tanggung jawab, jabatan, tuntutan keluarga, atau kebutuhan lingkungan; bukan karena area itu menjadi sumber energi dan semangat utama.",
     bestUse:
       "Gunakan untuk memastikan hal penting tidak tercecer, terutama ketika ada tujuan yang jelas dan dampaknya terasa penting.",
     energyCost:
       "Akan lebih cepat menguras energi bila menjadi pekerjaan utama harian yang repetitif, detail-heavy, dan tidak memberi ruang berpikir atau makna.",
     supportStrategy:
-      "Pakai checklist, template, folder standar, reminder otomatis, delegasi, atau batching waktu agar administrasi tidak memakan energi terbaik.",
+      "Pakai checklist, template, folder stkamur, reminder otomatis, delegasi, atau batching waktu agar administrasi tidak memakan energi terbaik.",
   };
 }
 
@@ -464,9 +608,9 @@ function buildServiceGapInsight(answers: Answers, roles: MicroRoleScore[]): Adap
     routeLabel: "Jalur yang mendorong: nilai, kepedulian, tanggung jawab",
     notRouteLabel: "Bukan berarti selalu siap menampung semua beban emosi",
     interpretation:
-      "Anda dapat terlihat kuat dalam membantu, melayani, atau mendampingi orang lain. Namun bila kepekaan relasional bukan sumber energi dan semangat utama, bantuan itu lebih mungkin muncul karena nilai, tanggung jawab, ketulusan, atau rasa perlu melakukan yang benar; bukan karena selalu siap menampung semua kebutuhan emosional orang lain.",
+      "kamu dapat terlihat kuat dalam membantu, melayani, atau mendampingi orang lain. Namun bila kepekaan relasional bukan sumber energi dan semangat utama, bantuan itu lebih mungkin muncul karena nilai, tanggung jawab, ketulusan, atau rasa perlu melakukan yang benar; bukan karena selalu siap menampung semua kebutuhan emosional orang lain.",
     bestUse:
-      "Paling sehat digunakan untuk bantuan yang punya batas jelas, tujuan jelas, dan tidak membuat Anda mengambil alih seluruh beban orang lain.",
+      "Paling sehat digunakan untuk bantuan yang punya batas jelas, tujuan jelas, dan tidak membuat kamu mengambil alih seluruh beban orang lain.",
     energyCost:
       "Dapat melelahkan bila orang lain terus meminta perhatian emosional, bantuan spontan, atau dukungan tanpa batas yang jelas.",
     supportStrategy:
@@ -488,9 +632,9 @@ function buildGenericAdaptiveInsights(roles: MicroRoleScore[]): AdaptiveGapInsig
       adaptiveLoadScore: role.strength - role.natural,
       routeLabel: "Terlihat kuat karena sering digunakan atau dituntut peran",
       notRouteLabel: "Belum tentu menjadi sumber energi dan semangat utama",
-      interpretation: `Area ${role.name} tampak dapat Anda jalankan, tetapi skor alami yang lebih rendah menunjukkan bahwa kekuatan ini perlu dibaca sebagai kemampuan yang mungkin terbentuk karena tuntutan hidup, pekerjaan, keluarga, atau lingkungan.`,
+      interpretation: `Area ${role.name} tampak dapat kamu jalankan, tetapi skor alami yang lebih rendah menunjukkan bahwa kekuatan ini perlu dibaca sebagai kemampuan yang mungkin terbentuk karena tuntutan hidup, pekerjaan, keluarga, atau lingkungan.`,
       bestUse: role.healthyUse,
-      energyCost: "Jika menjadi tuntutan utama terus-menerus, area ini dapat membuat Anda terlihat mampu di luar, tetapi semangat dan energi Anda dapat cepat turun di dalam.",
+      energyCost: "Jika menjadi tuntutan utama terus-menerus, area ini dapat membuat kamu terlihat mampu di luar, tetapi semangat dan energi kamu dapat cepat turun di dalam.",
       supportStrategy: "Gunakan sistem, pembagian peran, template, jadwal pemulihan, atau partner yang lebih natural di area ini agar tidak menjadi beban berkepanjangan.",
     }));
 }
@@ -517,29 +661,59 @@ export function buildRoleFamilyScores(roles: MicroRoleScore[]): RoleFamilyScore[
   }).sort((a, b) => b.natural - a.natural);
 }
 
+
+function byNaturalStrengthAndConfidence(a: MicroRoleScore, b: MicroRoleScore): number {
+  return b.natural + b.confidence * 0.08 - (a.natural + a.confidence * 0.08);
+}
+
+function byTrainedStrengthAndConfidence(a: MicroRoleScore, b: MicroRoleScore): number {
+  return b.strength + b.confidence * 0.08 - (a.strength + a.confidence * 0.08);
+}
+
+function takeRolesWithFallback(
+  roles: MicroRoleScore[],
+  filter: (role: MicroRoleScore) => boolean,
+  sorter: (a: MicroRoleScore, b: MicroRoleScore) => number,
+  count: number,
+): MicroRoleScore[] {
+  const strong = roles.filter(filter).sort(sorter).slice(0, count);
+  if (strong.length >= Math.min(3, count)) return strong;
+
+  const existing = new Set(strong.map((role) => role.id));
+  const fallback = roles
+    .filter((role) => !existing.has(role.id))
+    .sort(sorter)
+    .slice(0, count - strong.length);
+  return [...strong, ...fallback].slice(0, count);
+}
+
 export function buildPatternSignatureReport(answers: Answers, reports: ClusterReport[]): PatternSignatureReport {
   const roles = buildMicroRoleScores(answers);
-  const topNaturalRoles = [...roles]
-    .filter((role) => role.naturalItems > 0)
-    .sort((a, b) => b.natural - a.natural)
-    .slice(0, 7);
-  const topTrainedRoles = [...roles]
-    .filter((role) => role.strengthItems > 0)
-    .sort((a, b) => b.strength - a.strength)
-    .slice(0, 7);
-  const adaptiveRoles = [...roles]
-    .filter((role) => role.strengthItems > 0 && role.strength >= 55 && role.gap >= 14)
-    .sort((a, b) => b.gap - a.gap || b.strength - a.strength)
-    .slice(0, 7);
+  const topNaturalRoles = takeRolesWithFallback(
+    roles,
+    (role) => role.naturalItems > 0 && role.confidence >= 52,
+    byNaturalStrengthAndConfidence,
+    7,
+  );
+  const topTrainedRoles = takeRolesWithFallback(
+    roles,
+    (role) => role.strengthItems > 0 && role.confidence >= 50,
+    byTrainedStrengthAndConfidence,
+    7,
+  );
+  const adaptiveRoles = takeRolesWithFallback(
+    roles,
+    (role) => role.strength >= STR_HI && role.natural < NAT_HI && role.confidence >= 48,
+    (a, b) => b.strength - b.natural + b.confidence * 0.06 - (a.strength - a.natural + a.confidence * 0.06),
+    5,
+  );
   const adaptiveGapInsights = buildAdaptiveGapInsights(answers, roles);
-  const naturalDormantRoles = [...roles]
-    .filter((role) => role.naturalItems > 0 && role.strengthItems > 0 && role.natural >= 55 && role.natural - role.strength >= 12)
-    .sort((a, b) => b.natural - a.natural || a.strength - b.strength)
-    .slice(0, 7);
-  const drainingRoles = [...roles]
-    .filter((role) => role.naturalItems > 0)
-    .sort((a, b) => a.natural - b.natural)
-    .slice(0, 7);
+  const drainingRoles = takeRolesWithFallback(
+    roles,
+    (role) => role.naturalItems > 0 && role.confidence >= 48,
+    (a, b) => a.natural + (100 - a.confidence) * 0.03 - (b.natural + (100 - b.confidence) * 0.03),
+    5,
+  );
 
   // Keep reports parameter in the signature for future bridge with cluster-level engine.
   void reports;
@@ -551,7 +725,6 @@ export function buildPatternSignatureReport(answers: Answers, reports: ClusterRe
     topTrainedRoles,
     adaptiveRoles,
     adaptiveGapInsights,
-    naturalDormantRoles,
     drainingRoles,
     roleFamilies: buildRoleFamilyScores(roles),
   };

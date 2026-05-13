@@ -492,7 +492,7 @@ export async function generateJatiDiriPdf(input: PdfReportInput) {
     "Laporan ini adalah alat refleksi diri berbasis jawaban asesmen. Gunakan sebagai bahan memahami pola energi, komunikasi, dan pengembangan diri. Jangan gunakan sebagai diagnosis klinis atau satu-satunya dasar keputusan penting.",
     { tone: "slate" },
   );
-  pdf.card("Kualitas pembacaan", `${input.readingQuality.summary} ${(input.readingQuality.notes ?? []).join(" ")}`, { tone: "slate" });
+  pdf.card("Kualitas pembacaan", `Scale: 5-point. Raw answer: 1-5. Normalized score: 0-100. ${input.readingQuality.summary} ${(input.readingQuality.notes ?? []).join(" ")}`, { tone: "slate" });
 
   // ensure footer on final page
   pdf.footer();

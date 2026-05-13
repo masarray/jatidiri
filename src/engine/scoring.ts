@@ -8,13 +8,15 @@ import type {
   ReadingQuality,
   ReadingQualityLevel,
   Zone,
+  AnswerValue,
 } from "@/types/assessment";
 import { CLUSTER_LIST } from "@/data/clusterMeta";
 import { naturalQuestions } from "@/data/questionsNatural";
 import { strengthQuestions } from "@/data/questionsStrength";
 
 const SCORE_MIN = 1;
-const SCORE_MAX = 7;
+const SCORE_MAX = 5;
+const SCORE_NEUTRAL = 3;
 const NAT_HI = 62;
 const STR_HI = 62;
 
@@ -24,19 +26,15 @@ const STR_HI = 62;
  * and used to produce a reading-quality note when many of them are answered very high.
  */
 const SOCIAL_DESIRABILITY_ITEM_IDS = new Set([
-  "natural-10", // tidak pernah iri
-  "natural-29", // selalu dapat mengendalikan emosi
-  "natural-47", // tidak pernah membicarakan keburukan orang
-  "natural-66", // selalu tepat waktu tanpa pengecualian
-  "natural-85", // tidak pernah melakukan kesalahan
-  "natural-122", // tidak pernah menyesali keputusan
-  "natural-134", // tidak ingin memanfaatkan orang
-  "natural-141", // selalu mengatakan jujur meski merugikan
-  "natural-160", // tidak pernah merasa malas
-  "natural-170", // tidak ingin mengganggu/menyakiti orang
+  // V2: item ini tetap berguna sebagai indikator standar-diri/ideal-self.
+  // Mereka tidak dianggap salah, hanya diberi bobot lebih rendah dan dipakai untuk quality note.
+  "natural-47",
+  "natural-134",
+  "natural-141",
+  "natural-160",
+  "natural-170",
 ]);
 
-const LOW_WEIGHT_ITEM_IDS = SOCIAL_DESIRABILITY_ITEM_IDS;
 
 export function questionsFor(session: AssessmentSession): QuestionItem[] {
   return session === "natural" ? naturalQuestions : strengthQuestions;
@@ -46,16 +44,67 @@ function validQuestionIds(session: AssessmentSession): Set<string> {
   return new Set(questionsFor(session).map((q) => q.id));
 }
 
-function isAnswerValue(value: unknown): value is 1 | 2 | 3 | 4 | 5 | 6 | 7 {
+export function isAnswerValue(value: unknown): value is AnswerValue {
   return typeof value === "number" && value >= SCORE_MIN && value <= SCORE_MAX;
 }
 
-function normalizeTo100(value: number): number {
-  return Math.round(((value - SCORE_MIN) / (SCORE_MAX - SCORE_MIN)) * 100);
+export function normalizeAnswer(value: number): number {
+  const clamped = Math.min(SCORE_MAX, Math.max(SCORE_MIN, value));
+  return ((clamped - SCORE_MIN) / (SCORE_MAX - SCORE_MIN)) * 100;
 }
 
-function weightForQuestion(questionId: string): number {
-  if (LOW_WEIGHT_ITEM_IDS.has(questionId)) return 0.35;
+function normalizeTo100(value: number): number {
+  return Math.round(normalizeAnswer(value));
+}
+
+/**
+ * Agreement-bias guardrail.
+ *
+ * Raw 1-5 averages are useful, but when a user tends to answer "sesuai/kuat"
+ * on almost every item, absolute scores become too generous. This calibrated score
+ * keeps the personal ranking sharper by comparing each area to the user's own
+ * response baseline.
+ */
+function calibratedScoreFromMean(meanAnswer: number, sessionMeanAnswer: number): number {
+  const raw = normalizeTo100(meanAnswer);
+  const baseline = normalizeTo100(sessionMeanAnswer);
+  const calibrated = 50 + (raw - baseline) * 1.35 + (raw - 50) * 0.25;
+  return Math.round(clamp(calibrated));
+}
+
+function weightedSessionMean(questions: QuestionItem[], values: Record<string, number>): number {
+  let sum = 0;
+  let weightSum = 0;
+
+  for (const q of questions) {
+    const v = values[q.id];
+    if (isAnswerValue(v)) {
+      const weight = weightForQuestion(q);
+      sum += v * weight;
+      weightSum += weight;
+    }
+  }
+
+  return weightSum === 0 ? SCORE_NEUTRAL : sum / weightSum;
+}
+
+function metadataWeight(question: QuestionItem): number {
+  let weight = typeof question.weight === "number" ? question.weight : 1;
+
+  if (SOCIAL_DESIRABILITY_ITEM_IDS.has(question.id) || question.itemType === "social_desirability") weight *= 0.35;
+  if (question.itemType === "drain") weight *= 0.55;
+  if (question.biasRisk === "high") weight *= 0.75;
+  if (question.biasRisk === "medium") weight *= 0.9;
+
+  return Math.max(0.15, Math.min(1.25, weight));
+}
+
+function weightForQuestion(question: QuestionItem | string): number {
+  if (typeof question !== "string") return metadataWeight(question);
+
+  const found = [...naturalQuestions, ...strengthQuestions].find((q) => q.id === question);
+  if (found) return metadataWeight(found);
+  if (SOCIAL_DESIRABILITY_ITEM_IDS.has(question)) return 0.35;
   return 1;
 }
 
@@ -70,13 +119,14 @@ function avgPerCluster(
   questions: QuestionItem[],
   values: Record<string, number>,
 ): Record<Cluster, { adjusted: number; raw: number; items: number }> {
+  const sessionMean = weightedSessionMean(questions, values);
   const adjustedSums: Record<string, { sum: number; weight: number; rawSum: number; n: number }> = {};
   CLUSTER_LIST.forEach((c) => (adjustedSums[c] = { sum: 0, weight: 0, rawSum: 0, n: 0 }));
 
   for (const q of questions) {
     const v = values[q.id];
     if (isAnswerValue(v)) {
-      const weight = weightForQuestion(q.id);
+      const weight = weightForQuestion(q);
       adjustedSums[q.cluster].sum += v * weight;
       adjustedSums[q.cluster].weight += weight;
       adjustedSums[q.cluster].rawSum += v;
@@ -87,8 +137,9 @@ function avgPerCluster(
   const out = {} as Record<Cluster, { adjusted: number; raw: number; items: number }>;
   CLUSTER_LIST.forEach((c) => {
     const { sum, weight, rawSum, n } = adjustedSums[c];
+    const mean = n === 0 || weight === 0 ? SCORE_NEUTRAL : sum / weight;
     out[c] = {
-      adjusted: n === 0 || weight === 0 ? 0 : normalizeTo100(sum / weight),
+      adjusted: n === 0 || weight === 0 ? 0 : calibratedScoreFromMean(mean, sessionMean),
       raw: n === 0 ? 0 : normalizeTo100(rawSum / n),
       items: n,
     };
@@ -215,9 +266,11 @@ function dominantAnswerRatio(values: number[]): number {
 }
 
 function socialDesirabilityScore(answers: Answers): number {
-  const values = [...SOCIAL_DESIRABILITY_ITEM_IDS]
-    .map((id) => answers.natural[id])
-    .filter(isAnswerValue);
+  const ids = new Set([
+    ...SOCIAL_DESIRABILITY_ITEM_IDS,
+    ...naturalQuestions.filter((q) => q.itemType === "social_desirability" || q.scoreLane === "quality").map((q) => q.id),
+  ]);
+  const values = [...ids].map((id) => answers.natural[id]).filter(isAnswerValue);
   if (values.length === 0) return 0;
   const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
   return normalizeTo100(mean);
@@ -243,8 +296,8 @@ export function computeReadingQuality(answers: Answers): ReadingQuality {
 
   const variation = standardDeviation(values);
   const dominant = dominantAnswerRatio(values);
-  const neutral = ratio(values, (v) => v === 4);
-  const extremeHigh = ratio(values, (v) => v >= 6);
+  const neutral = ratio(values, (v) => v === SCORE_NEUTRAL);
+  const extremeHigh = ratio(values, (v) => v >= 4);
   const extremeLow = ratio(values, (v) => v <= 2);
   const socialScore = socialDesirabilityScore(answers);
 
@@ -256,10 +309,10 @@ export function computeReadingQuality(answers: Answers): ReadingQuality {
     notes.push("Sebagian item belum terjawab, sehingga pembacaan belum lengkap.");
   }
 
-  if (variation < 0.85) {
-    const penalty = clamp((0.85 - variation) * 28, 0, 24);
+  if (variation < 0.95) {
+    const penalty = clamp((0.95 - variation) * 30, 0, 26);
     score -= penalty;
-    notes.push("Variasi jawaban relatif sempit. Hasil sebaiknya dibaca sebagai indikasi awal, bukan kesimpulan final.");
+    notes.push("Variasi jawaban relatif sempit. Engine akan lebih mengandalkan ranking relatif agar hasil tidak terlalu dipengaruhi kecenderungan sesuai/kuat pada banyak item.");
   }
 
   if (dominant > 0.42) {
@@ -274,10 +327,10 @@ export function computeReadingQuality(answers: Answers): ReadingQuality {
     notes.push("Jawaban netral cukup banyak. Beberapa area mungkin belum dapat dibedakan dengan tajam.");
   }
 
-  if (extremeHigh > 0.68) {
-    const penalty = clamp((extremeHigh - 0.68) * 50, 0, 12);
+  if (extremeHigh > 0.55) {
+    const penalty = clamp((extremeHigh - 0.55) * 55, 0, 16);
     score -= penalty;
-    notes.push("Banyak jawaban berada di sisi sangat kuat/sangat sesuai. Perlu dibedakan antara kecenderungan alami dan ideal diri.");
+    notes.push("Banyak jawaban berada di sisi sesuai/kuat. Skor dibaca secara relatif terhadap pola jawaban pribadi, bukan sebagai angka absolut semata.");
   }
 
   if (extremeLow > 0.55) {
@@ -286,8 +339,8 @@ export function computeReadingQuality(answers: Answers): ReadingQuality {
     notes.push("Banyak jawaban berada di sisi rendah. Periksa apakah kondisi lelah atau kurang percaya diri ikut memengaruhi respons.");
   }
 
-  if (socialScore > 78) {
-    const penalty = clamp((socialScore - 78) * 0.55, 0, 14);
+  if (socialScore > 74) {
+    const penalty = clamp((socialScore - 74) * 0.6, 0, 16);
     score -= penalty;
     notes.push("Beberapa item ideal-diri dijawab sangat tinggi. Hasil tetap dapat dibaca, namun perlu kehati-hatian pada tema moral/perilaku sempurna.");
   }

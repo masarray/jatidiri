@@ -10,15 +10,47 @@ export type Cluster =
   | "Supporting"
   | "Analyzing";
 
+export type QuestionItemType =
+  | "energy"
+  | "thinking"
+  | "habit"
+  | "tradeoff"
+  | "drain"
+  | "social_desirability"
+  | "activity";
+
+export type QuestionScoreLane = "natural" | "strength" | "fatigue" | "adaptive" | "quality";
+
+export type QuestionPolarity = "positive" | "reverse";
+
+export type QuestionBiasRisk = "low" | "medium" | "high";
+
 export interface QuestionItem {
   id: string;
   session: AssessmentSession;
   number: number;
   text: string;
   cluster: Cluster;
+  /**
+   * Optional metadata for the Smart Advisory engine.
+   * This makes every question self-describing, instead of relying only on external maps.
+   */
+  microRoles?: string[];
+  itemType?: QuestionItemType;
+  scoreLane?: QuestionScoreLane;
+  polarity?: QuestionPolarity;
+  biasRisk?: QuestionBiasRisk;
+  /**
+   * Relative scoring weight. Use lower values for social desirability, drain-only,
+   * or early/soft indicators so the engine does not over-read one sentence.
+   */
+  weight?: number;
 }
 
-export type AnswerValue = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export const ASSESSMENT_SCALE_VERSION = "v2-5point";
+export const ANSWER_VALUES = [1, 2, 3, 4, 5] as const;
+
+export type AnswerValue = (typeof ANSWER_VALUES)[number];
 
 export interface Identity {
   name: string;

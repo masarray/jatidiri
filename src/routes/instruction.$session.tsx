@@ -16,7 +16,7 @@ const COPY: Record<AssessmentSession, { title: string; eyebrow: string; bullets:
     time: "± 30–40 menit · 180 pertanyaan",
     button: "Mulai Sesi 1",
     bullets: [
-      "Pilih jawaban yang pertama kali muncul di pikiran Anda.",
+      "Pilih yang paling sesuai dengan diri kamu sehari-hari.",
       "Jangan terlalu menganalisis atau menebak arah pertanyaan.",
       "Tidak ada jawaban benar atau salah — jawab apa adanya.",
       "Setelah memilih, sistem otomatis lanjut ke pertanyaan berikutnya.",
@@ -28,9 +28,9 @@ const COPY: Record<AssessmentSession, { title: string; eyebrow: string; bullets:
     time: "± 20 menit · 114 pertanyaan",
     button: "Mulai Sesi 2",
     bullets: [
-      "Sekarang fokus pada aktivitas: seberapa kuat Anda melakukannya dalam pengalaman nyata.",
+      "Sekarang fokus pada aktivitas: seberapa kuat kamu melakukannya dalam pengalaman nyata.",
       "Bukan tentang seberapa suka, tetapi seberapa terampil, terbiasa, atau percaya diri Anda melakukannya.",
-      "Skala bergerak dari 'Sangat Lemah' di kiri sampai 'Sangat Kuat' di kanan.",
+      "Skala 5 pilihan bergerak dari 'Sangat lemah' sampai 'Sangat kuat'.",
       "Pilih jawaban paling jujur, bukan jawaban yang terdengar paling ideal.",
     ],
   },

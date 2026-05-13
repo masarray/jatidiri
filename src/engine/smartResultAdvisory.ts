@@ -6,7 +6,6 @@ import type {
   PatternSignatureReport,
 } from "@/engine/patternSignature";
 import type { MicroRoleId } from "@/data/microRoles";
-import { displayMicroRoleName } from "@/utils/displayNames";
 
 export type AdvisoryTone = "teal" | "amber" | "rose" | "slate" | "sky";
 
@@ -25,6 +24,8 @@ export interface AdvisoryTheme {
   tone: AdvisoryTone;
   onSwitch: string[];
   forOthers: string;
+  confidence: number;
+  confidenceLabel: string;
 }
 
 export interface AdvisoryVulnerability {
@@ -39,6 +40,8 @@ export interface AdvisoryVulnerability {
   strengthScore: number;
   riskScore: number;
   tone: AdvisoryTone;
+  confidence: number;
+  confidenceLabel: string;
 }
 
 export interface AdvisoryAdaptive {
@@ -53,6 +56,8 @@ export interface AdvisoryAdaptive {
   strengthScore: number;
   gap: number;
   source?: AdaptiveGapInsight;
+  confidence: number;
+  confidenceLabel: string;
 }
 
 export interface AlignmentReading {
@@ -117,8 +122,6 @@ function cleanLanguage(value: string | null | undefined): string {
     .replace(/rumah energi(?: alami)?(?:mu| kamu)?/gi, "zona kekuatan alami kamu")
     .replace(/sumber energi alamimu/gi, "zona kekuatan alami kamu")
     .replace(/\bundefined\b/gi, "")
-    .replace(/social breadth/gi, "relasi sosial yang terlalu melebar")
-    .replace(/\.\s+kamu/g, ". Kamu")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -485,6 +488,27 @@ function combinedScore(natural: number, strength: number) {
   return Math.round(natural * 0.72 + strength * 0.28);
 }
 
+function averageConfidence(roles: MicroRoleScore[]): number {
+  if (roles.length === 0) return 0;
+  return Math.round(roles.reduce((sum, role) => sum + (role.confidence ?? 45), 0) / roles.length);
+}
+
+function confidenceLabel(score: number): string {
+  if (score >= 72) return "dukungan data kuat";
+  if (score >= 55) return "dukungan data cukup";
+  return "indikasi awal";
+}
+
+function confidencePhrase(score: number): string {
+  if (score >= 72) return "Pola ini cukup kuat terbaca dari jawaban kamu.";
+  if (score >= 55) return "Pola ini cukup terlihat, namun tetap baik dibaca sebagai bahan refleksi.";
+  return "Ini masih sinyal awal, jadi gunakan sebagai bahan pengamatan, bukan kesimpulan final.";
+}
+
+function themePriority(score: number, confidence: number): number {
+  return score * 0.82 + confidence * 0.18;
+}
+
 function buildEnergyThemes(report: PatternSignatureReport): AdvisoryTheme[] {
   return THEME_RULES
     .map((rule) => {
@@ -492,13 +516,14 @@ function buildEnergyThemes(report: PatternSignatureReport): AdvisoryTheme[] {
       const strengthScore = averageScore(report.microRoles, rule.roleIds, "strength");
       const evidence = selectedRoles(report.microRoles, rule.roleIds, "natural");
       const score = combinedScore(naturalScore, strengthScore);
+      const confidence = averageConfidence(evidence);
       return {
         id: rule.id,
         title: rule.title,
         shortTitle: rule.shortTitle,
         headline: rule.headline,
         body: rule.body,
-        whyItFits: rule.whyItFits,
+        whyItFits: `${rule.whyItFits} ${confidencePhrase(confidence)}`,
         healthyUse: rule.healthyUse,
         evidence,
         naturalScore,
@@ -507,10 +532,12 @@ function buildEnergyThemes(report: PatternSignatureReport): AdvisoryTheme[] {
         tone: rule.tone,
         onSwitch: rule.onSwitch,
         forOthers: rule.forOthers,
+        confidence,
+        confidenceLabel: confidenceLabel(confidence),
       };
     })
-    .filter((theme) => theme.score >= 46 && theme.evidence.length > 0)
-    .sort((a, b) => b.score - a.score)
+    .filter((theme) => theme.score >= 46 && theme.confidence >= 48 && theme.evidence.length > 0)
+    .sort((a, b) => themePriority(b.score, b.confidence) - themePriority(a.score, a.confidence))
     .slice(0, 4);
 }
 
@@ -521,13 +548,14 @@ function buildDormantThemes(report: PatternSignatureReport, usedThemeIds: Set<st
       const strengthScore = averageScore(report.microRoles, rule.roleIds, "strength");
       const evidence = selectedRoles(report.microRoles, rule.roleIds, "natural");
       const gap = naturalScore - strengthScore;
+      const confidence = averageConfidence(evidence);
       return {
         id: rule.id,
         title: rule.title,
         shortTitle: rule.shortTitle,
         headline: "Sinyal alami ini ada, tetapi belum tentu sudah sering menjadi aktivitas nyata.",
         body: rule.dormantBody,
-        whyItFits: rule.whyItFits,
+        whyItFits: `${rule.whyItFits} ${confidencePhrase(confidence)}`,
         healthyUse: rule.healthyUse,
         evidence,
         naturalScore,
@@ -536,10 +564,12 @@ function buildDormantThemes(report: PatternSignatureReport, usedThemeIds: Set<st
         tone: rule.tone,
         onSwitch: rule.onSwitch,
         forOthers: rule.forOthers,
+        confidence,
+        confidenceLabel: confidenceLabel(confidence),
       };
     })
-    .filter((theme) => !usedThemeIds.has(theme.id) && theme.naturalScore >= 50 && theme.score >= 9 && theme.evidence.length > 0)
-    .sort((a, b) => b.score - a.score)
+    .filter((theme) => !usedThemeIds.has(theme.id) && theme.naturalScore >= 50 && theme.score >= 9 && theme.confidence >= 48 && theme.evidence.length > 0)
+    .sort((a, b) => themePriority(b.score, b.confidence) - themePriority(a.score, a.confidence))
     .slice(0, 2);
 }
 
@@ -549,27 +579,37 @@ function buildVulnerabilities(report: PatternSignatureReport, energyThemeIds: Se
       const naturalScore = averageScore(report.microRoles, rule.roleIds, "natural");
       const strengthScore = averageScore(report.microRoles, rule.roleIds, "strength");
       const evidence = selectedRoles(report.microRoles, rule.roleIds, "natural");
+      const confidence = averageConfidence(evidence);
       const lowNatural = Math.max(0, 58 - naturalScore);
       const pressureGap = Math.max(0, strengthScore - naturalScore);
       const energyConflictBonus = rule.roleIds.some((id) => Array.from(energyThemeIds).some((themeId) => THEME_RULES.find((theme) => theme.id === themeId)?.roleIds.includes(id))) ? 4 : 0;
-      const riskScore = Math.round(lowNatural + pressureGap * 0.9 + energyConflictBonus);
+      let riskScore = Math.round(lowNatural + pressureGap * 0.9 + energyConflictBonus + confidence * 0.04);
+
+      // Do not over-read emotional absorption if both emotional natural and actual exposure are low.
+      // In that case the person may simply not live in that channel, not necessarily “absorbing emotions”.
+      if (rule.id === "emotion_absorption_drain" && naturalScore < 44 && strengthScore < 48) {
+        riskScore = 0;
+      }
+
       return {
         id: rule.id,
         title: rule.title,
         headline: rule.headline,
         body: rule.body,
-        support: rule.support,
+        support: `${rule.support} ${confidencePhrase(confidence)}`,
         triggerWords: rule.triggerWords,
         evidence,
         naturalScore,
         strengthScore,
         riskScore,
         tone: rule.tone,
+        confidence,
+        confidenceLabel: confidenceLabel(confidence),
       };
     })
-    .filter((item) => item.riskScore >= 14 && item.evidence.length > 0)
-    .sort((a, b) => b.riskScore - a.riskScore)
-    .slice(0, 4);
+    .filter((item) => item.riskScore >= 15 && item.confidence >= 46 && item.evidence.length > 0)
+    .sort((a, b) => b.riskScore + b.confidence * 0.08 - (a.riskScore + a.confidence * 0.08))
+    .slice(0, 3);
 }
 
 function transformSpecificAdaptive(insight: AdaptiveGapInsight, evidence: MicroRoleScore[]): AdvisoryAdaptive {
@@ -578,11 +618,12 @@ function transformSpecificAdaptive(insight: AdaptiveGapInsight, evidence: MicroR
     .replace("Administrative Responsibility Load", "Administrasi karena tanggung jawab")
     .replace("Service Through Duty & Values", "Membantu karena nilai dan tanggung jawab");
 
+  const confidence = averageConfidence(evidence);
   return {
     id: insight.id,
     title,
     headline: "Kamu tampak mampu di area ini, tetapi energi asalnya belum tentu dari sana.",
-    body: insight.interpretation,
+    body: `${insight.interpretation} ${confidencePhrase(confidence)}`,
     emotionalNote:
       "Kalau area ini membuatmu cepat jenuh atau lelah secara emosi, itu bukan berarti kamu lemah. Bisa jadi kamu sedang memakai kemampuan yang terbentuk karena tuntutan hidup, bukan karena itu zona kekuatan alami kamu.",
     recovery:
@@ -592,6 +633,8 @@ function transformSpecificAdaptive(insight: AdaptiveGapInsight, evidence: MicroR
     strengthScore: insight.adaptiveLoadScore,
     gap: insight.adaptiveLoadScore - insight.naturalRouteScore,
     source: insight,
+    confidence,
+    confidenceLabel: confidenceLabel(confidence),
   };
 }
 
@@ -608,9 +651,9 @@ function buildAdaptiveAdvisories(report: PatternSignatureReport): AdvisoryAdapti
     .slice(0, Math.max(0, 3 - specific.length))
     .map((role) => ({
       id: role.id,
-      title: `${displayMicroRoleName(role)} yang sudah terbentuk karena pengalaman`,
+      title: `${role.name} yang sudah terbentuk karena pengalaman`,
       headline: "Kamu bisa menjalankan area ini, tetapi perlu jujur apakah ini mengisi atau menguras energi.",
-      body: `Area ${displayMicroRoleName(role)} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada zona kekuatan alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan.`,
+      body: `Area ${role.name} tampak cukup terlatih dalam hidupmu. Namun jika skor aktivitasnya jauh lebih tinggi daripada zona kekuatan alaminya, kemungkinan area ini berkembang karena pekerjaan, keluarga, tanggung jawab, atau kebutuhan lingkungan. ${confidencePhrase(role.confidence ?? 45)}`,
       emotionalNote:
         "Kamu boleh merasa capek setelah menjalankan peran ini. Mampu melakukan sesuatu tidak selalu berarti itu zona kekuatan alami.",
       recovery:
@@ -619,13 +662,15 @@ function buildAdaptiveAdvisories(report: PatternSignatureReport): AdvisoryAdapti
       naturalScore: role.natural,
       strengthScore: role.strength,
       gap: role.strength - role.natural,
+      confidence: role.confidence ?? 45,
+      confidenceLabel: confidenceLabel(role.confidence ?? 45),
     }));
 
   return [...specific, ...generic].slice(0, 3);
 }
 
 function names(roles: MicroRoleScore[], limit = 3) {
-  const selected = roles.slice(0, limit).map((role) => displayMicroRoleName(role));
+  const selected = roles.slice(0, limit).map((role) => role.name);
   if (selected.length === 0) return "beberapa pola energi utama";
   if (selected.length === 1) return selected[0];
   if (selected.length === 2) return `${selected[0]} dan ${selected[1]}`;
@@ -660,30 +705,26 @@ function buildMirror(
 
   if (alignedCount >= 6) {
     lines.push(
-      "Kamu tampak sudah cukup mengenal zona kekuatan alami kamu. Banyak potensi alami bukan hanya muncul sebagai bakat, tetapi sudah berubah menjadi kekuatan nyata dalam aktivitas hidupmu.",
+      "Kamu tampak sudah cukup mengenal zona kekuatan alami kamu. Banyak potensi alami tidak hanya muncul sebagai bakat, tetapi juga sudah kamu pakai dalam aktivitas nyata.",
     );
   } else {
     lines.push(
-      "Hasil ini membaca peta energi kamu: bagian yang membuatmu menyala, bagian yang masih bisa diberi ruang, dan bagian yang perlu batas agar tidak menguras tenaga.",
+      "Hasil ini membaca pola energi kamu: area yang membuatmu lebih hidup, area yang masih bisa dikembangkan, dan area yang perlu batas agar tidak menguras tenaga.",
     );
   }
 
   if (first && second) {
     lines.push(
-      `Kamu adalah tipe orang yang lebih hidup ketika ${first.shortTitle.toLowerCase()} bertemu dengan ${second.shortTitle.toLowerCase()}. Kamu tidak sekadar ingin menyelesaikan tugas; kamu ingin melihat arah, makna, dan bentuk yang lebih jelas dari sesuatu.`,
+      `Kamu cenderung lebih menyala ketika ${first.shortTitle.toLowerCase()} bertemu dengan ${second.shortTitle.toLowerCase()}. Bukan sekadar menjalankan tugas, kamu butuh cara kerja yang terasa punya arah dan makna.`,
     );
   } else if (first) {
     lines.push(first.headline);
   }
 
-  if (first) {
-    lines.push(
-      `${first.body} Di titik terbaikmu, pengetahuan, pengalaman, dan ide tidak berhenti di kepala; kamu ingin mengubahnya menjadi penjelasan, arah, atau karya yang bisa dipakai orang lain.`,
-    );
-  }
+  if (first) lines.push(first.body);
 
   if (third) {
-    lines.push(`Pola lain yang ikut memberi warna adalah ${third.title.toLowerCase()}. Area ini bisa menjadi jalur tambahan agar hidup dan pekerjaan tidak hanya terasa sebagai kewajiban, tetapi juga ruang bertumbuh.`);
+    lines.push(`Pola lain yang ikut memberi warna: ${third.title.toLowerCase()}. Area ini bisa menjadi jalur tambahan untuk membuat hidup dan pekerjaan terasa lebih hidup.`);
   }
 
   if (mainAdaptive) {
