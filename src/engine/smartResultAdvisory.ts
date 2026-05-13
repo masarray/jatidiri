@@ -6,6 +6,7 @@ import type {
   PatternSignatureReport,
 } from "@/engine/patternSignature";
 import type { MicroRoleId } from "@/data/microRoles";
+import { buildEvidenceHighlights, buildPatternInsights, type PatternInsight } from "@/engine/resultComposer";
 
 export type AdvisoryTone = "teal" | "amber" | "rose" | "slate" | "sky";
 
@@ -85,6 +86,8 @@ export interface SmartResultAdvisory {
   resistance: string[];
   recoveryRituals: string[];
   selfCare: string[];
+  patternInsights: PatternInsight[];
+  evidenceHighlights: string[];
   evidenceLine: string;
   qualityNote: string;
 }
@@ -693,12 +696,14 @@ function buildMirror(
   energyThemes: AdvisoryTheme[],
   vulnerabilities: AdvisoryVulnerability[],
   adaptive: AdvisoryAdaptive[],
+  patternInsights: PatternInsight[],
 ) {
   const first = energyThemes[0];
   const second = energyThemes[1];
   const third = energyThemes[2];
   const mainDrain = vulnerabilities[0];
   const mainAdaptive = adaptive[0];
+  const strongestInsight = patternInsights[0];
   const alignedCount = report.microRoles.filter((role) => role.natural >= 60 && role.strength >= 55).length;
 
   const lines: string[] = [];
@@ -723,6 +728,10 @@ function buildMirror(
 
   if (first) lines.push(first.body);
 
+  if (strongestInsight) {
+    lines.push(strongestInsight.mirrorLine);
+  }
+
   if (third) {
     lines.push(`Pola lain yang ikut memberi warna: ${third.title.toLowerCase()}. Area ini bisa menjadi jalur tambahan untuk membuat hidup dan pekerjaan terasa lebih hidup.`);
   }
@@ -740,10 +749,13 @@ function buildMirror(
   return cleanList(lines).slice(0, 5);
 }
 
-function buildSharpSummary(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[]) {
+function buildSharpSummary(energyThemes: AdvisoryTheme[], vulnerabilities: AdvisoryVulnerability[], patternInsights: PatternInsight[]) {
   const energy = energyThemes[0]?.shortTitle.toLowerCase() ?? "zona kekuatan alami kamu";
   const drain = vulnerabilities[0]?.title.toLowerCase() ?? "tuntutan yang tidak selaras dengan caramu bekerja";
-  return `Intinya: kamu lebih hidup ketika masuk lewat ${energy}. Kamu lebih mudah lelah ketika terlalu lama dipaksa berada di ${drain}.`;
+  const signal = patternInsights[0]?.summaryLine;
+  return signal
+    ? `Intinya: kamu lebih hidup ketika masuk lewat ${energy}. Kamu lebih mudah lelah ketika terlalu lama dipaksa berada di ${drain}. Sinyal khusus yang perlu dijaga: ${signal}.`
+    : `Intinya: kamu lebih hidup ketika masuk lewat ${energy}. Kamu lebih mudah lelah ketika terlalu lama dipaksa berada di ${drain}.`;
 }
 
 function buildAlignment(report: PatternSignatureReport, adaptiveThemes: AdvisoryAdaptive[], dormantThemes: AdvisoryTheme[]): AlignmentReading {
@@ -833,9 +845,14 @@ function buildForOthers(energyThemes: AdvisoryTheme[], vulnerabilities: Advisory
   return [...new Set(lines)].slice(0, 4);
 }
 
-function buildResistance(vulnerabilities: AdvisoryVulnerability[]) {
-  if (vulnerabilities.length === 0) return ["Instruksi mendadak tanpa konteks bisa membuat energi turun sebelum kamu sempat bergerak."];
-  return vulnerabilities.slice(0, 4).map((item) => item.headline);
+function buildResistance(vulnerabilities: AdvisoryVulnerability[], patternInsights: PatternInsight[] = []) {
+  const lines = vulnerabilities.slice(0, 4).map((item) => item.headline);
+  patternInsights
+    .filter((item) => item.kind === "overuse" || item.kind === "drain")
+    .slice(0, 2)
+    .forEach((item) => lines.push(item.headline));
+  if (lines.length === 0) return ["Instruksi mendadak tanpa konteks bisa membuat energi turun sebelum kamu sempat bergerak."];
+  return [...new Set(lines)].slice(0, 4);
 }
 
 function buildRecoveryRituals(energyThemes: AdvisoryTheme[], adaptiveThemes: AdvisoryAdaptive[]) {
@@ -868,13 +885,15 @@ export function buildSmartResultAdvisory(
   const rawVulnerabilities = buildVulnerabilities(report, energyThemeIds);
   const rawAdaptiveThemes = buildAdaptiveAdvisories(report);
   const rawDormantThemes = buildDormantThemes(report, energyThemeIds);
+  const patternInsights = buildPatternInsights(report);
+  const evidenceHighlights = buildEvidenceHighlights(report, patternInsights);
 
   const energyThemes = rawEnergyThemes.map(cleanTheme);
   const vulnerabilities = rawVulnerabilities.map(cleanVulnerability);
   const adaptiveThemes = rawAdaptiveThemes.map(cleanAdaptive);
   const dormantThemes = rawDormantThemes.map(cleanTheme);
   const archetype = cleanLanguage(buildArchetype(energyThemes));
-  const mirror = buildMirror(report, energyThemes, vulnerabilities, adaptiveThemes);
+  const mirror = buildMirror(report, energyThemes, vulnerabilities, adaptiveThemes, patternInsights);
   const alignment = buildAlignment(report, adaptiveThemes, dormantThemes);
 
   const contextPrefix = cleanLanguage(
@@ -888,7 +907,7 @@ export function buildSmartResultAdvisory(
     archetype,
     mirrorTitle: "Kamu itu orang yang...",
     mirror: cleanList(mirror),
-    sharpSummary: cleanLanguage(buildSharpSummary(energyThemes, vulnerabilities)),
+    sharpSummary: cleanLanguage(buildSharpSummary(energyThemes, vulnerabilities, patternInsights)),
     alignment: {
       ...alignment,
       title: cleanLanguage(alignment.title),
@@ -905,14 +924,21 @@ export function buildSmartResultAdvisory(
       "Apa ide kamu supaya ini bisa berjalan lebih baik?",
     ]),
     forOthers: cleanList(buildForOthers(energyThemes, vulnerabilities)),
-    resistance: cleanList(buildResistance(vulnerabilities)),
+    resistance: cleanList(buildResistance(vulnerabilities, patternInsights)),
     recoveryRituals: cleanList(buildRecoveryRituals(energyThemes, adaptiveThemes)),
     selfCare: cleanList([
       contextPrefix,
       alignment.body,
+      patternInsights[0]?.support,
       "Kalau hasil ini terasa menampar pelan, jadikan ia peta, bukan penjara. Kamu tetap bisa bertumbuh, tetapi lebih sehat jika bertumbuh dari zona kekuatan alami kamu.",
     ]),
-    evidenceLine: cleanLanguage(`Pembacaan ini terutama terlihat dari kombinasi ${names(report.topNaturalRoles, 4)}. Angka detail tetap tersedia di bagian peta pendukung, tetapi makna utamanya dibaca dari kombinasi pola, bukan skor tunggal.`),
+    patternInsights,
+    evidenceHighlights,
+    evidenceLine: cleanLanguage(
+      evidenceHighlights.length > 0
+        ? `Pembacaan ini terutama terlihat dari pilihan aksi seperti: “${evidenceHighlights.slice(0, 2).join("” dan “")}”. Makna utamanya dibaca dari kombinasi pola, bukan skor tunggal.`
+        : `Pembacaan ini terutama terlihat dari kombinasi ${names(report.topNaturalRoles, 4)}. Angka detail tetap tersedia di bagian peta pendukung, tetapi makna utamanya dibaca dari kombinasi pola, bukan skor tunggal.`,
+    ),
     qualityNote: cleanLanguage(buildQualityNote(quality)),
   };
 }

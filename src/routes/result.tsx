@@ -17,6 +17,7 @@ import {
   type AdvisoryTheme,
   type AdvisoryVulnerability,
   type AdvisoryTone,
+  type SmartResultAdvisory,
 } from "@/engine/smartResultAdvisory";
 import { ClusterRadar } from "@/components/result/ClusterRadar";
 import { getPurposeLens } from "@/data/purposeLens";
@@ -183,6 +184,21 @@ function ResultPage() {
           </article>
         </Section>
 
+
+
+        {advisory.patternInsights.length > 0 && (
+          <Section title="Sinyal Kombinasi yang Terbaca" kicker="smart pattern engine">
+            <p className="section-lead">
+              Bagian ini membaca kombinasi pilihan aksi, bukan skor tunggal. Tujuannya menunjukkan sisi terang dan sisi bocor yang muncul bersama-sama.
+            </p>
+            <div className="mt-4 grid gap-3">
+              {advisory.patternInsights.slice(0, 3).map((insight, index) => (
+                <PatternInsightCard key={insight.id} insight={insight} index={index + 1} />
+              ))}
+            </div>
+          </Section>
+        )}
+
         <Section title="Seberapa Kamu Sudah Selaras dengan Zona Kekuatan Alami" kicker="alignment reading">
           <article className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
             <h3 className="text-lg font-medium leading-snug text-foreground">{advisory.alignment.title}</h3>
@@ -347,6 +363,45 @@ function toneClass(tone: AdvisoryTone, soft = false) {
     sky: soft ? "border-sky-200/70 bg-sky-50/45" : "border-sky-200/80 bg-sky-50/60",
   };
   return variants[tone];
+}
+
+
+function PatternInsightCard({
+  insight,
+  index,
+}: {
+  insight: SmartResultAdvisory["patternInsights"][number];
+  index: number;
+}) {
+  return (
+    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(insight.tone)}`}>
+      <div className="flex items-start gap-3">
+        <NumberBubble value={index} tone={insight.tone} muted />
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            {insight.kind === "drive" ? "pola penggerak" : insight.kind === "adaptive" ? "mode adaptif" : "sisi bocor yang perlu dijaga"}
+          </div>
+          <h3 className="mt-1 text-base font-medium text-foreground">{insight.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{insight.headline}</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{insight.body}</p>
+          <div className="mt-4 rounded-2xl border border-background/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
+            <span className="font-medium">Cara mengelola: </span>
+            {insight.support}
+          </div>
+          {insight.evidence.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-background/70 bg-background/55 p-4 text-xs leading-relaxed text-muted-foreground">
+              <div className="mb-2 font-medium text-foreground/80">Terlihat dari pilihan aksi seperti:</div>
+              <ul className="space-y-1.5">
+                {insight.evidence.slice(0, 3).map((item) => (
+                  <li key={item}>“{item}”</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
 }
 
 function EnergyThemeCard({ theme, index, soft }: { theme: AdvisoryTheme; index: number; soft?: boolean }) {
@@ -526,7 +581,7 @@ function ReadingQualityNote({ quality }: { quality: ReturnType<typeof computeRea
         {quality.level} · {quality.score}/100
       </div>
       <div className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-        Scale: 5-point · Raw answer: 1-5 · Normalized score: 0-100
+        Format: Context Action Cards · Signal engine · Evidence-based reading
       </div>
       <ul className="mt-3 space-y-1.5 text-xs leading-relaxed text-muted-foreground">
         {quality.notes.map((note) => (
