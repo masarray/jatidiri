@@ -185,6 +185,19 @@ function ResultPage() {
 
         </Section>
 
+        {advisory.contrastReadings.length > 0 && (
+          <Section title="Kontras Penting yang Tidak Boleh Disalahartikan" kicker="calibrated reading">
+            <p className="section-lead">
+              Bagian ini membaca kemampuan yang bisa terlihat kuat, tetapi memiliki biaya energi atau sisi bocor tertentu. Tujuannya agar hasil tidak menyamakan “bisa” dengan “selalu alami”.
+            </p>
+            <div className="mt-4 grid gap-3">
+              {advisory.contrastReadings.map((item, index) => (
+                <ContrastReadingCard key={item.id} item={item} index={index + 1} />
+              ))}
+            </div>
+          </Section>
+        )}
+
         <Section title="Manual Singkat Memakai Pola Ini" kicker="operating manual">
           <OperatingManualGrid manual={advisory.operatingManual} />
         </Section>
@@ -395,6 +408,43 @@ function toneClass(tone: AdvisoryTone, soft = false) {
 }
 
 
+
+
+function ContrastReadingCard({
+  item,
+  index,
+}: {
+  item: SmartResultAdvisory["contrastReadings"][number];
+  index: number;
+}) {
+  return (
+    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(item.tone, true)}`}>
+      <div className="flex items-start gap-3">
+        <NumberBubble value={index} tone={item.tone} muted />
+        <div className="min-w-0">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{item.kicker}</div>
+          <h3 className="mt-1 text-base font-medium leading-snug text-foreground">{item.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.headline}</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+          <div className="mt-4 rounded-2xl border border-background/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
+            <span className="font-medium">Pakai sehatnya: </span>
+            {item.healthyUse}
+          </div>
+          {item.evidence.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-background/70 bg-background/55 p-4 text-xs leading-relaxed text-muted-foreground">
+              <div className="mb-2 font-medium text-foreground/80">Terbaca dari pilihan aksi seperti:</div>
+              <ul className="space-y-1.5">
+                {item.evidence.slice(0, 3).map((line) => (
+                  <li key={line}>“{line}”</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
 
 function OperatingManualGrid({ manual }: { manual: SmartResultAdvisory["operatingManual"] }) {
   const panels = [

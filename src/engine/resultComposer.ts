@@ -20,6 +20,35 @@ export interface PatternInsight {
   evidence: string[];
 }
 
+export interface PatternContrastReading {
+  id: string;
+  kicker: string;
+  title: string;
+  headline: string;
+  body: string;
+  healthyUse: string;
+  tone: PatternInsightTone;
+  score: number;
+  primarySignals: string[];
+  tensionSignals: string[];
+  matchedSignals: string[];
+  evidence: string[];
+}
+
+interface ContrastRule {
+  id: string;
+  kicker: string;
+  title: string;
+  headline: string;
+  body: string;
+  healthyUse: string;
+  tone: PatternInsightTone;
+  primarySignals: string[];
+  tensionSignals: string[];
+  minPrimary: number;
+  minTension: number;
+}
+
 interface Rule {
   id: string;
   kind: PatternInsightKind;
@@ -262,4 +291,128 @@ export function buildEvidenceHighlights(report: PatternSignatureReport, insights
     if (selected.size >= limit) break;
   }
   return [...selected];
+}
+
+
+const CONTRAST_RULES: ContrastRule[] = [
+  {
+    id: "marketing_skill_not_social_spark",
+    kicker: "skill vs energi sosial",
+    title: "Bisa memasarkan ide tanpa harus menjadi social butterfly",
+    headline: "Kemampuan menjual ide atau solusi bisa muncul dari nilai, bukti, dan framing manfaat — bukan selalu dari energi basa-basi.",
+    body: "Pola ini penting agar hasil tidak salah membaca: kamu bisa kuat menjelaskan manfaat, membuat orang paham, atau membangun kepercayaan pada ide, tetapi tetap cepat terkuras jika harus membuka obrolan ringan terus-menerus.",
+    healthyUse: "Pakai jalur marketing yang lebih cocok: demo, tulisan, bukti, contoh, dan percakapan bertujuan. Kurangi beban basa-basi panjang jika itu bukan sumber energi alami.",
+    tone: "teal",
+    primarySignals: ["strategic_marketer", "value_framer", "persuasion_skill", "adaptive_influencer", "content_seller", "proof_builder", "credibility_based_marketing"],
+    tensionSignals: ["purposeful_communicator", "small_talk_drain", "social_energy_drain", "conversation_maintenance_burden", "deep_connection_preference"],
+    minPrimary: 1.2,
+    minTension: 0.8,
+  },
+  {
+    id: "exploration_vs_completion",
+    kicker: "dorongan baru vs selesai",
+    title: "Rasa ingin tahu perlu diikat ke garis selesai",
+    headline: "Hal baru bisa menyalakan kamu, tetapi sebagian energi perlu dijaga agar tidak membuat pekerjaan utama kehilangan tempat.",
+    body: "Ini bukan kelemahan belajar. Ini tanda bahwa eksplorasi punya tenaga besar. Yang perlu dibaca adalah apakah rasa penasaran itu membantu hasil utama atau justru memindahkan fokus terlalu cepat.",
+    healthyUse: "Buat tempat parkir ide dan batas eksplorasi. Kejar hal baru setelah ada satu output utama yang bergerak atau selesai.",
+    tone: "amber",
+    primarySignals: ["fast_learner", "explorer_learner", "novelty_pull", "controlled_curiosity"],
+    tensionSignals: ["priority_leak", "unfinished_risk", "routine_drain", "direction_shift_risk"],
+    minPrimary: 1.1,
+    minTension: 0.8,
+  },
+  {
+    id: "quality_vs_release",
+    kicker: "mutu vs melepas hasil",
+    title: "Standar tinggi perlu definisi cukup-selesai",
+    headline: "Mata kamu bisa cepat melihat hal yang bisa diperbaiki, tetapi hasil juga perlu momen untuk dilepas.",
+    body: "Dorongan memperbaiki kualitas adalah aset. Namun jika detail kecil terus terasa mengganjal, pekerjaan bisa tertahan lebih lama dari nilai tambah yang sebenarnya dibutuhkan.",
+    healthyUse: "Pisahkan perbaikan wajib, perbaikan bagus-jika-sempat, dan ide versi berikutnya. Definisi selesai membuat kualitas tetap sehat.",
+    tone: "slate",
+    primarySignals: ["quality_evaluator", "visual_detail_checker", "balanced_improver", "process_optimizer"],
+    tensionSignals: ["perfection_delay", "analysis_delay"],
+    minPrimary: 1.1,
+    minTension: 0.7,
+  },
+  {
+    id: "risk_vs_worry",
+    kicker: "antisipasi vs putaran khawatir",
+    title: "Radar risiko perlu berubah menjadi rencana",
+    headline: "Kamu bisa peka melihat yang mungkin salah, tetapi radar itu perlu diarahkan agar tidak menjadi putaran khawatir.",
+    body: "Sinyal ini membedakan kehati-hatian sehat dari kecemasan berulang. Yang menolong bukan mematikan kewaspadaan, tetapi mengubahnya menjadi langkah cadangan yang jelas.",
+    healthyUse: "Tulis risiko, tanda awal, dan tindakan cadangan. Setelah ada rencana kecil, berhenti mengecek ulang sampai ada informasi baru.",
+    tone: "rose",
+    primarySignals: ["risk_checker", "threat_scanner", "preparedness_keeper", "contingency_planner"],
+    tensionSignals: ["worry_loop", "uncertainty_drain", "hesitation_risk"],
+    minPrimary: 1.1,
+    minTension: 0.7,
+  },
+  {
+    id: "order_vs_priority",
+    kicker: "rapi vs prioritas",
+    title: "Rapi sebaiknya mendukung fokus, bukan mengambil alih",
+    headline: "Keteraturan bisa membuat pikiran lebih lega, tetapi perlu batas agar tidak menggeser tugas utama.",
+    body: "Kebutuhan ruang, file, atau alur yang rapi adalah sinyal penting. Tetapi saat deadline atau prioritas besar muncul, rapi perlu menjadi alat bantu, bukan tujuan baru.",
+    healthyUse: "Pakai aturan dua menit: rapikan titik yang paling mengganggu, lalu kembali ke hasil utama.",
+    tone: "teal",
+    primarySignals: ["order_restorer", "visual_clarity_seeker", "space_simplifier", "archive_organizer"],
+    tensionSignals: ["order_dependency", "control_tension", "digital_hoarding", "too_much_saving"],
+    minPrimary: 1.1,
+    minTension: 0.7,
+  },
+  {
+    id: "care_vs_boundary",
+    kicker: "peduli vs batas diri",
+    title: "Kepedulian perlu batas agar tidak menghapus diri sendiri",
+    headline: "Dorongan membantu bisa tulus dan kuat, tetapi bantuan yang sehat tetap menyisakan ruang untuk kebutuhanmu sendiri.",
+    body: "Pola ini membaca orang yang mudah tersentuh oleh kebutuhan orang lain. Sisi baiknya besar, tetapi tanpa batas, urusan pribadi bisa tertunda dan energi bisa habis diam-diam.",
+    healthyUse: "Bantu dengan format batas: bagian ini bisa saya bantu, bagian ini belum bisa saya ambil. Hangat tidak harus berarti mengambil semua beban.",
+    tone: "rose",
+    primarySignals: ["caregiver", "helper", "practical_supporter", "people_developer", "relationship_keeper"],
+    tensionSignals: ["self_neglect_risk", "approval_pressure", "relationship_overchecking"],
+    minPrimary: 1.1,
+    minTension: 0.7,
+  },
+];
+
+function totalScoreFor(report: PatternSignatureReport, signals: string[]): number {
+  return signals.reduce((sum, id) => sum + signalScore(report.signalScores, id), 0);
+}
+
+function matchedFor(report: PatternSignatureReport, signals: string[]): string[] {
+  return signals.filter((id) => signalScore(report.signalScores, id) > 0);
+}
+
+function composeContrast(report: PatternSignatureReport, rule: ContrastRule): PatternContrastReading | null {
+  const primaryScore = totalScoreFor(report, rule.primarySignals);
+  const tensionScore = totalScoreFor(report, rule.tensionSignals);
+  if (primaryScore < rule.minPrimary || tensionScore < rule.minTension) return null;
+
+  const primarySignals = matchedFor(report, rule.primarySignals);
+  const tensionSignals = matchedFor(report, rule.tensionSignals);
+  const matchedSignals = [...new Set([...primarySignals, ...tensionSignals])];
+  const score = Math.round((primaryScore + tensionScore * 1.15) * 10) / 10;
+
+  return {
+    id: rule.id,
+    kicker: rule.kicker,
+    title: rule.title,
+    headline: rule.headline,
+    body: rule.body,
+    healthyUse: rule.healthyUse,
+    tone: rule.tone,
+    score,
+    primarySignals,
+    tensionSignals,
+    matchedSignals,
+    evidence: evidenceFor(report, matchedSignals, 3),
+  };
+}
+
+export function buildPatternContrasts(report: PatternSignatureReport, limit = 3): PatternContrastReading[] {
+  return CONTRAST_RULES
+    .map((rule) => composeContrast(report, rule))
+    .filter((item): item is PatternContrastReading => Boolean(item))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
 }

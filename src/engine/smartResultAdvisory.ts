@@ -6,7 +6,7 @@ import type {
   PatternSignatureReport,
 } from "@/engine/patternSignature";
 import type { MicroRoleId } from "@/data/microRoles";
-import { buildEvidenceHighlights, buildPatternInsights, type PatternInsight } from "@/engine/resultComposer";
+import { buildEvidenceHighlights, buildPatternContrasts, buildPatternInsights, type PatternContrastReading, type PatternInsight } from "@/engine/resultComposer";
 import { resolveSignalDefinition } from "@/data/patternSignals";
 
 export type AdvisoryTone = "teal" | "amber" | "rose" | "slate" | "sky";
@@ -112,6 +112,7 @@ export interface SmartResultAdvisory {
   recoveryRituals: string[];
   selfCare: string[];
   patternInsights: PatternInsight[];
+  contrastReadings: PatternContrastReading[];
   operatingManual: OperatingManual;
   weeklyExperiments: WeeklyExperiment[];
   evidenceMap: EvidenceMapItem[];
@@ -1076,6 +1077,7 @@ export function buildSmartResultAdvisory(
   const rawAdaptiveThemes = buildAdaptiveAdvisories(report);
   const rawDormantThemes = buildDormantThemes(report, energyThemeIds);
   const patternInsights = buildPatternInsights(report);
+  const contrastReadings = buildPatternContrasts(report);
   const evidenceHighlights = buildEvidenceHighlights(report, patternInsights);
 
   const energyThemes = rawEnergyThemes.map(cleanTheme);
@@ -1126,6 +1128,7 @@ export function buildSmartResultAdvisory(
       "Kalau hasil ini terasa menampar pelan, jadikan ia peta, bukan penjara. Kamu tetap bisa bertumbuh, tetapi lebih sehat jika bertumbuh dari zona kekuatan alami kamu.",
     ]),
     patternInsights,
+    contrastReadings,
     operatingManual,
     weeklyExperiments,
     evidenceMap,
