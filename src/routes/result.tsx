@@ -209,22 +209,26 @@ function ResultPage() {
           </Section>
         )}
 
-        <Section id="manual" title="Manual Singkat Memakai Pola Ini" kicker="operating manual">
-          <OperatingManualGrid manual={advisory.operatingManual} />
-        </Section>
-
-        {advisory.evidenceMap.length > 0 && (
-          <Section id="bukti" title="Bukti dari Pilihan Aksi" kicker="evidence-based reading">
+        {advisory.calibrationReadings.length > 0 && (
+          <Section id="kalibrasi" title="Yang Jangan Disalahartikan" kicker="calibration engine">
             <SectionLead>
-              Bagian ini menunjukkan beberapa pilihan yang menjadi dasar pembacaan. Tujuannya agar hasil terasa grounded, bukan seperti label yang muncul tiba-tiba.
+              Bagian ini mengunci pembacaan agar hasil tidak terlalu cepat melabeli kamu. Satu kemampuan bisa terlihat kuat, tetapi sumber energinya bisa berbeda.
             </SectionLead>
             <div className="mt-5 grid gap-3">
-              {advisory.evidenceMap.slice(0, 4).map((item) => (
-                <EvidenceMapCard key={item.id} item={item} />
+              {advisory.calibrationReadings.map((item) => (
+                <CalibrationReadingCard key={item.id} item={item} />
               ))}
             </div>
           </Section>
         )}
+
+        <Section id="manual" title="Manual Singkat Memakai Pola Ini" kicker="operating manual">
+          <OperatingManualGrid manual={advisory.operatingManual} />
+        </Section>
+
+        <Section id="ringkasan-lanjutan" title="Ringkasan Lanjutan" kicker="optional detail">
+          <ResultInsightSummary advisory={advisory} />
+        </Section>
 
         {advisory.weeklyExperiments.length > 0 && (
           <Section id="eksperimen" title="Eksperimen 7 Hari" kicker="next small step">
@@ -232,38 +236,14 @@ function ResultPage() {
               Ini bukan tugas besar. Pilih satu eksperimen kecil agar hasil asesmen berubah menjadi pengalaman nyata, bukan hanya bacaan.
             </SectionLead>
             <div className="mt-5 grid gap-3">
-              {advisory.weeklyExperiments.map((item, index) => (
+              {advisory.weeklyExperiments.slice(0, 3).map((item, index) => (
                 <WeeklyExperimentCard key={item.id} item={item} index={index + 1} />
               ))}
             </div>
           </Section>
         )}
 
-        {advisory.patternInsights.length > 0 && (
-          <Section id="sinyal" title="Sinyal Kombinasi yang Terbaca" kicker="smart pattern engine">
-            <SectionLead>
-              Bagian ini membaca kombinasi pilihan aksi, bukan skor tunggal. Tujuannya menunjukkan sisi terang dan sisi bocor yang muncul bersama-sama.
-            </SectionLead>
-            <div className="mt-5 grid gap-3">
-              {advisory.patternInsights.slice(0, 3).map((insight, index) => (
-                <PatternInsightCard key={insight.id} insight={insight} index={index + 1} />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        <Section id="selaras" title="Seberapa Kamu Sudah Selaras dengan Zona Kekuatan Alami" kicker="alignment reading">
-          <article className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
-            <h3 className="text-[1.1rem] font-semibold leading-snug text-foreground">{advisory.alignment.title}</h3>
-            <p className="mt-3 text-[14.5px] leading-7 text-foreground/90">{advisory.alignment.headline}</p>
-            <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{advisory.alignment.body}</p>
-            <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-              <MetricPill label="Selaras" value={advisory.alignment.alignedCount} tone="teal" />
-              <MetricPill label="Belum hidup" value={advisory.alignment.dormantCount} tone="amber" />
-              <MetricPill label="Adaptif" value={advisory.alignment.adaptiveCount} tone="rose" />
-            </div>
-          </article>
-        </Section>
+        <AdvancedResultDetails advisory={advisory} />
 
         <Section id="menyala" title="Kenapa Kamu Menyala" kicker="zona kekuatan alami">
           <SectionLead>
@@ -288,32 +268,6 @@ function ResultPage() {
             ))}
           </div>
         </Section>
-
-        {advisory.adaptiveThemes.length > 0 && (
-          <Section id="adaptif" title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="kemampuan adaptif">
-            <SectionLead>
-              Ini adalah bagian penting. Area di bawah ini mungkin sudah kamu eksplorasi cukup jauh karena pekerjaan, tanggung jawab, atau tuntutan hidup. Kamu bisa melakukannya, tetapi belum tentu ini zona kekuatan alami kamu.
-            </SectionLead>
-            <div className="mt-5 grid gap-3">
-              {advisory.adaptiveThemes.map((item) => (
-                <AdaptiveCard key={item.id} item={item} />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {advisory.dormantThemes.length > 0 && (
-          <Section id="dormant" title="Potensi yang Belum Banyak Kamu Hidupkan" kicker="natural but dormant">
-            <SectionLead>
-              Area ini punya sinyal alami, tetapi mungkin belum cukup sering kamu pakai sebagai aktivitas nyata. Ini bisa menjadi arah eksperimen diri berikutnya.
-            </SectionLead>
-            <div className="mt-5 grid gap-3">
-              {advisory.dormantThemes.map((theme, index) => (
-                <EnergyThemeCard key={theme.id} theme={theme} index={index + 1} soft />
-              ))}
-            </div>
-          </Section>
-        )}
 
         <Section id="bahasa" title="Kalimat yang Menyalakan Energi Kamu" kicker="manual komunikasi">
           <div className="rounded-[2rem] border border-primary/15 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
@@ -355,7 +309,7 @@ function ResultPage() {
 
         <details className="mt-12 group rounded-[1.85rem] border border-border/60 bg-card/96 p-5 shadow-sm print-avoid-break">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-foreground/90">
-            <span>Detail Peta Pendukung</span>
+            <span>Debug / Peta Pendukung Teknis</span>
             <ChevronDown className="size-4 text-muted-foreground transition group-open:rotate-180" />
           </summary>
           <div className="mt-5 space-y-5">
@@ -488,6 +442,184 @@ function ContrastReadingCard({
     </article>
   );
 }
+
+
+
+function CalibrationReadingCard({ item }: { item: SmartResultAdvisory["calibrationReadings"][number] }) {
+  return (
+    <article className={`rounded-[1.6rem] border p-5 shadow-sm print-avoid-break ${toneClass(item.tone, true)}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-full border border-background/70 bg-background/70 px-3 py-1.5 text-[11px] font-medium text-muted-foreground">
+          Confidence · {item.confidenceLabel}
+        </div>
+        <div className="rounded-full border border-background/70 bg-background/65 px-3 py-1.5 text-[11px] text-muted-foreground">
+          Evidence {item.evidenceStrength}
+        </div>
+      </div>
+      <h3 className="mt-4 text-[17px] font-semibold leading-snug text-foreground">{item.title}</h3>
+      <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">{item.headline}</p>
+      <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{item.body}</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-[1.2rem] border border-background/70 bg-background/62 p-4 text-[13px] leading-6 text-foreground/85">
+          <span className="font-semibold text-foreground/90">Jangan disalahartikan: </span>
+          {item.notMeaning}
+        </div>
+        <div className="rounded-[1.2rem] border border-background/70 bg-background/62 p-4 text-[13px] leading-6 text-foreground/85">
+          <span className="font-semibold text-foreground/90">Pakai sehatnya: </span>
+          {item.support}
+        </div>
+      </div>
+      {item.evidence.length > 0 && (
+        <div className="mt-4 rounded-[1.2rem] border border-background/70 bg-background/55 p-4 text-[13px] leading-6 text-muted-foreground">
+          <div className="mb-2 font-semibold text-foreground/80">Terlihat dari pilihan seperti:</div>
+          <ul className="space-y-1.5">
+            {item.evidence.map((line) => (
+              <li key={line}>“{line}”</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function ResultInsightSummary({ advisory }: { advisory: SmartResultAdvisory }) {
+  const items = [
+    {
+      label: "Evidence",
+      title: advisory.evidenceMap.length > 0 ? `${advisory.evidenceMap.length} pilihan aksi terbaca` : "Bukti pilihan belum dominan",
+      body:
+        advisory.evidenceMap.length > 0
+          ? "Hasil tidak hanya ditarik dari skor, tetapi dari pilihan aksi yang berulang."
+          : "Baca hasil sebagai peta awal. Evidence akan makin kuat jika variasi pilihan lebih jelas.",
+      tone: "teal" as AdvisoryTone,
+    },
+    {
+      label: "Kombinasi",
+      title:
+        advisory.patternInsights.length > 0
+          ? `${Math.min(3, advisory.patternInsights.length)} sinyal kombinasi utama`
+          : "Belum ada kontras besar",
+      body:
+        advisory.patternInsights.length > 0
+          ? "Ada pola gabungan antara dorongan, sisi bocor, dan cara sehat memakainya."
+          : "Pola yang muncul relatif sederhana dan bisa dibaca dari section utama.",
+      tone: "sky" as AdvisoryTone,
+    },
+    {
+      label: "Alignment",
+      title: advisory.alignment.title,
+      body: advisory.alignment.headline,
+      tone: "amber" as AdvisoryTone,
+    },
+  ];
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-3">
+      {items.map((item) => (
+        <article key={item.label} className={`rounded-[1.45rem] border p-4 shadow-sm ${toneClass(item.tone, true)}`}>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{item.label}</div>
+          <h3 className="mt-2 text-[15px] font-semibold leading-snug text-foreground">{item.title}</h3>
+          <p className="mt-2 text-[13px] leading-6 text-muted-foreground">{item.body}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function AdvancedResultDetails({ advisory }: { advisory: SmartResultAdvisory }) {
+  const hasEvidence = advisory.evidenceMap.length > 0;
+  const hasSignals = advisory.patternInsights.length > 0;
+  const hasAdaptive = advisory.adaptiveThemes.length > 0;
+  const hasDormant = advisory.dormantThemes.length > 0;
+
+  if (!hasEvidence && !hasSignals && !hasAdaptive && !hasDormant) return null;
+
+  return (
+    <details className="mt-12 group rounded-[1.9rem] border border-border/60 bg-card/96 p-5 shadow-sm print-avoid-break" id="detail-lanjutan">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">detail lanjutan</div>
+          <h2 className="mt-1 text-[1.25rem] font-semibold tracking-[-0.02em] text-foreground">Bukti, Sinyal, dan Area Tambahan</h2>
+          <p className="mt-1 text-[13px] leading-6 text-muted-foreground">
+            Buka bagian ini kalau kamu ingin membaca dasar analisis yang lebih teknis.
+          </p>
+        </div>
+        <ChevronDown className="size-4 shrink-0 text-muted-foreground transition group-open:rotate-180" />
+      </summary>
+
+      <div className="mt-6 space-y-8">
+        {hasEvidence && (
+          <div>
+            <SectionMiniHeader title="Bukti dari Pilihan Aksi" kicker="evidence-based reading" />
+            <div className="mt-4 grid gap-3">
+              {advisory.evidenceMap.slice(0, 4).map((item) => (
+                <EvidenceMapCard key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hasSignals && (
+          <div>
+            <SectionMiniHeader title="Sinyal Kombinasi yang Terbaca" kicker="smart pattern engine" />
+            <div className="mt-4 grid gap-3">
+              {advisory.patternInsights.slice(0, 3).map((insight, index) => (
+                <PatternInsightCard key={insight.id} insight={insight} index={index + 1} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <SectionMiniHeader title="Seberapa Kamu Sudah Selaras" kicker="alignment reading" />
+          <article className="mt-4 rounded-[1.6rem] border border-border/60 bg-background/55 p-5">
+            <h3 className="text-[1.05rem] font-semibold leading-snug text-foreground">{advisory.alignment.title}</h3>
+            <p className="mt-3 text-[14.5px] leading-7 text-foreground/90">{advisory.alignment.headline}</p>
+            <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{advisory.alignment.body}</p>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+              <MetricPill label="Selaras" value={advisory.alignment.alignedCount} tone="teal" />
+              <MetricPill label="Belum hidup" value={advisory.alignment.dormantCount} tone="amber" />
+              <MetricPill label="Adaptif" value={advisory.alignment.adaptiveCount} tone="rose" />
+            </div>
+          </article>
+        </div>
+
+        {hasAdaptive && (
+          <div>
+            <SectionMiniHeader title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="kemampuan adaptif" />
+            <div className="mt-4 grid gap-3">
+              {advisory.adaptiveThemes.map((item) => (
+                <AdaptiveCard key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hasDormant && (
+          <div>
+            <SectionMiniHeader title="Potensi yang Belum Banyak Kamu Hidupkan" kicker="natural but dormant" />
+            <div className="mt-4 grid gap-3">
+              {advisory.dormantThemes.map((theme, index) => (
+                <EnergyThemeCard key={theme.id} theme={theme} index={index + 1} soft />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function SectionMiniHeader({ title, kicker }: { title: string; kicker: string }) {
+  return (
+    <div>
+      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/75">{kicker}</div>
+      <h3 className="mt-1 text-[1.05rem] font-semibold tracking-[-0.02em] text-foreground">{title}</h3>
+    </div>
+  );
+}
+
 
 function OperatingManualGrid({ manual }: { manual: SmartResultAdvisory["operatingManual"] }) {
   const panels = [
@@ -782,7 +914,7 @@ function RoleFamilySummary({ families }: { families: { family: string; natural: 
     <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
       <div className="text-[15px] font-semibold text-foreground">Peta Wilayah Peran</div>
       <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
-        Ini peta pendukung. Pembacaan utama tetap ada di Cermin Jati Diri, sumber energi, dan kemampuan adaptif di atas.
+        Ini peta teknis pendukung. Pembacaan utama tetap ada di Cermin Jati Diri, Neraca Energi, dan section utama di atas.
       </p>
       <div className="mt-4 space-y-3">
         {families.map((family) => (

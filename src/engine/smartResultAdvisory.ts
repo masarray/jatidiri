@@ -112,6 +112,19 @@ export interface EnergyLedger {
   cost: EnergyLedgerItem[];
 }
 
+export interface CalibrationReading {
+  id: string;
+  title: string;
+  headline: string;
+  body: string;
+  notMeaning: string;
+  support: string;
+  confidenceLabel: "kuat" | "cukup terbaca" | "indikasi awal";
+  evidenceStrength: number;
+  tone: AdvisoryTone;
+  evidence: string[];
+}
+
 export interface SmartResultAdvisory {
   title: string;
   archetype: string;
@@ -134,6 +147,7 @@ export interface SmartResultAdvisory {
   weeklyExperiments: WeeklyExperiment[];
   evidenceMap: EvidenceMapItem[];
   energyLedger: EnergyLedger;
+  calibrationReadings: CalibrationReading[];
   evidenceHighlights: string[];
   evidenceLine: string;
   qualityNote: string;
@@ -1157,6 +1171,179 @@ function buildEnergyLedger(report: PatternSignatureReport): EnergyLedger {
   };
 }
 
+
+function signalScoreGroup(report: PatternSignatureReport, ids: string[], lanes?: string[]): number {
+  return (report.signalScores ?? [])
+    .filter((row) => ids.includes(row.id) && (!lanes || lanes.includes(row.lane)))
+    .reduce((sum, row) => sum + row.score, 0);
+}
+
+function signalCountGroup(report: PatternSignatureReport, ids: string[], lanes?: string[]): number {
+  return (report.signalScores ?? [])
+    .filter((row) => ids.includes(row.id) && (!lanes || lanes.includes(row.lane)))
+    .reduce((sum, row) => sum + row.count, 0);
+}
+
+function evidenceForSignalGroup(report: PatternSignatureReport, ids: string[], limit = 3): string[] {
+  const selected: string[] = [];
+  const seen = new Set<string>();
+  for (const line of report.evidenceLines ?? []) {
+    if (!line.signals.some((signal) => ids.includes(signal))) continue;
+    const text = cleanLanguage(line.selectedText);
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    selected.push(text);
+    if (selected.length >= limit) break;
+  }
+  return selected;
+}
+
+function calibrationConfidence(evidenceStrength: number): CalibrationReading["confidenceLabel"] {
+  if (evidenceStrength >= 3) return "kuat";
+  if (evidenceStrength >= 2) return "cukup terbaca";
+  return "indikasi awal";
+}
+
+interface CalibrationRule {
+  id: string;
+  title: string;
+  headline: string;
+  body: string;
+  notMeaning: string;
+  support: string;
+  tone: AdvisoryTone;
+  primarySignals: string[];
+  tensionSignals: string[];
+  minPrimary: number;
+  minTension: number;
+}
+
+const CALIBRATION_RULES: CalibrationRule[] = [
+  {
+    id: "marketing_not_social_butterfly",
+    title: "Bisa memasarkan ide tanpa harus menjadi social butterfly",
+    headline: "Kemampuan menjual ide bisa muncul dari framing nilai, bukti, demo, atau substansi — bukan selalu dari energi basa-basi.",
+    body: "Ada perbedaan penting antara mampu menjelaskan nilai sebuah solusi dan menikmati obrolan sosial panjang. Kalau dua sinyal ini muncul bersama, pembacaan paling sehat adalah: komunikasi kamu kuat ketika ada isi, tujuan, atau manfaat yang jelas.",
+    notMeaning: "Ini tidak berarti kamu anti-sosial atau tidak bisa marketing. Ini hanya berarti jalur marketing kamu kemungkinan lebih strategis, berbasis isi, dan tidak selalu cocok dengan basa-basi tanpa arah.",
+    support: "Gunakan materi, demo, contoh, bukti, dan narasi manfaat. Batasi interaksi sosial yang hanya menuntut menjaga obrolan tetap hidup tanpa tujuan jelas.",
+    tone: "sky",
+    primarySignals: ["strategic_marketer", "value_framer", "persuasion_skill", "adaptive_influencer", "content_seller", "proof_builder", "credibility_based_marketing"],
+    tensionSignals: ["small_talk_drain", "social_energy_drain", "conversation_maintenance_burden", "low_social_responsibility", "deep_connection_preference"],
+    minPrimary: 1.2,
+    minTension: 1,
+  },
+  {
+    id: "explorer_with_guardrail",
+    title: "Rasa ingin tahu perlu dibaca bersama pagar prioritas",
+    headline: "Hal baru bisa menyalakan kamu, tetapi hasilnya tergantung apakah kamu punya pagar untuk kembali ke tugas utama.",
+    body: "Eksplorasi bukan otomatis distraksi. Jika sinyal eksplorasi muncul bersama priority keeper, kamu cenderung punya rasa ingin tahu yang masih bisa diarahkan. Jika muncul bersama priority leak, sisi bocornya perlu lebih dijaga.",
+    notMeaning: "Ini tidak berarti kamu tidak disiplin. Ini berarti rasa ingin tahu adalah bahan bakar kuat yang perlu wadah dan batas waktu.",
+    support: "Pakai sistem parkir ide: catat, beri slot eksplorasi, lalu kembali ke output utama. Eksplorasi paling sehat saat terikat ke hasil nyata.",
+    tone: "amber",
+    primarySignals: ["explorer_learner", "fast_learner", "novelty_pull", "controlled_curiosity"],
+    tensionSignals: ["priority_leak", "unfinished_risk", "routine_drain", "direction_shift_risk"],
+    minPrimary: 1.2,
+    minTension: 0.8,
+  },
+  {
+    id: "risk_radar_not_fear",
+    title: "Radar risiko bukan berarti penakut",
+    headline: "Kehati-hatian bisa menjadi fungsi proteksi, terutama jika diubah menjadi rencana cadangan yang jelas.",
+    body: "Sinyal risiko perlu dibedakan dari worry loop. Radar risiko sehat membantu melihat titik rawan. Worry loop membuat pikiran memutar kemungkinan buruk tanpa keputusan atau langkah kecil.",
+    notMeaning: "Ini tidak berarti kamu negatif, lambat, atau takut maju. Ini bisa berarti kamu membaca konsekuensi lebih cepat daripada orang lain.",
+    support: "Ubah kekhawatiran menjadi daftar antisipasi: risiko apa, tanda awalnya apa, tindakan kecilnya apa, dan kapan cukup dipikirkan.",
+    tone: "rose",
+    primarySignals: ["risk_guardian", "risk_checker", "threat_scanner", "preparedness_keeper", "contingency_planner"],
+    tensionSignals: ["worry_loop", "uncertainty_drain", "hesitation_risk", "analysis_delay"],
+    minPrimary: 1.2,
+    minTension: 0.8,
+  },
+  {
+    id: "quality_not_perfectionism_label",
+    title: "Kualitas tinggi tidak selalu berarti perfeksionis",
+    headline: "Dorongan memperbaiki hasil bisa menjadi aset besar, selama ada definisi selesai yang jelas.",
+    body: "Jika sinyal quality improver muncul bersama perfection delay, hasil perlu dikalibrasi. Kekuatanmu mungkin ada pada melihat celah peningkatan, tetapi sisi bocornya muncul saat pekerjaan yang sudah layak sulit dilepas.",
+    notMeaning: "Ini tidak berarti kamu ribet atau selalu perfeksionis. Ini berarti standar kualitas perlu ditemani batas cukup-selesai.",
+    support: "Pisahkan: wajib diperbaiki, bagus-jika-sempat, dan ide untuk versi berikutnya. Dengan begitu kualitas naik tanpa menahan output terlalu lama.",
+    tone: "slate",
+    primarySignals: ["quality_improver", "quality_evaluator", "balanced_improver", "visual_detail_checker"],
+    tensionSignals: ["perfection_delay", "order_dependency", "control_tension"],
+    minPrimary: 1.2,
+    minTension: 0.8,
+  },
+  {
+    id: "helper_not_unlimited_availability",
+    title: "Peduli bukan berarti selalu tersedia",
+    headline: "Kepedulian perlu dibedakan dari kewajiban menanggung kebutuhan orang lain.",
+    body: "Sinyal helper/caregiver adalah kekuatan relasi. Namun jika muncul bersama self-neglect atau approval pressure, hasil harus dibaca sebagai dorongan membantu yang perlu pagar sehat.",
+    notMeaning: "Ini tidak berarti kamu egois saat memberi batas. Justru batas membuat bantuanmu lebih sehat dan tidak berubah menjadi kelelahan.",
+    support: "Gunakan kalimat batas: ‘Aku bisa bantu bagian ini, tapi tidak bisa ambil semuanya.’ Bantuan sehat tetap menyisakan ruang untuk tugas dan energi pribadi.",
+    tone: "teal",
+    primarySignals: ["helper", "caregiver", "practical_supporter", "people_developer", "relationship_keeper"],
+    tensionSignals: ["self_neglect_risk", "approval_pressure", "relationship_overchecking"],
+    minPrimary: 1.2,
+    minTension: 0.8,
+  },
+];
+
+function buildCalibrationReadings(report: PatternSignatureReport, contrastReadings: PatternContrastReading[], patternInsights: PatternInsight[]): CalibrationReading[] {
+  const rows = CALIBRATION_RULES.map((rule) => {
+    const primaryScore = signalScoreGroup(report, rule.primarySignals);
+    const tensionScore = signalScoreGroup(report, rule.tensionSignals);
+    if (primaryScore < rule.minPrimary || tensionScore < rule.minTension) return null;
+
+    const primaryCount = signalCountGroup(report, rule.primarySignals);
+    const tensionCount = signalCountGroup(report, rule.tensionSignals);
+    const evidenceStrength = Math.max(1, Math.min(4, primaryCount + tensionCount));
+    const evidence = evidenceForSignalGroup(report, [...rule.primarySignals, ...rule.tensionSignals], 3);
+
+    return {
+      id: rule.id,
+      title: cleanLanguage(rule.title),
+      headline: cleanLanguage(rule.headline),
+      body: cleanLanguage(rule.body),
+      notMeaning: cleanLanguage(rule.notMeaning),
+      support: cleanLanguage(rule.support),
+      confidenceLabel: calibrationConfidence(evidenceStrength),
+      evidenceStrength,
+      tone: rule.tone,
+      evidence,
+    } satisfies CalibrationReading;
+  }).filter((item): item is CalibrationReading => Boolean(item));
+
+  const contrastBackfill = contrastReadings.slice(0, 2).map((item) => ({
+    id: `contrast_${item.id}`,
+    title: cleanLanguage(item.title),
+    headline: cleanLanguage(item.headline),
+    body: cleanLanguage(item.body),
+    notMeaning: cleanLanguage("Ini bukan label tetap. Ini adalah kontras yang perlu dibaca hati-hati agar kemampuan tidak otomatis dianggap selalu alami atau selalu ringan."),
+    support: cleanLanguage(item.healthyUse),
+    confidenceLabel: calibrationConfidence(item.evidence.length),
+    evidenceStrength: Math.max(1, item.evidence.length),
+    tone: item.tone,
+    evidence: item.evidence.slice(0, 3).map(cleanLanguage),
+  } satisfies CalibrationReading));
+
+  const insightBackfill = patternInsights.slice(0, 1).map((item) => ({
+    id: `insight_${item.id}`,
+    title: cleanLanguage(item.title),
+    headline: cleanLanguage(item.headline),
+    body: cleanLanguage(item.body),
+    notMeaning: cleanLanguage("Ini bukan penilaian benar-salah. Ini adalah pola yang perlu dipakai dengan konteks dan batas sehat."),
+    support: cleanLanguage(item.support),
+    confidenceLabel: calibrationConfidence(item.evidence.length),
+    evidenceStrength: Math.max(1, item.evidence.length),
+    tone: item.tone,
+    evidence: item.evidence.slice(0, 3).map(cleanLanguage),
+  } satisfies CalibrationReading));
+
+  const unique = new Map<string, CalibrationReading>();
+  for (const item of [...rows, ...contrastBackfill, ...insightBackfill]) {
+    if (!unique.has(item.id)) unique.set(item.id, item);
+  }
+  return [...unique.values()].sort((a, b) => b.evidenceStrength - a.evidenceStrength).slice(0, 4);
+}
+
 function buildQualityNote(quality: ReadingQuality) {
   if (quality.level === "Stabil") return "Pola jawaban cukup stabil untuk dibaca sebagai refleksi diri yang relatif konsisten.";
   if (quality.level === "Cukup Stabil") return "Pola jawaban cukup bisa dibaca, tetapi beberapa area tetap sebaiknya dianggap sebagai sinyal refleksi, bukan label final.";
@@ -1185,6 +1372,7 @@ export function buildSmartResultAdvisory(
   const weeklyExperiments = buildWeeklyExperiments(patternInsights, energyThemes);
   const evidenceMap = buildEvidenceMap(report, patternInsights);
   const energyLedger = buildEnergyLedger(report);
+  const calibrationReadings = buildCalibrationReadings(report, contrastReadings, patternInsights);
   const archetype = cleanLanguage(buildArchetype(energyThemes));
   const mirror = buildMirror(report, energyThemes, vulnerabilities, adaptiveThemes, patternInsights);
   const alignment = buildAlignment(report, adaptiveThemes, dormantThemes);
@@ -1231,6 +1419,7 @@ export function buildSmartResultAdvisory(
     weeklyExperiments,
     evidenceMap,
     energyLedger,
+    calibrationReadings,
     evidenceHighlights,
     evidenceLine: cleanLanguage(
       evidenceHighlights.length > 0
