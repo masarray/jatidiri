@@ -95,6 +95,23 @@ export interface EvidenceMapItem {
   tone: AdvisoryTone;
 }
 
+export interface EnergyLedgerItem {
+  id: string;
+  title: string;
+  label: string;
+  body: string;
+  score: number;
+  count: number;
+  tone: AdvisoryTone;
+  evidence: string[];
+}
+
+export interface EnergyLedger {
+  fuel: EnergyLedgerItem[];
+  skill: EnergyLedgerItem[];
+  cost: EnergyLedgerItem[];
+}
+
 export interface SmartResultAdvisory {
   title: string;
   archetype: string;
@@ -116,6 +133,7 @@ export interface SmartResultAdvisory {
   operatingManual: OperatingManual;
   weeklyExperiments: WeeklyExperiment[];
   evidenceMap: EvidenceMapItem[];
+  energyLedger: EnergyLedger;
   evidenceHighlights: string[];
   evidenceLine: string;
   qualityNote: string;
@@ -1060,6 +1078,85 @@ function buildEvidenceMap(report: PatternSignatureReport, patternInsights: Patte
   return selected;
 }
 
+
+function signalScore(report: PatternSignatureReport, signalId: string, lanes?: string[]) {
+  return (report.signalScores ?? [])
+    .filter((item) => item.id === signalId && (!lanes || lanes.includes(item.lane)))
+    .reduce((sum, item) => sum + item.score, 0);
+}
+
+function evidenceForSignal(report: PatternSignatureReport, signalId: string, limit = 2): string[] {
+  const selected: string[] = [];
+  const seen = new Set<string>();
+  for (const line of report.evidenceLines ?? []) {
+    if (!line.signals.includes(signalId)) continue;
+    const text = cleanLanguage(line.selectedText);
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    selected.push(text);
+    if (selected.length >= limit) break;
+  }
+  return selected;
+}
+
+function ledgerBody(kind: "fuel" | "skill" | "cost", label: string): string {
+  if (kind === "fuel") {
+    return `Ini tampak sebagai bahan bakar alami: ${label.toLowerCase()}. Saat pola ini diberi ruang yang sehat, kamu biasanya lebih mudah hidup, tertarik, atau bergerak tanpa terlalu dipaksa.`;
+  }
+  if (kind === "skill") {
+    return `Ini terlihat sebagai kemampuan yang bisa kamu pakai: ${label.toLowerCase()}. Baca ini sebagai area yang mungkin sudah terlatih; belum tentu semuanya menjadi sumber energi alami.`;
+  }
+  return `Ini perlu dibaca sebagai biaya energi atau sisi bocor: ${label.toLowerCase()}. Pola ini bukan label buruk, tetapi tanda area yang perlu batas, ritme, atau sistem pendukung.`;
+}
+
+function buildLedgerItems(
+  report: PatternSignatureReport,
+  kind: "fuel" | "skill" | "cost",
+  lanes: string[],
+  tone: AdvisoryTone,
+  limit = 4,
+): EnergyLedgerItem[] {
+  const bySignal = new Map<string, { score: number; count: number }>();
+  for (const row of report.signalScores ?? []) {
+    if (!lanes.includes(row.lane)) continue;
+    const definition = resolveSignalDefinition(row.id);
+    if (!definition) continue;
+    if (kind === "fuel" && (definition.kind === "overuse" || definition.kind === "drain" || definition.kind === "quality")) continue;
+    if (kind === "skill" && (definition.kind === "overuse" || definition.kind === "drain")) continue;
+    if (kind === "cost" && !(definition.kind === "overuse" || definition.kind === "drain" || row.lane === "overuse" || row.lane === "drain")) continue;
+    const current = bySignal.get(row.id) ?? { score: 0, count: 0 };
+    current.score += row.score;
+    current.count += row.count;
+    bySignal.set(row.id, current);
+  }
+
+  return [...bySignal.entries()]
+    .map(([id, value]) => {
+      const definition = resolveSignalDefinition(id);
+      const label = cleanLanguage(definition?.label ?? id.replace(/_/g, " "));
+      return {
+        id,
+        title: label,
+        label,
+        body: cleanLanguage(ledgerBody(kind, label)),
+        score: Math.round(value.score * 10) / 10,
+        count: value.count,
+        tone,
+        evidence: evidenceForSignal(report, id),
+      } satisfies EnergyLedgerItem;
+    })
+    .sort((a, b) => b.score - a.score || b.count - a.count)
+    .slice(0, limit);
+}
+
+function buildEnergyLedger(report: PatternSignatureReport): EnergyLedger {
+  return {
+    fuel: buildLedgerItems(report, "fuel", ["natural"], "teal", 4),
+    skill: buildLedgerItems(report, "skill", ["strength", "adaptive"], "sky", 4),
+    cost: buildLedgerItems(report, "cost", ["overuse", "drain"], "amber", 4),
+  };
+}
+
 function buildQualityNote(quality: ReadingQuality) {
   if (quality.level === "Stabil") return "Pola jawaban cukup stabil untuk dibaca sebagai refleksi diri yang relatif konsisten.";
   if (quality.level === "Cukup Stabil") return "Pola jawaban cukup bisa dibaca, tetapi beberapa area tetap sebaiknya dianggap sebagai sinyal refleksi, bukan label final.";
@@ -1087,6 +1184,7 @@ export function buildSmartResultAdvisory(
   const operatingManual = buildOperatingManual(energyThemes, vulnerabilities, adaptiveThemes, patternInsights);
   const weeklyExperiments = buildWeeklyExperiments(patternInsights, energyThemes);
   const evidenceMap = buildEvidenceMap(report, patternInsights);
+  const energyLedger = buildEnergyLedger(report);
   const archetype = cleanLanguage(buildArchetype(energyThemes));
   const mirror = buildMirror(report, energyThemes, vulnerabilities, adaptiveThemes, patternInsights);
   const alignment = buildAlignment(report, adaptiveThemes, dormantThemes);
@@ -1132,6 +1230,7 @@ export function buildSmartResultAdvisory(
     operatingManual,
     weeklyExperiments,
     evidenceMap,
+    energyLedger,
     evidenceHighlights,
     evidenceLine: cleanLanguage(
       evidenceHighlights.length > 0

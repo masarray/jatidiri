@@ -84,18 +84,18 @@ function ResultPage() {
               <AlertCircle className="size-6" />
             </div>
             <h1 className="mt-5 text-2xl font-semibold text-foreground">Asesmen belum lengkap</h1>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-3 text-[14px] leading-7 text-muted-foreground">
               Hasil baru ditampilkan setelah kedua sesi selesai agar pembacaan tidak terpotong.
             </p>
             <div className="mt-5 rounded-2xl bg-muted/50 p-4 text-sm">
               <div className="flex justify-between gap-3">
-                <span>Sesi 1 — Bakat Alami</span>
+                <span>Sesi 1 — Kartu Situasi Alami</span>
                 <strong>
                   {naturalProg.answered}/{naturalProg.total}
                 </strong>
               </div>
               <div className="mt-2 flex justify-between gap-3">
-                <span>Sesi 2 — Kekuatan Aktivitas</span>
+                <span>Sesi 2 — Bukti Kemampuan</span>
                 <strong>
                   {strengthProg.answered}/{strengthProg.total}
                 </strong>
@@ -122,12 +122,13 @@ function ResultPage() {
 
   return (
     <main className="min-h-dvh bg-background">
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-12">
-        <div className="no-print mb-6 flex items-center justify-between gap-3">
-          <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-            <Home className="size-4" /> Beranda
-          </Link>
-          <div className="flex items-center gap-2">
+      <div className="mx-auto max-w-[860px] px-4 py-6 sm:px-5 sm:py-10">
+        <div className="no-print mb-6 rounded-[1.5rem] border border-border/60 bg-card/92 p-3 shadow-[0_10px_30px_rgba(36,49,58,0.05)] backdrop-blur-sm sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Link to="/" className="inline-flex items-center gap-1.5 rounded-full px-1 text-sm text-muted-foreground transition hover:text-foreground">
+              <Home className="size-4" /> Beranda
+            </Link>
+            <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() =>
                 generateJatiDiriPdf({
@@ -139,13 +140,13 @@ function ResultPage() {
                   readingQuality,
                 })
               }
-              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-xs font-medium text-primary shadow-sm transition hover:bg-primary/15 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-3.5 py-2 text-[12px] font-medium text-primary shadow-sm transition hover:bg-primary/12 active:scale-[0.98]"
             >
               <FileDown className="size-3.5" /> PDF Report
             </button>
             <button
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm transition hover:bg-muted/50 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/70 px-3.5 py-2 text-[12px] font-medium text-foreground/80 shadow-sm transition hover:bg-muted/45 active:scale-[0.98]"
             >
               <Printer className="size-3.5" /> Print
             </button>
@@ -156,16 +157,19 @@ function ResultPage() {
                   navigate({ to: "/" });
                 }
               }}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium shadow-sm transition hover:bg-muted/50 active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-background/70 px-3.5 py-2 text-[12px] font-medium text-foreground/80 shadow-sm transition hover:bg-muted/45 active:scale-[0.98]"
             >
               <RotateCcw className="size-3.5" /> Ulang
             </button>
+          </div>
           </div>
         </div>
 
         <HeroCard name={identity.name} date={reportDate} context={lens.label} archetype={advisory.archetype} />
 
-        <Section title="Cermin Jati Diri" kicker="pembacaan utama">
+        <ResultJumpNav />
+
+        <Section id="cermin" title="Cermin Jati Diri" kicker="pembacaan utama">
           <article className="rounded-[2rem] border border-primary/15 bg-card p-5 shadow-sm sm:p-7 print-avoid-break">
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[11px] font-medium text-primary">
               <Sparkles className="size-3.5" /> {advisory.mirrorTitle}
@@ -175,22 +179,29 @@ function ResultPage() {
                 <p key={line}>{line}</p>
               ))}
             </div>
-            <div className="mt-6 rounded-2xl border border-amber-200/70 bg-amber-50/55 p-4 text-sm leading-relaxed text-foreground/90">
+            <div className="mt-6 rounded-2xl border border-amber-200/70 bg-amber-50/55 p-4 text-[14.5px] leading-7 text-foreground/90">
               {advisory.sharpSummary}
             </div>
-            <p className="mt-4 rounded-2xl border border-border/60 bg-muted/35 p-4 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-4 rounded-2xl border border-border/60 bg-muted/35 p-4 text-[13px] leading-6 text-muted-foreground">
               {advisory.evidenceLine}
             </p>
           </article>
 
         </Section>
 
+        <Section id="neraca" title="Neraca Energi Kamu" kicker="fuel · skill · cost">
+          <SectionLead>
+            Bagian ini memisahkan tiga hal yang sering tertukar: apa yang menyalakan kamu, kemampuan yang sudah bisa dipakai, dan area yang punya biaya energi. Ini membantu hasil tidak menyamakan “bisa” dengan “alami”.
+          </SectionLead>
+          <EnergyLedgerGrid ledger={advisory.energyLedger} />
+        </Section>
+
         {advisory.contrastReadings.length > 0 && (
-          <Section title="Kontras Penting yang Tidak Boleh Disalahartikan" kicker="calibrated reading">
-            <p className="section-lead">
+          <Section id="kontras" title="Kontras Penting yang Tidak Boleh Disalahartikan" kicker="calibrated reading">
+            <SectionLead>
               Bagian ini membaca kemampuan yang bisa terlihat kuat, tetapi memiliki biaya energi atau sisi bocor tertentu. Tujuannya agar hasil tidak menyamakan “bisa” dengan “selalu alami”.
-            </p>
-            <div className="mt-4 grid gap-3">
+            </SectionLead>
+            <div className="mt-5 grid gap-3">
               {advisory.contrastReadings.map((item, index) => (
                 <ContrastReadingCard key={item.id} item={item} index={index + 1} />
               ))}
@@ -198,16 +209,16 @@ function ResultPage() {
           </Section>
         )}
 
-        <Section title="Manual Singkat Memakai Pola Ini" kicker="operating manual">
+        <Section id="manual" title="Manual Singkat Memakai Pola Ini" kicker="operating manual">
           <OperatingManualGrid manual={advisory.operatingManual} />
         </Section>
 
         {advisory.evidenceMap.length > 0 && (
-          <Section title="Bukti dari Pilihan Aksi" kicker="evidence-based reading">
-            <p className="section-lead">
+          <Section id="bukti" title="Bukti dari Pilihan Aksi" kicker="evidence-based reading">
+            <SectionLead>
               Bagian ini menunjukkan beberapa pilihan yang menjadi dasar pembacaan. Tujuannya agar hasil terasa grounded, bukan seperti label yang muncul tiba-tiba.
-            </p>
-            <div className="mt-4 grid gap-3">
+            </SectionLead>
+            <div className="mt-5 grid gap-3">
               {advisory.evidenceMap.slice(0, 4).map((item) => (
                 <EvidenceMapCard key={item.id} item={item} />
               ))}
@@ -216,11 +227,11 @@ function ResultPage() {
         )}
 
         {advisory.weeklyExperiments.length > 0 && (
-          <Section title="Eksperimen 7 Hari" kicker="next small step">
-            <p className="section-lead">
+          <Section id="eksperimen" title="Eksperimen 7 Hari" kicker="next small step">
+            <SectionLead>
               Ini bukan tugas besar. Pilih satu eksperimen kecil agar hasil asesmen berubah menjadi pengalaman nyata, bukan hanya bacaan.
-            </p>
-            <div className="mt-4 grid gap-3">
+            </SectionLead>
+            <div className="mt-5 grid gap-3">
               {advisory.weeklyExperiments.map((item, index) => (
                 <WeeklyExperimentCard key={item.id} item={item} index={index + 1} />
               ))}
@@ -229,11 +240,11 @@ function ResultPage() {
         )}
 
         {advisory.patternInsights.length > 0 && (
-          <Section title="Sinyal Kombinasi yang Terbaca" kicker="smart pattern engine">
-            <p className="section-lead">
+          <Section id="sinyal" title="Sinyal Kombinasi yang Terbaca" kicker="smart pattern engine">
+            <SectionLead>
               Bagian ini membaca kombinasi pilihan aksi, bukan skor tunggal. Tujuannya menunjukkan sisi terang dan sisi bocor yang muncul bersama-sama.
-            </p>
-            <div className="mt-4 grid gap-3">
+            </SectionLead>
+            <div className="mt-5 grid gap-3">
               {advisory.patternInsights.slice(0, 3).map((insight, index) => (
                 <PatternInsightCard key={insight.id} insight={insight} index={index + 1} />
               ))}
@@ -241,11 +252,11 @@ function ResultPage() {
           </Section>
         )}
 
-        <Section title="Seberapa Kamu Sudah Selaras dengan Zona Kekuatan Alami" kicker="alignment reading">
+        <Section id="selaras" title="Seberapa Kamu Sudah Selaras dengan Zona Kekuatan Alami" kicker="alignment reading">
           <article className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
-            <h3 className="text-lg font-medium leading-snug text-foreground">{advisory.alignment.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-foreground/90">{advisory.alignment.headline}</p>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{advisory.alignment.body}</p>
+            <h3 className="text-[1.1rem] font-semibold leading-snug text-foreground">{advisory.alignment.title}</h3>
+            <p className="mt-3 text-[14.5px] leading-7 text-foreground/90">{advisory.alignment.headline}</p>
+            <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{advisory.alignment.body}</p>
             <div className="mt-5 grid grid-cols-3 gap-2 text-center">
               <MetricPill label="Selaras" value={advisory.alignment.alignedCount} tone="teal" />
               <MetricPill label="Belum hidup" value={advisory.alignment.dormantCount} tone="amber" />
@@ -254,20 +265,20 @@ function ResultPage() {
           </article>
         </Section>
 
-        <Section title="Kenapa Kamu Menyala" kicker="zona kekuatan alami">
-          <p className="section-lead">
+        <Section id="menyala" title="Kenapa Kamu Menyala" kicker="zona kekuatan alami">
+          <SectionLead>
             Bagian ini menggabungkan beberapa elemen yang saling berkaitan. Tujuannya bukan memberi banyak label, tetapi menjawab: area apa yang membuat kamu merasa hidup dan bertenaga?
-          </p>
-          <div className="mt-4 grid gap-3">
+          </SectionLead>
+          <div className="mt-5 grid gap-3">
             {advisory.energyThemes.map((theme, index) => (
               <EnergyThemeCard key={theme.id} theme={theme} index={index + 1} />
             ))}
           </div>
         </Section>
 
-        <Section title="Kenapa Kamu Bisa Lelah" kicker="titik rentan energi">
+        <Section id="lelah" title="Kenapa Kamu Bisa Lelah" kicker="titik rentan energi">
           <article className="rounded-[2rem] border border-amber-300/55 bg-amber-50/60 p-5 shadow-sm sm:p-6 print-avoid-break">
-            <p className="text-[15px] leading-relaxed text-foreground/90">
+            <p className="text-[15.5px] leading-7 text-foreground/90">
               Kelelahan emosi tidak selalu muncul karena kamu tidak mampu. Kadang justru karena kamu mampu menjalankan banyak peran, tetapi terlalu lama berada di area yang bukan zona kekuatan alami kamu.
             </p>
           </article>
@@ -279,11 +290,11 @@ function ResultPage() {
         </Section>
 
         {advisory.adaptiveThemes.length > 0 && (
-          <Section title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="kemampuan adaptif">
-            <p className="section-lead">
+          <Section id="adaptif" title="Kemampuan yang Bisa, Tapi Bisa Menguras" kicker="kemampuan adaptif">
+            <SectionLead>
               Ini adalah bagian penting. Area di bawah ini mungkin sudah kamu eksplorasi cukup jauh karena pekerjaan, tanggung jawab, atau tuntutan hidup. Kamu bisa melakukannya, tetapi belum tentu ini zona kekuatan alami kamu.
-            </p>
-            <div className="mt-4 grid gap-3">
+            </SectionLead>
+            <div className="mt-5 grid gap-3">
               {advisory.adaptiveThemes.map((item) => (
                 <AdaptiveCard key={item.id} item={item} />
               ))}
@@ -292,11 +303,11 @@ function ResultPage() {
         )}
 
         {advisory.dormantThemes.length > 0 && (
-          <Section title="Potensi yang Belum Banyak Kamu Hidupkan" kicker="natural but dormant">
-            <p className="section-lead">
+          <Section id="dormant" title="Potensi yang Belum Banyak Kamu Hidupkan" kicker="natural but dormant">
+            <SectionLead>
               Area ini punya sinyal alami, tetapi mungkin belum cukup sering kamu pakai sebagai aktivitas nyata. Ini bisa menjadi arah eksperimen diri berikutnya.
-            </p>
-            <div className="mt-4 grid gap-3">
+            </SectionLead>
+            <div className="mt-5 grid gap-3">
               {advisory.dormantThemes.map((theme, index) => (
                 <EnergyThemeCard key={theme.id} theme={theme} index={index + 1} soft />
               ))}
@@ -304,9 +315,9 @@ function ResultPage() {
           </Section>
         )}
 
-        <Section title="Kalimat yang Menyalakan Energi Kamu" kicker="manual komunikasi">
+        <Section id="bahasa" title="Kalimat yang Menyalakan Energi Kamu" kicker="manual komunikasi">
           <div className="rounded-[2rem] border border-primary/15 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
-            <p className="text-sm leading-relaxed text-muted-foreground">
+            <p className="text-[14px] leading-7 text-muted-foreground">
               Bagian ini dibaca oleh kamu terlebih dahulu. Ini membantu kamu mengenali bahasa seperti apa yang biasanya membuatmu lebih ON, lebih semangat, dan lebih tidak defensif.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -322,28 +333,28 @@ function ResultPage() {
           </div>
         </Section>
 
-        <Section title="Cara Merawat Diri" kicker="self advisory">
+        <Section id="rawat" title="Cara Merawat Diri" kicker="self advisory">
           <article className="rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm sm:p-6 print-avoid-break">
-            <div className="space-y-3 text-sm leading-relaxed text-foreground/90">
+            <div className="space-y-3 text-[14.5px] leading-7 text-foreground/90">
               {advisory.recoveryRituals.map((item) => (
                 <p key={item}>{item}</p>
               ))}
             </div>
-            <div className="mt-5 rounded-2xl border border-primary/10 bg-primary/6 p-4 text-xs leading-relaxed text-muted-foreground">
+            <div className="mt-5 rounded-2xl border border-primary/10 bg-primary/6 p-4 text-[13px] leading-6 text-muted-foreground">
               {advisory.selfCare.map((item) => (
                 <p key={item} className="mt-2 first:mt-0">
                   {item}
                 </p>
               ))}
             </div>
-            <p className="mt-4 rounded-2xl bg-muted/45 p-4 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-4 rounded-2xl bg-muted/45 p-4 text-[13px] leading-6 text-muted-foreground">
               {advisory.qualityNote}
             </p>
           </article>
         </Section>
 
-        <details className="mt-10 group rounded-[2rem] border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium text-foreground">
+        <details className="mt-12 group rounded-[1.85rem] border border-border/60 bg-card/96 p-5 shadow-sm print-avoid-break">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-foreground/90">
             <span>Detail Peta Pendukung</span>
             <ChevronDown className="size-4 text-muted-foreground transition group-open:rotate-180" />
           </summary>
@@ -356,7 +367,7 @@ function ResultPage() {
           </div>
         </details>
 
-        <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground print:hidden">
+        <p className="mt-8 text-center text-[13px] leading-6 text-muted-foreground print:hidden">
           Hasil ini adalah alat refleksi diri, bukan diagnosis klinis atau label permanen. Gunakan sebagai bahan mengenal pola energi, komunikasi, dan arah pengembangan diri.
         </p>
       </div>
@@ -366,24 +377,56 @@ function ResultPage() {
 
 function HeroCard({ name, date, context, archetype }: { name: string; date: string; context: string; archetype: string }) {
   return (
-    <section className="rounded-[2rem] border border-border/60 bg-gradient-to-br from-primary/10 via-card to-amber-50/70 p-6 shadow-sm sm:p-8 print-avoid-break">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Peta Jati Diri · Smart Advisory V5</div>
-      <div className="mt-5 grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
+    <section className="rounded-[2rem] border border-border/60 bg-gradient-to-br from-white via-card to-emerald-50/40 p-6 shadow-[0_16px_40px_rgba(36,49,58,0.06)] sm:p-8 print-avoid-break">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">Peta Jati Diri · Smart Advisory V5</div>
+      <div className="mt-5 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
         <div>
-          <h1 className="text-2xl font-medium tracking-tight text-foreground sm:text-3xl">{name}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Tanggal asesmen: {date}</p>
+          <h1 className="text-[1.9rem] font-semibold tracking-[-0.03em] text-foreground sm:text-[2.35rem]">{name}</h1>
+          <p className="mt-2 text-[14px] leading-6 text-muted-foreground">Tanggal asesmen: {date}</p>
         </div>
-        <div className="rounded-2xl border border-border/60 bg-background/70 px-4 py-3 text-left sm:text-right">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Konteks</div>
-          <div className="mt-1 text-base font-medium text-primary">{context}</div>
+        <div className="rounded-[1.3rem] border border-border/70 bg-background/78 px-4 py-3 text-left shadow-sm sm:min-w-[180px] sm:text-right">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Konteks</div>
+          <div className="mt-1 text-[15px] font-medium leading-snug text-primary">{context}</div>
         </div>
       </div>
-      <div className="mt-7 max-w-2xl">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Kesimpulan jati diri</div>
-        <div className="mt-2 text-2xl font-medium leading-snug text-primary sm:text-3xl">{archetype}</div>
+      <div className="mt-7 max-w-[40rem] rounded-[1.5rem] border border-primary/12 bg-primary/6 px-5 py-5">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Kesimpulan jati diri</div>
+        <div className="mt-2 text-[1.45rem] font-semibold leading-[1.3] tracking-[-0.02em] text-foreground sm:text-[1.9rem]">{archetype}</div>
       </div>
     </section>
   );
+}
+
+function ResultJumpNav() {
+  const items = [
+    { id: 'cermin', label: 'Cermin' },
+    { id: 'neraca', label: 'Neraca' },
+    { id: 'menyala', label: 'Menyala' },
+    { id: 'lelah', label: 'Lelah' },
+    { id: 'adaptif', label: 'Adaptif' },
+    { id: 'bahasa', label: 'Bahasa' },
+    { id: 'rawat', label: 'Rawat Diri' },
+  ];
+
+  return (
+    <nav className="no-print mt-5 overflow-x-auto pb-1">
+      <div className="flex min-w-max items-center gap-2 rounded-[1.2rem] border border-border/60 bg-card/88 p-2 shadow-sm">
+        {items.map((item) => (
+          <a
+            key={item.id}
+            href={`#${item.id}`}
+            className="rounded-full border border-border/60 bg-background/85 px-3.5 py-2 text-[12px] font-medium text-muted-foreground transition hover:border-primary/20 hover:bg-primary/6 hover:text-foreground"
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function SectionLead({ children }: { children: ReactNode }) {
+  return <p className="max-w-[64ch] text-[14.5px] leading-7 text-muted-foreground sm:text-[15px]">{children}</p>;
 }
 
 function Section({ title, kicker, children }: { title: string; kicker?: string; children: ReactNode }) {
@@ -418,20 +461,20 @@ function ContrastReadingCard({
   index: number;
 }) {
   return (
-    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(item.tone, true)}`}>
+    <article className={`rounded-[1.6rem] border p-5 shadow-sm print-avoid-break ${toneClass(item.tone, true)}`}>
       <div className="flex items-start gap-3">
         <NumberBubble value={index} tone={item.tone} muted />
         <div className="min-w-0">
           <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{item.kicker}</div>
           <h3 className="mt-1 text-base font-medium leading-snug text-foreground">{item.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.headline}</p>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-          <div className="mt-4 rounded-2xl border border-background/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
+          <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">{item.headline}</p>
+          <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{item.body}</p>
+          <div className="mt-4 rounded-[1.2rem] border border-background/75 bg-background/68 p-4 text-[13px] leading-6 text-foreground/85">
             <span className="font-medium">Pakai sehatnya: </span>
             {item.healthyUse}
           </div>
           {item.evidence.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-background/70 bg-background/55 p-4 text-xs leading-relaxed text-muted-foreground">
+            <div className="mt-4 rounded-[1.2rem] border border-background/75 bg-background/62 p-4 text-[13px] leading-6 text-muted-foreground">
               <div className="mb-2 font-medium text-foreground/80">Terbaca dari pilihan aksi seperti:</div>
               <ul className="space-y-1.5">
                 {item.evidence.slice(0, 3).map((line) => (
@@ -457,9 +500,9 @@ function OperatingManualGrid({ manual }: { manual: SmartResultAdvisory["operatin
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {panels.map((panel) => (
-        <article key={panel.title} className={`rounded-[1.65rem] border p-4 shadow-sm print-avoid-break ${toneClass(panel.tone, true)}`}>
-          <h3 className="text-sm font-medium text-foreground">{panel.title}</h3>
-          <ul className="mt-3 space-y-2 text-xs leading-relaxed text-foreground/80">
+        <article key={panel.title} className={`rounded-[1.5rem] border p-4 shadow-sm print-avoid-break ${toneClass(panel.tone, true)}`}>
+          <h3 className="text-[15px] font-semibold text-foreground">{panel.title}</h3>
+          <ul className="mt-3 space-y-2 text-[13px] leading-6 text-foreground/80">
             {panel.items.map((item) => (
               <li key={item} className="flex gap-2">
                 <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary/45" />
@@ -473,17 +516,85 @@ function OperatingManualGrid({ manual }: { manual: SmartResultAdvisory["operatin
   );
 }
 
+
+function EnergyLedgerGrid({ ledger }: { ledger: SmartResultAdvisory["energyLedger"] }) {
+  const groups = [
+    {
+      id: "fuel",
+      title: "Yang Menyalakan",
+      subtitle: "Bahan bakar alami yang paling sering muncul dari pilihan aksi kamu.",
+      items: ledger.fuel,
+      tone: "teal" as AdvisoryTone,
+    },
+    {
+      id: "skill",
+      title: "Yang Bisa Kamu Pakai",
+      subtitle: "Kemampuan yang terlihat bisa dijalankan, termasuk yang mungkin terbentuk karena pengalaman.",
+      items: ledger.skill,
+      tone: "sky" as AdvisoryTone,
+    },
+    {
+      id: "cost",
+      title: "Yang Ada Biaya Energinya",
+      subtitle: "Area yang perlu batas agar tidak berubah menjadi lelah, bocor fokus, atau overuse.",
+      items: ledger.cost,
+      tone: "amber" as AdvisoryTone,
+    },
+  ];
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-3">
+      {groups.map((group) => (
+        <article key={group.id} className={`rounded-[1.75rem] border p-4 shadow-sm print-avoid-break ${toneClass(group.tone, true)}`}>
+          <h3 className="text-[15px] font-semibold text-foreground">{group.title}</h3>
+          <p className="mt-2 text-[13px] leading-6 text-muted-foreground">{group.subtitle}</p>
+          <div className="mt-4 space-y-3">
+            {group.items.length > 0 ? (
+              group.items.map((item) => <EnergyLedgerItemCard key={item.id} item={item} />)
+            ) : (
+              <p className="rounded-[1.15rem] border border-background/75 bg-background/65 p-3 text-[13px] leading-6 text-muted-foreground">
+                Belum ada sinyal yang cukup kuat di bagian ini. Baca hasil utama sebagai peta awal.
+              </p>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function EnergyLedgerItemCard({ item }: { item: SmartResultAdvisory["energyLedger"]["fuel"][number] }) {
+  return (
+    <div className="rounded-[1.15rem] border border-background/75 bg-background/68 p-3.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm font-medium leading-snug text-foreground">{item.title}</div>
+          <p className="mt-1.5 text-[13px] leading-6 text-muted-foreground">{item.body}</p>
+        </div>
+        <span className="shrink-0 rounded-full border border-background/80 bg-background/75 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+          {item.score}
+        </span>
+      </div>
+      {item.evidence.length > 0 && (
+        <div className="mt-3 border-t border-background/80 pt-2 text-[11px] leading-relaxed text-foreground/75">
+          “{item.evidence[0]}”
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EvidenceMapCard({ item }: { item: SmartResultAdvisory["evidenceMap"][number] }) {
   return (
-    <article className={`rounded-[1.65rem] border p-4 shadow-sm print-avoid-break ${toneClass(item.tone, true)}`}>
+    <article className={`rounded-[1.5rem] border p-4 shadow-sm print-avoid-break ${toneClass(item.tone, true)}`}>
       <div className="flex items-start gap-3">
         <div className="grid size-8 shrink-0 place-items-center rounded-2xl border border-background/70 bg-background/70 text-[11px] font-semibold text-primary">
           {item.title.replace("Pilihan ", "")}
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-medium leading-relaxed text-muted-foreground">{item.situation}</p>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/90">“{item.selectedText}”</p>
-          <p className="mt-3 rounded-2xl border border-background/70 bg-background/55 p-3 text-xs leading-relaxed text-muted-foreground">
+          <p className="text-[13px] font-medium leading-6 text-muted-foreground">{item.situation}</p>
+          <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">“{item.selectedText}”</p>
+          <p className="mt-3 rounded-[1.15rem] border border-background/75 bg-background/65 p-3 text-[13px] leading-6 text-muted-foreground">
             {item.meaning}
           </p>
         </div>
@@ -499,9 +610,9 @@ function WeeklyExperimentCard({ item, index }: { item: SmartResultAdvisory["week
         <NumberBubble value={index} tone="teal" muted />
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/70">{item.signal}</div>
-          <h3 className="mt-1 text-base font-medium text-foreground">{item.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.action}</p>
-          <p className="mt-3 rounded-2xl border border-primary/10 bg-primary/6 p-3 text-xs leading-relaxed text-muted-foreground">
+          <h3 className="mt-1 text-[17px] font-semibold leading-snug text-foreground">{item.title}</h3>
+          <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">{item.action}</p>
+          <p className="mt-3 rounded-2xl border border-primary/10 bg-primary/6 p-3 text-[13px] leading-6 text-muted-foreground">
             {item.why}
           </p>
         </div>
@@ -518,22 +629,22 @@ function PatternInsightCard({
   index: number;
 }) {
   return (
-    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(insight.tone)}`}>
+    <article className={`rounded-[1.6rem] border p-5 shadow-sm print-avoid-break ${toneClass(insight.tone)}`}>
       <div className="flex items-start gap-3">
         <NumberBubble value={index} tone={insight.tone} muted />
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             {insight.kind === "drive" ? "pola penggerak" : insight.kind === "adaptive" ? "mode adaptif" : "sisi bocor yang perlu dijaga"}
           </div>
-          <h3 className="mt-1 text-base font-medium text-foreground">{insight.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{insight.headline}</p>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{insight.body}</p>
-          <div className="mt-4 rounded-2xl border border-background/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
+          <h3 className="mt-1 text-[17px] font-semibold leading-snug text-foreground">{insight.title}</h3>
+          <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">{insight.headline}</p>
+          <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{insight.body}</p>
+          <div className="mt-4 rounded-[1.2rem] border border-background/75 bg-background/68 p-4 text-[13px] leading-6 text-foreground/85">
             <span className="font-medium">Cara mengelola: </span>
             {insight.support}
           </div>
           {insight.evidence.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-background/70 bg-background/55 p-4 text-xs leading-relaxed text-muted-foreground">
+            <div className="mt-4 rounded-[1.2rem] border border-background/75 bg-background/62 p-4 text-[13px] leading-6 text-muted-foreground">
               <div className="mb-2 font-medium text-foreground/80">Terlihat dari pilihan aksi seperti:</div>
               <ul className="space-y-1.5">
                 {insight.evidence.slice(0, 3).map((item) => (
@@ -550,14 +661,14 @@ function PatternInsightCard({
 
 function EnergyThemeCard({ theme, index, soft }: { theme: AdvisoryTheme; index: number; soft?: boolean }) {
   return (
-    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(theme.tone, soft)}`}>
+    <article className={`rounded-[1.6rem] border p-5 shadow-sm print-avoid-break ${toneClass(theme.tone, soft)}`}>
       <div className="flex items-start gap-3">
         <NumberBubble value={index} tone={theme.tone} />
         <div>
-          <h3 className="text-base font-medium text-foreground">{theme.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{theme.headline}</p>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{theme.body}</p>
-          <div className="mt-4 rounded-2xl border border-background/70 bg-background/55 p-4 text-xs leading-relaxed text-foreground/80">
+          <h3 className="text-[17px] font-semibold leading-snug text-foreground">{theme.title}</h3>
+          <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">{theme.headline}</p>
+          <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{theme.body}</p>
+          <div className="mt-4 rounded-[1.2rem] border border-background/75 bg-background/62 p-4 text-[13px] leading-6 text-foreground/80">
             <p><span className="font-medium">Kenapa ini cocok: </span>{theme.whyItFits}</p>
             <p className="mt-2"><span className="font-medium">Pakai sehatnya: </span>{theme.healthyUse}</p>
           </div>
@@ -570,14 +681,14 @@ function EnergyThemeCard({ theme, index, soft }: { theme: AdvisoryTheme; index: 
 
 function VulnerabilityCard({ item, index }: { item: AdvisoryVulnerability; index: number }) {
   return (
-    <article className={`rounded-[1.75rem] border p-5 shadow-sm print-avoid-break ${toneClass(item.tone)}`}>
+    <article className={`rounded-[1.6rem] border p-5 shadow-sm print-avoid-break ${toneClass(item.tone)}`}>
       <div className="flex items-start gap-3">
         <NumberBubble value={index} tone={item.tone} muted />
         <div>
-          <h3 className="text-base font-medium text-foreground">{item.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.headline}</p>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-          <div className="mt-4 rounded-2xl border border-background/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
+          <h3 className="text-[17px] font-semibold leading-snug text-foreground">{item.title}</h3>
+          <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">{item.headline}</p>
+          <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{item.body}</p>
+          <div className="mt-4 rounded-[1.2rem] border border-background/75 bg-background/68 p-4 text-[13px] leading-6 text-foreground/85">
             <span className="font-medium">Cara mengelola: </span>
             {item.support}
           </div>
@@ -591,12 +702,12 @@ function VulnerabilityCard({ item, index }: { item: AdvisoryVulnerability; index
 function AdaptiveCard({ item }: { item: AdvisoryAdaptive }) {
   return (
     <article className="rounded-[1.75rem] border border-amber-300/60 bg-amber-50/60 p-5 shadow-sm print-avoid-break">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]">kemampuan adaptif</div>
-      <h3 className="mt-2 text-base font-medium text-foreground">{item.title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-foreground/90">{item.headline}</p>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-      <p className="mt-3 text-sm leading-relaxed text-foreground/90">{item.emotionalNote}</p>
-      <div className="mt-4 rounded-2xl border border-amber-300/70 bg-background/60 p-4 text-xs leading-relaxed text-foreground/85">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--ember)]/90">kemampuan adaptif</div>
+      <h3 className="mt-2 text-[17px] font-semibold leading-snug text-foreground">{item.title}</h3>
+      <p className="mt-2 text-[14.5px] leading-7 text-foreground/90">{item.headline}</p>
+      <p className="mt-3 text-[14px] leading-7 text-muted-foreground">{item.body}</p>
+      <p className="mt-3 text-[14.5px] leading-7 text-foreground/90">{item.emotionalNote}</p>
+      <div className="mt-4 rounded-2xl border border-amber-300/70 bg-background/60 p-4 text-[13px] leading-6 text-foreground/85">
         <span className="font-medium">Saran pemulihan: </span>
         {item.recovery}
       </div>
@@ -607,7 +718,7 @@ function AdaptiveCard({ item }: { item: AdvisoryAdaptive }) {
 
 function QuotePill({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-primary/15 bg-primary/8 px-4 py-3 text-sm leading-relaxed text-foreground/90 shadow-sm">
+    <div className="rounded-2xl border border-primary/15 bg-primary/8 px-4 py-3 text-[14.5px] leading-7 text-foreground/90 shadow-sm">
       “{children}”
     </div>
   );
@@ -616,8 +727,8 @@ function QuotePill({ children }: { children: ReactNode }) {
 function MiniPanel({ title, items, muted }: { title: string; items: string[]; muted?: boolean }) {
   return (
     <div className={`rounded-[1.5rem] border p-5 shadow-sm print-avoid-break ${muted ? "border-border/70 bg-muted/40" : "border-primary/15 bg-card"}`}>
-      <h3 className="text-sm font-medium text-foreground">{title}</h3>
-      <ul className="mt-3 space-y-2 text-xs leading-relaxed text-foreground/85">
+      <h3 className="text-[15px] font-semibold text-foreground">{title}</h3>
+      <ul className="mt-3 space-y-2 text-[13px] leading-6 text-foreground/85">
         {items.slice(0, 4).map((item) => (
           <li key={item}>• {item}</li>
         ))}
@@ -631,7 +742,7 @@ function Evidence({ roles }: { roles: MicroRoleScore[] }) {
   return (
     <div className="mt-4 flex flex-wrap gap-2">
       {roles.slice(0, 4).map((role) => (
-        <span key={role.id} className="rounded-full border border-background/70 bg-background/65 px-3 py-1 text-[11px] text-muted-foreground">
+        <span key={role.id} className="rounded-full border border-background/70 bg-background/70 px-3 py-1.5 text-[12px] leading-none text-muted-foreground">
           {role.name} · alami {role.natural} · terlatih {role.strength} · {role.confidenceLabel}
         </span>
       ))}
@@ -669,8 +780,8 @@ function MetricPill({ label, value, tone }: { label: string; value: number; tone
 function RoleFamilySummary({ families }: { families: { family: string; natural: number; strength: number }[] }) {
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-      <div className="text-sm font-medium text-foreground">Peta Wilayah Peran</div>
-      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+      <div className="text-[15px] font-semibold text-foreground">Peta Wilayah Peran</div>
+      <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
         Ini peta pendukung. Pembacaan utama tetap ada di Cermin Jati Diri, sumber energi, dan kemampuan adaptif di atas.
       </p>
       <div className="mt-4 space-y-3">
@@ -695,7 +806,7 @@ function RoleFamilySummary({ families }: { families: { family: string; natural: 
 function RoleScoreList({ title, roles, mode }: { title: string; roles: MicroRoleScore[]; mode: "natural" | "strength" }) {
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-      <div className="text-sm font-medium text-foreground">{title}</div>
+      <div className="text-[15px] font-semibold text-foreground">{title}</div>
       <div className="mt-4 space-y-3">
         {roles.map((role) => {
           const value = role[mode];
@@ -719,15 +830,15 @@ function RoleScoreList({ title, roles, mode }: { title: string; roles: MicroRole
 function ReadingQualityNote({ quality }: { quality: ReturnType<typeof computeReadingQuality> }) {
   return (
     <div className="rounded-3xl border border-border/60 bg-card p-5 shadow-sm print-avoid-break">
-      <div className="text-sm font-medium text-foreground">Kualitas Pembacaan</div>
-      <p className="mt-2 text-xs leading-relaxed text-foreground/90">{quality.summary}</p>
+      <div className="text-[15px] font-semibold text-foreground">Kualitas Pembacaan</div>
+      <p className="mt-2 text-[13px] leading-6 text-foreground/90">{quality.summary}</p>
       <div className="mt-3 inline-flex rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-foreground">
         {quality.level} · {quality.score}/100
       </div>
-      <div className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-2 text-[13px] leading-6 text-muted-foreground">
         Format: Context Action Cards · Signal engine · Evidence-based reading
       </div>
-      <ul className="mt-3 space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+      <ul className="mt-3 space-y-1.5 text-[13px] leading-6 text-muted-foreground">
         {quality.notes.map((note) => (
           <li key={note}>• {note}</li>
         ))}

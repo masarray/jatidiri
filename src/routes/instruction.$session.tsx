@@ -13,25 +13,25 @@ const COPY: Record<AssessmentSession, { title: string; eyebrow: string; bullets:
   natural: {
     eyebrow: "Sesi 1 dari 2",
     title: "Zona Kekuatan Alami",
-    time: "± 10–15 menit · 44 context cards",
+    time: "± 10–15 menit · 44 kartu situasi",
     button: "Mulai Sesi 1",
     bullets: [
-      "Bayangkan situasinya, lalu pilih respons yang paling mungkin kamu lakukan secara alami.",
-      "Jangan pilih jawaban yang terlihat paling ideal; pilih yang paling sering terjadi pada dirimu.",
-      "Tidak ada pilihan yang lebih baik atau lebih buruk — setiap opsi membaca pola yang berbeda.",
-      "Setelah memilih card, sistem otomatis lanjut ke pertanyaan berikutnya.",
+      "Setiap kartu berisi situasi nyata dan empat kemungkinan respons.",
+      "Bayangkan kondisinya, lalu pilih aksi yang paling mungkin kamu lakukan saat tidak sedang berusaha terlihat ideal.",
+      "Sebagian pilihan membaca dorongan alami; sebagian lain membaca sisi bocor seperti lelah basa-basi, prioritas bocor, atau sulit melepas hasil.",
+      "Setelah memilih card, sistem otomatis lanjut ke kartu berikutnya.",
     ],
   },
   strength: {
     eyebrow: "Sesi 2 dari 2",
-    title: "Bukti Kemampuan",
-    time: "± 3 menit · 5 context cards",
+    title: "Bukti Kemampuan yang Terlihat",
+    time: "± 2–3 menit · 5 kartu situasi",
     button: "Mulai Sesi 2",
     bullets: [
-      "Sekarang fokus pada bukti kemampuan yang sudah terlihat dalam pengalaman nyata.",
-      "Pilih respons yang paling mendekati cara kamu bekerja, bukan gambaran ideal.",
-      "Bagian ini singkat, untuk melihat apakah pola alami sudah muncul sebagai kemampuan nyata atau sebagai kemampuan adaptif/terlatih.",
-      "Setelah memilih card, sistem otomatis lanjut ke hasil.",
+      "Bagian ini singkat dan bukan pengulangan sesi pertama.",
+      "Fokusnya melihat apakah pola yang muncul sudah menjadi kemampuan nyata, atau lebih berupa kemampuan adaptif yang bisa kamu lakukan saat dibutuhkan.",
+      "Pilih berdasarkan pengalaman yang benar-benar pernah kamu jalankan, bukan versi ideal.",
+      "Di bagian ini sistem juga membaca kemampuan seperti menjelaskan, menuntaskan, menjaga hubungan, mengatur sistem, dan memasarkan ide tanpa harus menjadi social butterfly.",
     ],
   },
 };
@@ -91,14 +91,14 @@ function InstructionPage() {
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5 shrink-0 mt-0.5 text-[var(--ember)]" />
           <p className="leading-relaxed">
-            Ini bukan diagnosis klinis, bukan ujian, dan bukan alat seleksi kerja. Hasilnya adalah peta refleksi diri berdasarkan pola pilihan kamu.
+            Ini bukan diagnosis klinis, bukan ujian, dan bukan alat seleksi kerja. Hasilnya adalah cermin refleksi diri dari pola pilihan aksi kamu.
           </p>
         </div>
 
         <div className="mt-4 flex items-start gap-3 px-2 text-xs text-muted-foreground">
           <Heart className="size-3.5 shrink-0 mt-0.5 text-[var(--ember)]" />
           <p>
-            Jawaban tersimpan otomatis. kamu bisa jeda dan melanjutkan lagi dari perangkat yang sama.
+            Jawaban tersimpan otomatis. Kamu bisa jeda dan melanjutkan lagi dari perangkat yang sama.
           </p>
         </div>
       </div>

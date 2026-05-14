@@ -30,9 +30,11 @@ function TransitionPage() {
       </div>
       <h1 className="mt-6 text-2xl font-bold text-foreground">Sesi 1 selesai</h1>
       <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-xs">
-        kamu sudah menyelesaikan bagian Zona Kekuatan Alami. Sekarang kita lanjut singkat ke Sesi 2 untuk melihat
-        bukti kemampuan yang sudah muncul dalam kehidupan nyata.
+        Bagian pertama sudah membaca respons alami kamu dalam berbagai situasi. Sekarang lanjut ke sesi singkat untuk melihat kemampuan yang sudah terlihat di pengalaman nyata — termasuk kemampuan adaptif yang bisa kamu lakukan, meski belum tentu menjadi sumber energi alami.
       </p>
+      <div className="mt-5 rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3 text-left text-xs text-muted-foreground leading-relaxed max-w-xs">
+        Sesi 2 hanya berisi beberapa kartu. Pilih berdasarkan hal yang benar-benar pernah kamu lakukan, bukan kemampuan yang ingin terlihat ideal.
+      </div>
       <Link
         to="/instruction/$session"
         params={{ session: "strength" }}

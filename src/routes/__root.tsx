@@ -14,7 +14,7 @@ function NotFoundComponent() {
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Kembali ke berkamu
+            Kembali ke beranda
           </Link>
         </div>
       </div>
@@ -33,7 +33,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           Halaman gagal dimuat
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Terjadi kendala saat memuat halaman. Coba muat ulang, atau kembali ke berkamu.
+          Terjadi kendala saat memuat halaman. Coba muat ulang, atau kembali ke beranda.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -49,7 +49,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             href={import.meta.env.BASE_URL}
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Ke berkamu
+            Ke beranda
           </a>
         </div>
       </div>
@@ -66,14 +66,14 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Asesmen self-awareness untuk memahami bakat alami, kekuatan aktivitas, dan area energi diri.",
+          "Quick Scan berbasis kartu situasi untuk membaca pola energi, kemampuan yang sudah terlihat, mode adaptif, dan area yang menguras.",
       },
       { name: "author", content: "Peta Jati Diri" },
       { property: "og:title", content: "Peta Jati Diri" },
       {
         property: "og:description",
         content:
-          "Kenali pola energi diri: apa yang menghidupkan, apa yang menguras, dan apa yang sudah terlatih.",
+          "Kenali pola energi diri melalui pilihan aksi dalam situasi nyata: apa yang menghidupkan, apa yang menguras, dan apa yang sudah terlihat sebagai kemampuan.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
